@@ -1,0 +1,2 @@
+# MCPM
+Modified CPM method
