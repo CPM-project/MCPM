@@ -13,7 +13,11 @@ import MCPM
 
 
 class TpfData(object):
-    """handles data read from TPF file"""
+    """Handles data read from TPF file.
+    
+    Note that there are no (x,y) coordinates! Instead there are (row, column) 
+    or (column, row) and, yes, I wish one convention was used consistently.
+    """
 
     directory = path.join(MCPM.MODULE_PATH, 'tpf') # The directory where TPF files are stored.
 
@@ -220,7 +224,8 @@ class TpfData(object):
         return out
 
     def save_pixel_curve(self, row, column, file_name, full_time=True):
-        """saves the time vector and the flux for a single pixel into a file"""
+        """saves the time vector and the flux for a single pixel into a file
+        """
         flux = self.get_flux_for_pixel(row=row, column=column)
         if flux is None:
             msg = "wrong call to save_pixel_curve():\nrow = {:}\ncolumn={:}"
@@ -235,7 +240,8 @@ class TpfData(object):
                 full_time=True):
         """saves: 
         the time vector, flux vector, and flux_err vector 
-        for a single pixel into a file"""
+        for a single pixel into a file
+        """
         flux = self.get_flux_for_pixel(row=row, column=column)
         if flux is None:
             msg = "\n\nwrong call to save_pixel_curve_with_err():\nrow = {:}\ncolumn = {:}\n"
