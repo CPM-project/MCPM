@@ -7,6 +7,7 @@ import numpy as np
 # - pixel_list_center()
 # - load_matrix_xy()
 # - save_matrix_xy()
+# - read_true_false_file()
 
 def pixel_list_center(center_x, center_y, half_size):
     """Return list of pixels centered on (center_x,center_y) 
@@ -69,4 +70,15 @@ def save_matrix_xy(matrix, file_name, data_type='float'):
                 out_file.write("{:} {:} {:}\n".format(index[0], index[1], parser[value]))
         else:
             raise ValueError('save_matrix_xy() - unrecognized format')
-
+        
+def read_true_false_file(file_name):
+    """Reads file with values True or False into a boolean numpy array.
+    To save such a file, just use:
+    np.savetxt(FILE_NAME, BOOL_ARRAY, fmt='%r')
+    """
+    parser = {'TRUE': True, 'FALSE': False}
+    out = []
+    with open(file_name) as in_file:
+        for line in in_file.readlines():
+            out.append(parser[line[:-1].upper()])
+    return np.array(out)
