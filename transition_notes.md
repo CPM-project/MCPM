@@ -13,7 +13,7 @@ plot_utils.py - to utils.py
 poly2d.py - to utils.py
 prfdata.py
 prfforcampaign.py
-tpfdata.py
+tpfdata.py - almost done, get_predictor_matrix() was left
 wcsfromtpf.py
 ```
 
