@@ -19,3 +19,8 @@ def test_pixel_list_center():
     assert (expected_1 == out_1).all()
     assert (expected_2 == out_2).all()
     
+def test_eval_poly_2d():
+    x = np.array([1, 2, 0, 1, 1])
+    y = np.array([3, 4, 1, 0, 10])
+    out = utils.eval_poly_2d(x, y, np.array([5, 6, 7]))
+    np.testing.assert_almost_equal(out, [ 32., 45., 12., 11., 81.])
