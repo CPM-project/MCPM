@@ -1,0 +1,10 @@
+# Byte-compiled / optimized 
+__pycache__/
+.cache/
+*.py[cod]
+
+# simple editor backups
+*.py~
+.*.swp
+
+
