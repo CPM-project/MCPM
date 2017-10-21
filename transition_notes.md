@@ -2,7 +2,7 @@ Files to be transfered:
 ```
 campaigngridradec2pix.py
 cpm_part1.py
-cpm_part2.py - chage to be a class; read_true_false_file() moved to utils.py, rest not done
+cpm_part2.py - change to be a class; read_true_false_file() moved to utils.py, rest not done
 k2_cpm_small.py - this would be merged with cpm_part2.py
 leastSquareSolver.py
 multipletpf.py - try to make it a singleton
