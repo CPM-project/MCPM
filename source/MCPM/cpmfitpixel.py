@@ -3,8 +3,8 @@ import numpy as np
 from MCPM import leastSquareSolver as solver
 
 
-class CpmFit(object):
-    """Class for performing CPM fit"""
+class CpmFitPixel(object):
+    """Class for performing CPM fit for a single pixel"""
     
     def __init__(self, target_flux, target_flux_err, target_mask, 
             predictor_matrix, predictor_mask,
@@ -59,9 +59,9 @@ class CpmFit(object):
     def reset_results(self):
         """sets all the results to None so that they're re-calculated 
         when you access them next time"""
+        self._target_masked = None
         self._coefs = None
-        self._fit_flux = None
-        self._residue = None
+        self._fitted_flux = None
         
     @property
     def model(self):
@@ -86,27 +86,57 @@ class CpmFit(object):
         return self.results_mask * self.train_time_mask
         
     @property
+    def target_masked(self):
+        """target flux after subtracting model and applying mask"""
+        if self._target_masked is None:
+            mask = self.train_mask
+            self._target_masked = self.target_flux[mask]
+            if self.model is not None:
+                self._target_masked -= self.model[mask]
+        return self._target_masked
+        
+    @property
     def coefs(self):
         """coefficients inside the CPM - they're multipled by 
         predictor_matrix_masked to get the prediction"""
         if self._coefs is None:
-            mask = self.train_mask
-            predictor = self.predictor_matrix[mask]
-            if self.model is not None:
-                target = self.target_flux[mask] - self.model[mask]
-            else:
-                target = self.target_flux[mask]
+            predictor = self.predictor_matrix[self.train_mask]
+            target = self.target_masked
             yvar = None
             
             self._coefs = solver(predictor, target, yvar, self.l2)
             
         return self._coefs
         
-# TO BE DONE:        
-#       fit_flux
-#       residue
-#       cpm_residue - this is residue + model
-
-# In original code, it was:
-#     fit_flux = np.dot(predictor_matrix, result)
-#     dif = target_flux - fit_flux[:,0]
+    @property
+    def fitted_flux(self):
+        """predicted flux values"""
+        if self._fitted_flux is None:
+            predictor = self.predictor_matrix[results_mask]
+            fit = np.dot(predictor, self.coefs)[:,0]
+            self._fitted_flux = np.zeros(self.n_epochs, dtype=float)
+            self._fitted_flux[results_mask] = fit
+        return self._fitted_flux
+        
+    @property
+    def residue(self):
+        """residuals of the fit itself i.e., if there was model then 
+        it's not added here"""
+        out = np.zeros(self.n_epochs, dtype=float)
+        mask = self.results_mask
+        out[mask] = self.target_flux[mask]
+        if self.model is not None:
+            out[mask] -= self.model
+        out[mask] -= self.fitted_flux[mask]
+        return out
+        
+    @property
+    def cpm_residue(self):
+        """residuals of the fit with added model"""
+        out = np.zeros(self.n_epochs, dtype=float)
+        mask = self.results_mask
+        out[mask] = self.residue[mask]
+        if self.model is not None:
+            out[mask] += self.model
+        return out
+        
