@@ -4,7 +4,6 @@ from math import fsum
 import matplotlib.pyplot as plt
 
 
-
 # File with short functions used in different parts of the code.
 # Contains:
 # - pixel_list_center()
@@ -19,6 +18,7 @@ import matplotlib.pyplot as plt
 # - fit_two_poly_2d()
 # - plot_matrix_subplots()
 # - construct_matrix_from_list()
+# - module_output_for_channel
 
 def pixel_list_center(center_x, center_y, half_size):
     """Return list of pixels centered on (center_x,center_y) 
@@ -212,3 +212,24 @@ def construct_matrix_from_list(pixel_list, time_series_list):
         matrix[x-x_0, y-y_0, :] = time_series_list[i]
 
     return matrix
+
+# For K2 channel number give corresponding module and output numbers.
+module_output_for_channel = {
+1: (2, 1), 2: (2, 2), 3: (2, 3), 4: (2, 4), 5: (3, 1), 
+6: (3, 2), 7: (3, 3), 8: (3, 4), 9: (4, 1), 10: (4, 2), 
+11: (4, 3), 12: (4, 4), 13: (6, 1), 14: (6, 2), 15: (6, 3), 
+16: (6, 4), 17: (7, 1), 18: (7, 2), 19: (7, 3), 20: (7, 4), 
+21: (8, 1), 22: (8, 2), 23: (8, 3), 24: (8, 4), 25: (9, 1), 
+26: (9, 2), 27: (9, 3), 28: (9, 4), 29: (10, 1), 30: (10, 2), 
+31: (10, 3), 32: (10, 4), 33: (11, 1), 34: (11, 2), 35: (11, 3), 
+36: (11, 4), 37: (12, 1), 38: (12, 2), 39: (12, 3), 40: (12, 4), 
+41: (13, 1), 42: (13, 2), 43: (13, 3), 44: (13, 4), 45: (14, 1), 
+46: (14, 2), 47: (14, 3), 48: (14, 4), 49: (15, 1), 50: (15, 2), 
+51: (15, 3), 52: (15, 4), 53: (16, 1), 54: (16, 2), 55: (16, 3), 
+56: (16, 4), 57: (17, 1), 58: (17, 2), 59: (17, 3), 60: (17, 4), 
+61: (18, 1), 62: (18, 2), 63: (18, 3), 64: (18, 4), 65: (19, 1), 
+66: (19, 2), 67: (19, 3), 68: (19, 4), 69: (20, 1), 70: (20, 2), 
+71: (20, 3), 72: (20, 4), 73: (22, 1), 74: (22, 2), 75: (22, 3), 
+76: (22, 4), 77: (23, 1), 78: (23, 2), 79: (23, 3), 80: (23, 4), 
+81: (24, 1), 82: (24, 2), 83: (24, 3), 84: (24, 4)
+}

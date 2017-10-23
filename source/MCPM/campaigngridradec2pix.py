@@ -22,8 +22,8 @@ class CampaignGridRaDec2Pix(object):
             path_ = path.abspath(__file__)
             for i in range(3):
                 path_ = path.dirname(path_)
-            temp = "grids_RADEC2pix_{:}_{:}.data".format(campaign, channel)
-            file_name = path.join(path_, "data", "K2C9", temp)
+            name = "grids_RADEC2pix_{:}_{:}.data".format(campaign, channel)
+            file_name = path.join(path_, "data", "K2C9", 'grids', name)
 
         self._read_from_file(file_name, campaign)
 
