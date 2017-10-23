@@ -1,4 +1,6 @@
 # directories with data
+data/K2C9/tpf
+data/Kepler_PRF
 
 # Byte-compiled / optimized 
 __pycache__/
