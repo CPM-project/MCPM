@@ -1,6 +1,5 @@
 Files to be transfered:
 ```
-campaigngridradec2pix.py
 cpm_part1.py
 prfdata.py
 prfforcampaign.py
@@ -10,6 +9,7 @@ wcsfromtpf.py
 
 Missing unit tests:
 ```
+campaigngridradec2pix.py
 cpmfitpixel.py
 gridradec2pix.py
 multipletpf.py
@@ -17,6 +17,7 @@ multipletpf.py
 
 Fully done:
 ```
+campaigngridradec2pix.py
 cpm_part2.py - read_true_false_file() moved to utils.py, rest moved to cpmfitpixel.py
 gridradec2pix.py
 hugetpf.py
