@@ -19,7 +19,8 @@ class TpfData(object):
     or (column, row) and, yes, I wish one convention was used consistently.
     """
 
-    directory = path.join(MCPM.MODULE_PATH, 'tpf') # The directory where TPF files are stored.
+    directory = path.join(MCPM.MODULE_PATH, 'data', 'K2C9', 'tpf') 
+    # The directory where TPF files are stored.
 
     def __init__(self, epic_id=None, campaign=None, file_name=None):
         if (epic_id is None) != (campaign is None):
