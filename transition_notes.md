@@ -1,7 +1,6 @@
 Files to be transfered:
 ```
 cpm_part1.py
-prfforcampaign.py
 tpfdata.py - almost done, get_predictor_matrix() was left
 wcsfromtpf.py
 ```
@@ -13,6 +12,7 @@ cpmfitpixel.py
 gridradec2pix.py
 multipletpf.py
 prfdata.py
+prfforcampaign.py
 ```
 
 Fully done:
@@ -28,5 +28,6 @@ multipletpf.py
 plot_utils.py - to utils.py
 poly2d.py - to utils.py
 prfdata.py
+prfforcampaign.py
 ```
 
