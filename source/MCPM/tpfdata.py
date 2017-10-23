@@ -179,9 +179,9 @@ class TpfData(object):
 
     def get_flux_for_pixel(self, row, column, apply_epoch_mask=False):
         """extracts flux for a single pixel (all epochs) specified as row and column"""
-        if not self.check_pixel_covered(column, row):
+        if not self.check_pixel_covered(column=column, row=row):
             return None
-        index = self._get_pixel_index(row, column)
+        index = self._get_pixel_index(row=row, column=column)
         if apply_epoch_mask:
             return self.flux[:,index][self.epoch_mask]
         else:
@@ -189,9 +189,9 @@ class TpfData(object):
 
     def get_flux_err_for_pixel(self, row, column, apply_epoch_mask=False):
         """extracts flux_err for a single pixel (all epochs) specified as row and column"""
-        if not self.check_pixel_covered(column, row):
+        if not self.check_pixel_covered(column=column, row=row):
             return None
-        index = self._get_pixel_index(row, column)
+        index = self._get_pixel_index(row=row, column=column)
         if apply_epoch_mask:
             return self.flux_err[:,index][self.epoch_mask]
         else:
@@ -211,8 +211,9 @@ class TpfData(object):
             row = i_row + row_center
             for i_column in range(-half_size, half_size+1):
                 column = i_column + column_center
-                out[i_row+half_size][i_column+half_size] = self.get_flux_for_pixel(
-                                        row, column, apply_epoch_mask=apply_epoch_mask)
+                flux = self.get_flux_for_pixel(row=row, column=column, 
+                                            apply_epoch_mask=apply_epoch_mask)
+                out[i_row+half_size][i_column+half_size] = flux
         return out
 
     def get_fluxes_for_pixel_list(self, pixel_list, apply_epoch_mask=False):
