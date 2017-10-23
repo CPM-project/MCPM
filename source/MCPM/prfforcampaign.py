@@ -39,9 +39,9 @@ class PrfForCampaign(object):
         much faster and just slightly less accurate. 
         
         Returns:
-          mask - numpy.array of shape (len(bjds),) that gives the mask for 
-            calculated epochs; you will later use bjds[mask] etc. in your code.
-          out_prfs - numpy.array of shape (len(bjds), len(pixels)) that gives 
+          mask - numpy.array of shape (len(epochs),) that gives the mask for 
+            calculated epochs; you will later use XXX[mask] etc. in your code.
+          out_prfs - numpy.array of shape (len(epochs), len(pixels)) that gives 
             prf values for all epochs and pixels; remember to use 
             out_prfs[mask]
         """
