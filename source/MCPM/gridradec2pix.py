@@ -1,6 +1,6 @@
 import numpy as np
 
-import poly2d
+from MCPM import utils
 
 
 class GridRaDec2Pix(object):
@@ -28,14 +28,14 @@ class GridRaDec2Pix(object):
 
     def apply_grid(self, ra, dec):
         """calculate pixel coordinates for given (RA,Dec) which can be floats, lists, or numpy.arrays"""
-        x_out = poly2d.eval_poly_2d(ra, dec, self.coefs_x)
-        y_out = poly2d.eval_poly_2d(ra, dec, self.coefs_y)
+        x_out = utils.eval_poly_2d(ra, dec, self.coefs_x)
+        y_out = utils.eval_poly_2d(ra, dec, self.coefs_y)
         return (x_out, y_out)
     
     def apply_grid_single(self, ra, dec):
         """calculate pixel coordinates for a single sky position (RA,Dec)"""
-        if not isinstance(ra, (float, np.floating)) 
-                    or not isinstance(dec, (float, np.floating)):
+        if (not isinstance(ra, (float, np.floating)) 
+                    or not isinstance(dec, (float, np.floating))):
             raise TypeError('2 floats expected, got {:} and {:}'.format(
                                                 type(ra), type(dec)))
         out = self.apply_grid(ra=ra, dec=dec)
