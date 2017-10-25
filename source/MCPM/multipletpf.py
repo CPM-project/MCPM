@@ -149,7 +149,7 @@ class MultipleTpf(object):
         for (i, epic) in enumerate(self._epic_ids):
             if not epic in epics_to_include:
                 continue
-            median_flux.append(self._tpfs[i].median)
+            median_flux.append(self._tpfs[i].median_flux)
             
         self._get_median_fluxes = np.concatenate(median_flux, axis=0)
         self._get_median_fluxes_epics = get_median_fluxes_epics
