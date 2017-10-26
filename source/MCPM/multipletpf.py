@@ -1,4 +1,9 @@
+import numpy as np
+from bisect import bisect
+
 from MCPM import tpfdata, hugetpf
+from tpfgrid import TpfGrid
+from tpfrectangles import TpfRectangles
 
 
 def singleton(cls):
@@ -9,24 +14,50 @@ def singleton(cls):
         return instance_container[0]
     return getinstance
 
-# We define MultipleTpf as a singleton
+# We define MultipleTpf as a singleton.
+# I don't how to make this construct work with args/kwargs, 
+# so I make it without arguemtns at all.
 @singleton
 class MultipleTpf(object):
-    def __init__(self, n_remove_huge=None, campaign=None, channel=None):
+    def __init__(self):
+        self._campaign = None
+        self._channel = None
+        self.n_remove_huge = None
+
         self._tpfs = [] # This list has TpfData instances and the order 
         # corresponds to self._epic_ids.
         self._epic_ids = [] # This is sorted list and all elements are 
         # of string type.
-        self._campaign = campaign
-        self._channel = channel
-        
-        self._n_remove_huge = n_remove_huge
+
         self._huge_tpf = None
+        self._tpfgrid = None
         
         self._get_rows_columns_epics = None
         self._get_fluxes_epics = None
         self._get_median_fluxes_epics = None
-    
+
+    @property
+    def campaign(self):
+        """which campaign/subcampaign are we working on"""
+        if self._campaign is None:
+            raise ValueError("MultipleTpf.campaign not set")
+        return self._campaign
+        
+    @campaign.setter
+    def campaign(self, new_value):
+        self._campaign = int(new_value)
+
+    @property
+    def channel(self):
+        """which channel are we working on"""
+        if self._channel is None:
+            raise ValueError("MultipleTpf.channel not set")
+        return self._channel
+        
+    @channel.setter
+    def channel(self, new_value):
+        self._channel = int(new_value)
+
     def add_tpf_data(self, tpf_data):
         """add one more instance of TpfData"""
         if not isinstance(tpf_data, tpfdata.TpfData):
@@ -36,25 +67,25 @@ class MultipleTpf(object):
         epic_id = str(tpf_data.epic_id)
         if epic_id in self._epic_ids:
             return
-        if self._campaign is None:
-            self._campaign = tpf_data.campaign
-        if self._channel is None:
-            self._channel = tpf_data.channel
+        if self.campaign is None:
+            self.campaign = tpf_data.campaign
+        if self.channel is None:
+            self.channel = tpf_data.channel
         if not self._tpfs:
-            if self._n_remove_huge is None:
-                self._huge_tpf = hugetpf.HugeTpf(campaign=self._campaign)
+            if self.n_remove_huge is None:
+                self._huge_tpf = hugetpf.HugeTpf(campaign=self.campaign)
             else:
-                self._huge_tpf = hugetpf.HugeTpf(campaign=self._campaign, 
-                                                    n_huge=self._n_remove_huge)
+                self._huge_tpf = hugetpf.HugeTpf(campaign=self.campaign, 
+                                                    n_huge=self.n_remove_huge)
         else:
-            if self._campaign != tpf_data.campaign:
+            if self.campaign != tpf_data.campaign:
                 msg = ('MultipleTpf.add_tpf_data() cannot add data from ' + 
                         'a different campaign ({:} and {:})')
-                raise ValueError(msg.format(self._campaign, tpf_data.campaign))
-            if self._channel != tpf_data.channel:
+                raise ValueError(msg.format(self.campaign, tpf_data.campaign))
+            if self.channel != tpf_data.channel:
                 msg = ('MultipleTpf.add_tpf_data() cannot add data from ' + 
                         'a different channel ({:} and {:})')
-                raise ValueError(msg.format(self._channel, tpf_data.channel))
+                raise ValueError(msg.format(self.channel, tpf_data.channel))
         
         index = bisect(self._epic_ids, epic_id)
         self._tpfs.insert(index, tpf_data)
@@ -72,14 +103,12 @@ class MultipleTpf(object):
         index = self._epic_ids.index(epic_id)
         return self._tpfs[index]  
     
-# def predictor_epoch_mask(self) - REMOVED !!!
-
     def add_tpf_data_from_epic_list(self, epic_id_list, campaign=None):
         """for each epic_id in the list, construct TPF object and add it"""
         if campaign is None:
-            if self._campaign is None:
+            if self.campaign is None:
                 raise ValueError('MultipleTpf - campaign not known')
-            campaign = self._campaign
+            campaign = self.campaign
         for epic_id in epic_id_list:
             if str(epic_id) in self._epic_ids:
                 continue
@@ -90,17 +119,6 @@ class MultipleTpf(object):
                     # be added via self.add_tpf_data().
             new_tpf = tpfdata.TpfData(epic_id=epic_id, campaign=campaign)
             self.add_tpf_data(new_tpf)
-
-# Function below is commented because we don't need it most probably.
-    #def add_tpf_data_from_epic_list_in_file(self, epic_id_list_file, campaign=None):
-        #"""read data from file and apply add_tpf_data_from_epic_list()"""
-        #if campaign is None:
-            #if self._campaign is None:
-                #raise ValueError('MultipleTpf() - campaign not known')
-            #campaign = self._campaign        
-        #with open(epic_id_list_file) as list_file:
-            #epic_id_list = [int(line) for line in list_file.readlines()]
-        #self.add_tpf_data_from_epic_list(epic_id_list=epic_id_list, campaign=campaign)
         
     def _limit_epic_ids_to_list(self, epic_list):
         """limit self._epic_ids to ones in epic_list"""
@@ -163,12 +181,121 @@ class MultipleTpf(object):
         self._get_median_fluxes_epics = get_median_fluxes_epics
         return self._get_median_fluxes        
         
+    def _predictor_matrix_for_epics(self, x, y, n_pixel, min_distance, 
+            exclude, median_flux_ratio_limits, median_flux_limits, 
+            epics):
+        """inner function that tries to get the predictor_matrix
+        it requires epics - a list of TPF ids"""
+        target_column = int(x+0.5)
+        target_row = int(y+0.5)
+        self.add_tpf_data_from_epic_list(epics)
+        
+        (pixel_row, pixel_column) = self.get_rows_columns(epics)
+        pixel_flux = self.get_fluxes(epics)
+        pixel_mask = np.ones_like(pixel_row, dtype=bool)
+        
+        if exclude is not None: # exclude=None means no exclusion at all
+            for shift in range(-exclude, exclude+1):
+                pixel_mask &= (pixel_row != (target_row+shift))
+                pixel_mask &= (pixel_column != (target_column+shift))
+        
+        ref_tpf = None
+        if median_flux_ratio_limits is not None:
+            ref_tpf = self.tpf_for_epic_id(epics[0])
+            target_index = ref_tpf.get_pixel_index(row=target_row, 
+                column=target_column) 
+            pixel_median = self.get_median_fluxes(epics)
+            ref_median_flux = ref_tpf.median_flux[target_index]
+            lim_1 = median_flux_ratio_limits[0] * ref_median_flux
+            lim_2 = median_flux_ratio_limits[1] * ref_median_flux
+            mask_1 = (lim_1 <= pixel_median)
+            mask_2 = (lim_2 >= pixel_median)
+            pixel_mask &= (mask_1 & mask_2)
+        if median_flux_limits is not None:
+            if ref_tpf is None:
+                ref_tpf = self.tpf_for_epic_id(epics[0])
+                target_index = ref_tpf.get_pixel_index(row=target_row, 
+                    column=target_column) 
+                pixel_median = self.get_median_fluxes(epics)
+            mask_1 = (median_flux_limits[0] <= pixel_median)
+            mask_2 = (median_flux_limits[1] >= pixel_median)
+            pixel_mask &= (mask_1 & mask_2)
+                
+        distance2_row = np.square(pixel_row[pixel_mask] - target_row)
+        distance2_column = np.square(pixel_column[pixel_mask] - target_column)
+        distance2 = distance2_row + distance2_column
+        distance_mask = (distance2 > min_distance**2)
+        if np.sum(distance_mask) < n_pixel: # means we haven't found 
+            return (None, np.sum(distance_mask)) # enough pixels
+        distance2 = distance2[distance_mask]
+        index = np.argsort(distance2, kind="mergesort")
+        
+        pixel_numbers_masked = np.arange(pixel_flux.shape[1])[pixel_mask]
+        pixel_indexes = pixel_numbers_masked[distance_mask][index[:n_pixel]]
+        predictor_flux = pixel_flux[:, pixel_indexes]
+
+        return (predictor_flux, distance2[index[n_pixel]]**.5)
+        
+    def _guess_n_radius_min(self, n_pixel, exclude):
+        """guess the minimum radius in which all pixels have to be checked"""
+        margin = 1.2
+        if exclude is None:
+            n_rm = 0
+        else:
+            n_rm = 2 * exclude + 1
+        delta = 4 * n_rm**2 + np.pi * (margin*n_pixel)
+        radius_min = (2 * n_rm + (delta)**.5) / np.pi
+        return radius_min
+        
     def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=10, 
             exclude=1, median_flux_ratio_limits=(0.25, 4.0), 
             median_flux_limits=(100., 1.e5)):
-        """ XXX """
+        """Calculate predictor matrix.
+        exclude - number or rows and columns around the target that would be
+            rejected
+        """
+        n_add_epics = 3 # How many more epics we should consider in each loop
         # get pixel coordinates
-        # get nearest epics
-        # limit epics to reasonable number
-        # get_predictor_matrix() from old tpfdata.py
+        if self._tpfgrid is None:
+            
+            self._tpfgrid = TpfGrid(self.campaign, self.channel)
+        (mean_x, mean_y) = self._tpfgrid.apply_grid_single(ra, dec)
+        rectangles = TpfRectangles(campaign=self.campaign, 
+                                                        channel=self.channel)
+        (epics, epics_distances) = rectangles.closest_epics(x=mean_x, y=mean_y)
+        radius_min = self._guess_n_radius_min(n_pixel, exclude)
+        n_epics = np.argmax(epics_distances>radius_min) + 2   
         
+        run = True
+        while run:
+            if n_epics > len(epics):
+                raise ValueError('predictor_matrix preparation failed')
+            out = self._predictor_matrix_for_epics(x=mean_x, y=mean_y, 
+                n_pixel=n_pixel, min_distance=min_distance, exclude=exclude, 
+                median_flux_ratio_limits=median_flux_ratio_limits, 
+                median_flux_limits=median_flux_limits, 
+                epics=epics[:n_epics])
+            if out[0] is None:
+                guess = n_epics * (n_pixel/out[1]) # Some rough guess of how 
+                # many more epics we need.
+                n_epics = max(n_epics + n_add_epics, guess)
+            elif out[1] > epics_distances[n_epics-2]:
+                n_epics += n_add_epics
+            else:
+                run = False        
+        return out[0]
+
+if __name__ == "__main__":
+    channel = 31
+    campaign = 91
+    ra = 269.929125
+    dec = -28.410833
+
+    tpfs = MultipleTpf()
+    tpfs.campaign = campaign
+    tpfs.channel = channel
+    
+    predictor_matrix = tpfs.get_predictor_matrix(ra=ra, dec=dec)
+
+    
+    
