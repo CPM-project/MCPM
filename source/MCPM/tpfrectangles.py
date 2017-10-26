@@ -49,15 +49,5 @@ class TpfRectangles(object):
                 continue
             out_epic.append(self.epic[i])
             out_distance.append(distances[i])
-        return (out_epic, out_distance)
+        return (np.array(out_epic), np.array(out_distance))
         
-if __name__ == '__main__':
-    channel=52 
-    campaign=92
-    (x, y) = (883, 670)
-    
-    rectangle = TpfRectangles(campaign, channel)
-    (out_1, out_2) = rectangle.closest_epics(y, x)
-    print(out_1[:15])
-    print(out_2[:15])
-    print(len(out_2), len(rectangle.epic))

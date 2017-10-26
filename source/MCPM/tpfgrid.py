@@ -61,8 +61,4 @@ class TpfGrid(object):
     def apply_grid_single(self, ra, dec):
         """calculate pixel coordinates for a single sky position (RA,Dec)"""
         return self._grid.apply_grid_single(ra=ra, dec=dec)
-        
-if __name__ == '__main__':
-    g = TpfGrid(91, 31)
-    print(g.apply_grid_single(269.5, -28.4))
     
