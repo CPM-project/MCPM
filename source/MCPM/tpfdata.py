@@ -166,8 +166,16 @@ class TpfData(object):
             self._make_column_row_vectors()
         return self._column
 
+    def get_pixel_index(self, row, column):
+        """finds index of given (row, column) pixel in given file - 
+        information necessary to extract flux;
+        float input is rounded to nearest int"""
+        return self._get_pixel_index(row=int(row+.5), column=int(column+.5))
+
     def _get_pixel_index(self, row, column):
-        """finds index of given (row, column) pixel in given file - information necessary to extract flux"""
+        """finds index of given (row, column) pixel in given file - 
+        information necessary to extract flux;
+        only int on input"""
         if (self._row is None) or (self._column is None):
             self._make_column_row_vectors()
         index = np.arange(self.n_pixels)
