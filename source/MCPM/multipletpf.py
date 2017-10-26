@@ -12,12 +12,13 @@ def singleton(cls):
 # We define MultipleTpf as a singleton
 @singleton
 class MultipleTpf(object):
-    def __init__(self, n_remove_huge=None, campaign=None):
+    def __init__(self, n_remove_huge=None, campaign=None, channel=None):
         self._tpfs = [] # This list has TpfData instances and the order 
         # corresponds to self._epic_ids.
         self._epic_ids = [] # This is sorted list and all elements are 
         # of string type.
         self._campaign = campaign
+        self._channel = channel
         
         self._n_remove_huge = n_remove_huge
         self._huge_tpf = None
@@ -29,13 +30,16 @@ class MultipleTpf(object):
     def add_tpf_data(self, tpf_data):
         """add one more instance of TpfData"""
         if not isinstance(tpf_data, tpfdata.TpfData):
-            msg = 'Ooops... MultipleTpf.add_tpf_data() requires input that is an instance of TpfData class'
-            raise ValueError(msg)
+            msg = ("Ooops... MultipleTpf.add_tpf_data() requires input that " +
+                "is an instance of TpfData class; {:} given")
+            raise ValueError(msg.format(type(tpf_data)))
         epic_id = str(tpf_data.epic_id)
         if epic_id in self._epic_ids:
             return
         if self._campaign is None:
             self._campaign = tpf_data.campaign
+        if self._channel is None:
+            self._channel = tpf_data.channel
         if not self._tpfs:
             if self._n_remove_huge is None:
                 self._huge_tpf = hugetpf.HugeTpf(campaign=self._campaign)
@@ -47,6 +51,10 @@ class MultipleTpf(object):
                 msg = ('MultipleTpf.add_tpf_data() cannot add data from ' + 
                         'a different campaign ({:} and {:})')
                 raise ValueError(msg.format(self._campaign, tpf_data.campaign))
+            if self._channel != tpf_data.channel:
+                msg = ('MultipleTpf.add_tpf_data() cannot add data from ' + 
+                        'a different channel ({:} and {:})')
+                raise ValueError(msg.format(self._channel, tpf_data.channel))
         
         index = bisect(self._epic_ids, epic_id)
         self._tpfs.insert(index, tpf_data)
@@ -154,4 +162,13 @@ class MultipleTpf(object):
         self._get_median_fluxes = np.concatenate(median_flux, axis=0)
         self._get_median_fluxes_epics = get_median_fluxes_epics
         return self._get_median_fluxes        
+        
+    def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=10, 
+            exclude=1, median_flux_ratio_limits=(0.25, 4.0), 
+            median_flux_limits=(100., 1.e5)):
+        """ XXX """
+        # get pixel coordinates
+        # get nearest epics
+        # limit epics to reasonable number
+        # get_predictor_matrix() from old tpfdata.py
         
