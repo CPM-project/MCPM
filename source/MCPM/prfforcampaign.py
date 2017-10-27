@@ -61,7 +61,7 @@ class PrfForCampaign(object):
             out_prfs[i] = self.prf_data.get_interpolated_prf(
                             positions_x[i], positions_y[i], pixels, fast=fast)
         
-        return (mask, out_prfs)
+        return (out_prfs, mask)
 
     @property
     def grids_bjd_short(self):
