@@ -192,7 +192,35 @@ class MultipleTpf(object):
         self._get_median_fluxes = np.concatenate(median_flux, axis=0)
         self._get_median_fluxes_epics = get_median_fluxes_epics
         return self._get_median_fluxes        
+
+    def _mask_pixel_based_on_flux(self, target_row, target_column, 
+            median_flux_ratio_limits, median_flux_limits, epics):
+        """Prepare a pixel mask that is based on median fluxes"""
+        if median_flux_ratio_limits is None and median_flux_limits is None:
+            return np.array([True])
+        ref_tpf = self.tpf_for_epic_id(epics[0])
+        target_index = ref_tpf.get_pixel_index(row=target_row, column=target_column) 
+        pixel_median = self.get_median_fluxes(epics)
         
+        pixel_mask = None
+        if median_flux_ratio_limits is not None:            
+            ref_median_flux = ref_tpf.median_flux[target_index]
+            lim_1 = median_flux_ratio_limits[0] * ref_median_flux
+            lim_2 = median_flux_ratio_limits[1] * ref_median_flux
+            mask_1 = (lim_1 <= pixel_median)
+            mask_2 = (lim_2 >= pixel_median)
+            pixel_mask = (mask_1 & mask_2)
+            
+        if median_flux_limits is not None:
+            mask_1 = (median_flux_limits[0] <= pixel_median)
+            mask_2 = (median_flux_limits[1] >= pixel_median)
+            if pixel_mask is None:
+                pixel_mask = (mask_1 & mask_2)
+            else:
+                pixel_mask &= (mask_1 & mask_2)
+                
+        return pixel_mask
+
     def _predictor_matrix_for_epics(self, x, y, n_pixel, min_distance, 
             exclude, median_flux_ratio_limits, median_flux_limits, 
             epics):
@@ -211,22 +239,8 @@ class MultipleTpf(object):
                 pixel_mask &= (pixel_row != (target_row+shift))
                 pixel_mask &= (pixel_column != (target_column+shift))
 
-        if median_flux_ratio_limits is not None or median_flux_limits is not None:
-            ref_tpf = self.tpf_for_epic_id(epics[0])
-            target_index = ref_tpf.get_pixel_index(row=target_row, 
-                column=target_column) 
-            pixel_median = self.get_median_fluxes(epics)
-        if median_flux_ratio_limits is not None:            
-            ref_median_flux = ref_tpf.median_flux[target_index]
-            lim_1 = median_flux_ratio_limits[0] * ref_median_flux
-            lim_2 = median_flux_ratio_limits[1] * ref_median_flux
-            mask_1 = (lim_1 <= pixel_median)
-            mask_2 = (lim_2 >= pixel_median)
-            pixel_mask &= (mask_1 & mask_2)
-        if median_flux_limits is not None:
-            mask_1 = (median_flux_limits[0] <= pixel_median)
-            mask_2 = (median_flux_limits[1] >= pixel_median)
-            pixel_mask &= (mask_1 & mask_2)
+        pixel_mask &= self._mask_pixel_based_on_flux(target_row, target_column, 
+            median_flux_ratio_limits, median_flux_limits, epics)
                 
         distance2_row = np.square(pixel_row[pixel_mask] - target_row)
         distance2_column = np.square(pixel_column[pixel_mask] - target_column)
