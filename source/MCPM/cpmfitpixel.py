@@ -104,7 +104,7 @@ class CpmFitPixel(object):
             target = self.target_masked
             yvar = None
             
-            self._coefs = solver(predictor, target, yvar, self.l2)
+            self._coefs = solver.linear_least_squares(predictor, target, yvar, self.l2)
             
         return self._coefs
         
@@ -112,10 +112,10 @@ class CpmFitPixel(object):
     def fitted_flux(self):
         """predicted flux values"""
         if self._fitted_flux is None:
-            predictor = self.predictor_matrix[results_mask]
+            predictor = self.predictor_matrix[self.results_mask]
             fit = np.dot(predictor, self.coefs)[:,0]
             self._fitted_flux = np.zeros(self.n_epochs, dtype=float)
-            self._fitted_flux[results_mask] = fit
+            self._fitted_flux[self.results_mask] = fit
         return self._fitted_flux
         
     @property
@@ -125,8 +125,9 @@ class CpmFitPixel(object):
         out = np.zeros(self.n_epochs, dtype=float)
         mask = self.results_mask
         out[mask] = self.target_flux[mask]
+
         if self.model is not None:
-            out[mask] -= self.model
+            out[mask] -= self.model[mask]
         out[mask] -= self.fitted_flux[mask]
         return out
         
