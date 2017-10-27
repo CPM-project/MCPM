@@ -50,4 +50,13 @@ class TpfRectangles(object):
             out_epic.append(self.epic[i])
             out_distance.append(distances[i])
         return (np.array(out_epic), np.array(out_distance))
-        
+   
+    def get_epic_id_for_pixel(self, x, y):
+        """find in which TPF given pixel lies"""
+        distances = self.point_distances(x=x, y=y)
+        selection = (distances == 0.)
+        if not selection.any():
+            return None
+        else:
+            return self.epic[np.argmax(selection)]
+           

@@ -18,4 +18,12 @@ def test_closest_epics_1():
     np.testing.assert_almost_equal(out_2[:10], expect_2, decimal=3)
     assert len(out_1) == 380
     assert len(rectangle.epic) == 381
+  
+def test_get_epic_id_for_pixel_1():
+    channel=52 
+    campaign=92  
+    
+    rectangle = TpfRectangles(campaign, channel)
+
+    assert rectangle.get_epic_id_for_pixel(670, 883) == '200071074'
     
