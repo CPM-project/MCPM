@@ -323,7 +323,16 @@ class MultipleTpf(object):
         return (out[0], out[1])
   
     def get_epic_id_for_radec(self, ra, dec):
-        """ """
+        """find which tpf file given (ra,dec) belong to"""
         (mean_x, mean_y) = self.tpf_grid.apply_grid_single(ra, dec)
         return self.tpf_rectangles.get_epic_id_for_pixel(mean_x, mean_y)
+        
+    def get_flux_for_pixels(self, pixels):
+        """for every pixel in the list extract the flux from appropriate 
+        TPF file; pixels is a list of input pixels"""
+        flux = []
+        for (x, y) in pixels:
+            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
+            flux.append(self.tpf_for_epic_id(epic).get_flux_for_pixel(row=y, column=x))
+        return flux
         
