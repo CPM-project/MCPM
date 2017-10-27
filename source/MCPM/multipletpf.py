@@ -2,8 +2,8 @@ import numpy as np
 from bisect import bisect
 
 from MCPM import tpfdata, hugetpf
-from tpfgrid import TpfGrid
-from tpfrectangles import TpfRectangles
+from MCPM.tpfgrid import TpfGrid
+from MCPM.tpfrectangles import TpfRectangles
 
 
 def singleton(cls):
@@ -164,7 +164,19 @@ class MultipleTpf(object):
         self._get_fluxes = np.concatenate(flux, axis=1)
         self._get_fluxes_epics = get_fluxes_epics
         return self._get_fluxes
-        
+    
+    def _get_epic_ids_as_vector(self, epics_to_include):
+        """get vector that gives epic_id as many times as there are pixels"""
+        get_fluxes_epics = self._limit_epic_ids_to_list(epics_to_include)
+
+        epic_ids = []
+        for (i, epic) in enumerate(self._epic_ids):
+            if not epic in epics_to_include:
+                continue
+            epic_ids.extend([self._tpfs[i].epic_id] * self._tpfs[i].n_pixels)
+            
+        return np.array(epic_ids)
+    
     def get_median_fluxes(self, epics_to_include):
         """get concatenated median fluxes for selected epics"""
         get_median_fluxes_epics = self._limit_epic_ids_to_list(epics_to_include)
@@ -198,13 +210,13 @@ class MultipleTpf(object):
             for shift in range(-exclude, exclude+1):
                 pixel_mask &= (pixel_row != (target_row+shift))
                 pixel_mask &= (pixel_column != (target_column+shift))
-        
-        ref_tpf = None
-        if median_flux_ratio_limits is not None:
+
+        if median_flux_ratio_limits is not None or median_flux_limits is not None:
             ref_tpf = self.tpf_for_epic_id(epics[0])
             target_index = ref_tpf.get_pixel_index(row=target_row, 
                 column=target_column) 
             pixel_median = self.get_median_fluxes(epics)
+        if median_flux_ratio_limits is not None:            
             ref_median_flux = ref_tpf.median_flux[target_index]
             lim_1 = median_flux_ratio_limits[0] * ref_median_flux
             lim_2 = median_flux_ratio_limits[1] * ref_median_flux
@@ -212,11 +224,6 @@ class MultipleTpf(object):
             mask_2 = (lim_2 >= pixel_median)
             pixel_mask &= (mask_1 & mask_2)
         if median_flux_limits is not None:
-            if ref_tpf is None:
-                ref_tpf = self.tpf_for_epic_id(epics[0])
-                target_index = ref_tpf.get_pixel_index(row=target_row, 
-                    column=target_column) 
-                pixel_median = self.get_median_fluxes(epics)
             mask_1 = (median_flux_limits[0] <= pixel_median)
             mask_2 = (median_flux_limits[1] >= pixel_median)
             pixel_mask &= (mask_1 & mask_2)
@@ -226,15 +233,20 @@ class MultipleTpf(object):
         distance2 = distance2_row + distance2_column
         distance_mask = (distance2 > min_distance**2)
         if np.sum(distance_mask) < n_pixel: # means we haven't found 
-            return (None, np.sum(distance_mask)) # enough pixels
+            return (None, None, np.sum(distance_mask)) # enough pixels
         distance2 = distance2[distance_mask]
         index = np.argsort(distance2, kind="mergesort")
         
         pixel_numbers_masked = np.arange(pixel_flux.shape[1])[pixel_mask]
         pixel_indexes = pixel_numbers_masked[distance_mask][index[:n_pixel]]
         predictor_flux = pixel_flux[:, pixel_indexes]
+        
+        used_epic_ids = set(self._get_epic_ids_as_vector(epics)[pixel_indexes])
+        epoch_mask = np.ones(predictor_flux.shape[0], dtype=bool)
+        for epic_id in used_epic_ids:
+            epoch_mask &= self.tpf_for_epic_id(epic_id).epoch_mask
 
-        return (predictor_flux, distance2[index[n_pixel]]**.5)
+        return (predictor_flux, epoch_mask, distance2[index[n_pixel]]**.5)
         
     def _guess_n_radius_min(self, n_pixel, exclude):
         """guess the minimum radius in which all pixels have to be checked"""
@@ -257,8 +269,7 @@ class MultipleTpf(object):
         n_add_epics = 3 # How many more epics we should consider in each loop
         # get pixel coordinates
         if self._tpfgrid is None:
-            
-            self._tpfgrid = TpfGrid(self.campaign, self.channel)
+            self._tpfgrid = TpfGrid(self.campaign, self.channel) # Use self to get this TPF. XXX self.tpf_for_epic_id()
         (mean_x, mean_y) = self._tpfgrid.apply_grid_single(ra, dec)
         rectangles = TpfRectangles(campaign=self.campaign, 
                                                         channel=self.channel)
@@ -279,23 +290,9 @@ class MultipleTpf(object):
                 guess = n_epics * (n_pixel/out[1]) # Some rough guess of how 
                 # many more epics we need.
                 n_epics = max(n_epics + n_add_epics, guess)
-            elif out[1] > epics_distances[n_epics-2]:
+            elif out[2] > epics_distances[n_epics-2]:
                 n_epics += n_add_epics
             else:
                 run = False        
-        return out[0]
-
-if __name__ == "__main__":
-    channel = 31
-    campaign = 91
-    ra = 269.929125
-    dec = -28.410833
-
-    tpfs = MultipleTpf()
-    tpfs.campaign = campaign
-    tpfs.channel = channel
-    
-    predictor_matrix = tpfs.get_predictor_matrix(ra=ra, dec=dec)
-
-    
-    
+        return (out[0], out[1])
+  
