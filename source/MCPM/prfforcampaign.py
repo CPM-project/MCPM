@@ -1,7 +1,7 @@
 import numpy as np
 
-from campaigngridradec2pix import CampaignGridRaDec2Pix
-from prfdata import PrfData
+from MCPM.campaigngridradec2pix import CampaignGridRaDec2Pix
+from MCPM.prfdata import PrfData
 
 
 class PrfForCampaign(object):
@@ -45,11 +45,11 @@ class PrfForCampaign(object):
             prf values for all epochs and pixels; remember to use 
             out_prfs[mask]
         """
-        if not isinstance(ra, (float, np.floating)) 
-                or not isinstance(dec, (float, np.floating)):
+        if (not isinstance(ra, (float, np.floating)) 
+                or not isinstance(dec, (float, np.floating))):
             msg = ('wrong types of RA,Dec in apply_grids_and_prf(): {:}' + 
                     'and {:}; 2 floats expected')
-            raise TypeError(.format(type(ra), type(dec)))
+            raise TypeError(msg.format(type(ra), type(dec)))
 
         (positions_x, positions_y) = self.grids.apply_grids(ra=ra, dec=dec)
 
