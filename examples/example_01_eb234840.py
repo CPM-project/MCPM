@@ -44,5 +44,7 @@ if __name__ == "__main__":
     
     print(tpfs.get_epic_id_for_radec(ra, dec))
     
-    pixels_flux = tpfs.get_flux_for_pixels(pixels)
+    (times, pixels_flux, pixel_masks) = tpfs.get_time_flux_mask_for_pixels(pixels)
     print(len(pixels_flux))
+    print(times)
+    print(pixel_masks)

@@ -327,14 +327,16 @@ class MultipleTpf(object):
         (mean_x, mean_y) = self.tpf_grid.apply_grid_single(ra, dec)
         return self.tpf_rectangles.get_epic_id_for_pixel(mean_x, mean_y)
         
-    def get_flux_for_pixels(self, pixels):
-        """for every pixel in the list extract the flux and epoch masks from appropriate 
-        TPF files; pixels is a list of input pixels"""
+    def get_time_flux_mask_for_pixels(self, pixels):
+        """for every pixel in the list extract the time, flux, and epoch masks 
+        from appropriate TPF files; pixels is a list of input pixels"""
+        time = []
         flux = []
         mask = []
         for (x, y) in pixels:
             epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
             tpf = self.tpf_for_epic_id(epic)
+            time.append(tpf.jd_short)
             flux.append(tpf.get_flux_for_pixel(row=y, column=x))
             mask.append(tpf.epoch_mask)
-        return (flux, mask)
+        return (time, flux, mask)
