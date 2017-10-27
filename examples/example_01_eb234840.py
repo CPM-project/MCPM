@@ -43,3 +43,6 @@ if __name__ == "__main__":
     (prfs, mask_prfs) = prf_for_campaign.apply_grids_and_prf(ra, dec, pixels)  
     
     print(tpfs.get_epic_id_for_radec(ra, dec))
+    
+    pixels_flux = tpfs.get_flux_for_pixels(pixels)
+    print(len(pixels_flux))
