@@ -30,7 +30,7 @@ class MultipleTpf(object):
         # of string type.
 
         self._huge_tpf = None
-        self._tpfgrid = None
+        self._tpf_grid = None
         
         self._get_rows_columns_epics = None
         self._get_fluxes_epics = None
@@ -273,6 +273,13 @@ class MultipleTpf(object):
         radius_min = (2 * n_rm + (delta)**.5) / np.pi
         return radius_min
         
+    @property
+    def tpf_grid(self):
+        """TpfGrid object"""
+        if self._tpf_grid is None:
+            self._tpf_grid = TpfGrid(self.campaign, self.channel)
+        return self._tpf_grid
+        
     def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=10, 
             exclude=1, median_flux_ratio_limits=(0.25, 4.0), 
             median_flux_limits=(100., 1.e5)):
@@ -282,9 +289,7 @@ class MultipleTpf(object):
         """
         n_add_epics = 3 # How many more epics we should consider in each loop
         # get pixel coordinates
-        if self._tpfgrid is None:
-            self._tpfgrid = TpfGrid(self.campaign, self.channel) # Use self to get this TPF. XXX self.tpf_for_epic_id()
-        (mean_x, mean_y) = self._tpfgrid.apply_grid_single(ra, dec)
+        (mean_x, mean_y) = self.tpfgrid.apply_grid_single(ra, dec)
         rectangles = TpfRectangles(campaign=self.campaign, 
                                                         channel=self.channel)
         (epics, epics_distances) = rectangles.closest_epics(x=mean_x, y=mean_y)
