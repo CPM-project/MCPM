@@ -322,3 +322,8 @@ class MultipleTpf(object):
                 run = False        
         return (out[0], out[1])
   
+    def get_epic_id_for_radec(self, ra, dec):
+        """ """
+        (mean_x, mean_y) = self.tpf_grid.apply_grid_single(ra, dec)
+        return self.tpf_rectangles.get_epic_id_for_pixel(mean_x, mean_y)
+        
