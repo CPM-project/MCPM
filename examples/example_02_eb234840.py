@@ -24,15 +24,15 @@ if __name__ == "__main__":
     ra = 269.929125
     dec = -28.410833
 
-    #half_size = 2
-    #n_select = 10
-    #l2 = 10**8.5
+    half_size = 2
+    n_select = 10
+    l2 = 10**8.5
     #start_1 = np.array([7516.])
     #start = np.array([7518., 0.5, 0.3])
     #tol = 0.0001
     ##method = 'Nelder-Mead' # only these 2 make sense
     #method = 'Powell'
-    #model_file = "example_1_model_averaged.dat"
+    model_file = "example_1_model_averaged.dat"
     
     cpm_source = CpmFitSource(ra=ra, dec=dec, campaign=campaign, 
             channel=channel)
@@ -40,4 +40,11 @@ if __name__ == "__main__":
     print("Mean target position: {:.2f} {:.2f}\n".format(cpm_source.mean_x, 
             cpm_source.mean_y))
     
+    cpm_source.get_predictor_matrix()
+    cpm_source.set_pixels_square(half_size)
+    cpm_source.select_highest_prf_sum_pixels(n_select)
+    
+    (model_dt, model_flux) = np.loadtxt(model_file, unpack=True)
+    model_flux[model_dt < -13.] = 0.
+    model_flux[model_dt > 13.] = 0.
     

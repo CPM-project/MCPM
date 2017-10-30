@@ -116,7 +116,7 @@ if __name__ == "__main__":
     tpfs.channel = channel
     
     out = tpfs.get_predictor_matrix(ra=ra, dec=dec, 
-            min_distance=16,
+            min_distance=15,
             median_flux_ratio_limits=(0.2, 2.0))
     (predictor_matrix, predictor_matrix_mask) = out
     #n_predictor = 400
