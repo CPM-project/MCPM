@@ -48,8 +48,16 @@ class CpmFitSource(object):
         self._prf_values_mask = None
         self._pixel_time = None
         self._pixel_flux = None
-        self._pixel_mask = None        
+        self._pixel_mask = None  
+        self._cpm_pixel = None
     
+    @property
+    def n_pixels(self):
+        """number of pixels"""
+        if self._pixels is None:
+            return 0
+        return len(self._pixels)        
+        
     def _calculate_mean_xy(self):
         """calculate mean position of the source in pixels"""
         out = self.campaign_grids.mean_position_clipped(ra=self.ra, dec=self.dec)
@@ -141,6 +149,7 @@ class CpmFitSource(object):
         self._pixel_time = None
         self._pixel_flux = None
         self._pixel_mask = None
+        self._cpm_pixel = None
 
     def _get_time_flux_mask_for_pixels(self):
         """extract time vectors, flux vectors and epoch masks 
@@ -167,23 +176,18 @@ class CpmFitSource(object):
     @property
     def pixel_mask(self):
         """epoch masks for pixel_flux and pixel_time"""
-        if self._mask is None:
+        if self._pixel_mask is None:
             self._get_time_flux_mask_for_pixels()
         return self._pixel_mask
     
-#def cpm_output(tpf_flux, tpf_epoch_mask, predictor_matrix, predictor_mask,
-        #prfs, mask_prfs, model, l2):
-    #"""runs CPM on a set of pixels and returns each result"""
-    #out_signal = []
-    #out_mask = []
-    #for i in range(len(tpf_flux)):
-        #cpm_pixel = CpmFitPixel(
-            #target_flux=tpf_flux[i], target_flux_err=None, target_mask=tpf_epoch_mask[i], 
-            #predictor_matrix=predictor_matrix, predictor_mask=predictor_mask,
-            #l2=l2, 
-            #model=model[i]*prfs[:,i], model_mask=mask_prfs,
-            #time=times[i]
-        #)
-        #out_signal.append(cpm_pixel.residue)
-        #out_mask.append(cpm_pixel.results_mask)
-    #return (out_signal, out_mask)
+    def run_cpm(self, l2, model):
+        """run CPM on all pixels"""
+        self._cpm_pixel = [None] * self.n_pixels
+        for i in range(self.n_pixels):
+            model_i = model * self.prf_values[:,i]
+            self._cpm_pixel[i] = CpmFitPixel(
+                    target_flux=self.pixel_time[i], 
+                    target_flux_err=None, target_mask=self.pixel_mask[i], 
+                    predictor_matrix=self.predictor_matrix, 
+                    predictor_mask=self.predictor_matrix_mask, 
+                    l2=l2, model=model_i, time=self.pixel_time)

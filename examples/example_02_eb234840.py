@@ -48,3 +48,12 @@ if __name__ == "__main__":
     model_flux[model_dt < -13.] = 0.
     model_flux[model_dt > 13.] = 0.
     
+    model = transform_model(7520., 1., 1., model_dt, model_flux, cpm_source.pixel_time[0])
+    
+    cpm_source.run_cpm(l2, model)
+    
+    for i in range(cpm_source.n_pixels):
+        mask = cpm_source._cpm_pixel[i].results_mask
+        #plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].residue[mask], '.')
+        plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].cpm_residue[mask], '.')
+    plt.show()
