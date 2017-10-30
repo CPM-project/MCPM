@@ -124,11 +124,10 @@ class CpmFitPixel(object):
         it's not added here"""
         out = np.zeros(self.n_epochs, dtype=float)
         mask = self.results_mask
-        out[mask] = self.target_flux[mask]
+        out[mask] = self.target_flux[mask] - self.fitted_flux[mask]
 
         if self.model is not None:
             out[mask] -= self.model[mask]
-        out[mask] -= self.fitted_flux[mask]
         return out
         
     @property
@@ -136,8 +135,6 @@ class CpmFitPixel(object):
         """residuals of the fit with added model"""
         out = np.zeros(self.n_epochs, dtype=float)
         mask = self.results_mask
-        out[mask] = self.residue[mask]
-        if self.model is not None:
-            out[mask] += self.model
+        out[mask] = self.target_flux[mask] - self.fitted_flux[mask]
         return out
         
