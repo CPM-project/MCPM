@@ -289,8 +289,8 @@ class MultipleTpf(object):
                                                         channel=self.channel)
         return self._tpf_rectangles
         
-    def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=10, 
-            exclude=1, median_flux_ratio_limits=(0.25, 4.0), 
+    def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=15, 
+            exclude=1, median_flux_ratio_limits=(0.2, 5.0), 
             median_flux_limits=(100., 1.e5)):
         """Calculate predictor matrix.
         exclude - number or rows and columns around the target that would be
