@@ -117,3 +117,17 @@ class CampaignGridRaDec2Pix(object):
         mean_y = (pixel_y[self.mask] * weights).sum() / weights.sum()
         return (mean_x, mean_y)
         
+    def mean_position_clipped(self, ra, dec, radius=2):
+        """get mean position with input data narrowed down to radius"""
+        (pixel_x, pixel_y) = self.apply_grids(ra, dec)
+        weights = self.sigma[self.mask]**-2
+        mean_x = (pixel_x[self.mask] * weights).sum() / weights.sum()
+        mean_y = (pixel_y[self.mask] * weights).sum() / weights.sum()
+        mask = ((pixel_x[self.mask]-mean_x)**2 + (pixel_y[self.mask]-mean_y)**2 < radius**2)
+        weights = weights[mask]
+        mean_x = (pixel_x[self.mask][mask] * weights).sum() / weights.sum()
+        mean_y = (pixel_y[self.mask][mask] * weights).sum() / weights.sum()
+        mask_out = np.copy(self.mask)
+        mask_out[self.mask] = mask
+        return (mean_x, mean_y, mask_out)
+        

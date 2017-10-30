@@ -140,7 +140,7 @@ if __name__ == "__main__":
         #predictor_matrix_mask = utils.read_true_false_file(file_2_name)
         
     grids = CampaignGridRaDec2Pix(campaign=campaign, channel=channel)
-    (mean_x, mean_y, grids_mask) = mean_position_clipped(grids, ra, dec)
+    (mean_x, mean_y, grids_mask) = grids.mean_position_clipped(ra, dec)
     print("Mean target position: {:.2f} {:.2f}\n".format(mean_x, mean_y))
 
     for i in [510, 860, 856, 1004, 968]:
