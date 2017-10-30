@@ -87,20 +87,7 @@ def fun(inputs, model_dt, model_flux, time, tpf_flux, tpf_epoch_mask,
 
     #print(t_0, amplitude_factor, width_ratio, out)
     return out
-
-def mean_position_clipped(grids, ra, dec, radius=2):
-    """get mean position with input data narrowed down to radius"""
-    (pixel_x, pixel_y) = grids.apply_grids(ra, dec)
-    weights = grids.sigma[grids.mask]**-2
-    mean_x = (pixel_x[grids.mask] * weights).sum() / weights.sum()
-    mean_y = (pixel_y[grids.mask] * weights).sum() / weights.sum()
-    mask = ((pixel_x[grids.mask]-mean_x)**2 + (pixel_y[grids.mask]-mean_y)**2 < radius**2)
-    weights = weights[mask]
-    mean_x = (pixel_x[grids.mask][mask] * weights).sum() / weights.sum()
-    mean_y = (pixel_y[grids.mask][mask] * weights).sum() / weights.sum()
-    mask_out = np.copy(grids.mask)
-    mask_out[grids.mask] = mask
-    return (mean_x, mean_y, mask_out)
+    
 
 if __name__ == "__main__":
     # We want to extract the light curve of OGLE-BLG-ECL-234840, which is
