@@ -186,7 +186,7 @@ class CpmFitSource(object):
         for i in range(self.n_pixels):
             model_i = model * self.prf_values[:,i]
             self._cpm_pixel[i] = CpmFitPixel(
-                    target_flux=self.pixel_time[i], 
+                    target_flux=self.pixel_flux[i], 
                     target_flux_err=None, target_mask=self.pixel_mask[i], 
                     predictor_matrix=self.predictor_matrix, 
                     predictor_mask=self.predictor_matrix_mask, 
