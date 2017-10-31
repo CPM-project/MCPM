@@ -16,6 +16,19 @@ def transform_model(t_0, amplitude_ratio, width_ratio, model_dt, model_flux, tim
     model = np.interp(time, model_time, model_flux) * amplitude_ratio
     return model
 
+def fun(inputs, model_dt, model_flux, cpm_source, l2):
+    """3-parameter function for optimisation"""
+    t_0 = inputs[0]
+    amplitude_factor = inputs[1]
+    width_ratio = inputs[2]
+
+    model = transform_model(t_0, amplitude_factor, width_ratio, model_dt, 
+                            model_flux, cpm_source.pixel_time)
+
+    cpm_source.run_cpm(l2, model)
+    
+    return cpm_source.residual_rms
+    
 
 if __name__ == "__main__":
     # We want to extract the light curve of OGLE-BLG-ECL-234840
@@ -27,11 +40,10 @@ if __name__ == "__main__":
     half_size = 2
     n_select = 10
     l2 = 10**8.5
-    #start_1 = np.array([7516.])
-    #start = np.array([7518., 0.5, 0.3])
-    #tol = 0.0001
+    start = np.array([7518., 0.5, 0.3])
+    tol = 0.0001
     ##method = 'Nelder-Mead' # only these 2 make sense
-    #method = 'Powell'
+    method = 'Powell'
     model_file = "example_1_model_averaged.dat"
     
     cpm_source = CpmFitSource(ra=ra, dec=dec, campaign=campaign, 
@@ -48,7 +60,7 @@ if __name__ == "__main__":
     model_flux[model_dt < -13.] = 0.
     model_flux[model_dt > 13.] = 0.
     
-    model = transform_model(7520., 1., 1., model_dt, model_flux, cpm_source.pixel_time)
+    model = transform_model(7519., 1., 1., model_dt, model_flux, cpm_source.pixel_time)
     
     for i in [510, 860, 856, 1004, 968]:
         for j in range(n_select):
@@ -56,9 +68,24 @@ if __name__ == "__main__":
     
     cpm_source.run_cpm(l2, model)
     
-    print(cpm_source.residual_rms)
+    print("RMS: {:.4f}".format(cpm_source.residual_rms))
     
     mask = cpm_source.residue_mask
     plt.plot(cpm_source.pixel_time[mask], cpm_source.residue[mask]+model[mask], '.')
     plt.show()
+
+    # Optimize model parameters:"
+    args = (model_dt, model_flux, cpm_source, l2)
+    out = minimize(fun, start, args=args, tol=tol, method=method)
+    print()  
+    print(out.success)
+    print(out.nfev)
+    print("{:.5f} {:.4f} {:.4f}  ==> {:.4f}".format(out.x[0], out.x[1], out.x[2], out.fun))
+    
+    model = transform_model(out.x[0], out.x[1], out.x[2], model_dt, model_flux, cpm_source.pixel_time)
+    cpm_source.run_cpm(l2, model)
+    mask = cpm_source.residue_mask
+    plt.plot(cpm_source.pixel_time[mask], cpm_source.residue[mask]+model[mask], '.')
+    plt.show()
+    
     
