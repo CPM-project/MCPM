@@ -50,6 +50,10 @@ if __name__ == "__main__":
     
     model = transform_model(7520., 1., 1., model_dt, model_flux, cpm_source.pixel_time[0])
     
+    for i in [510, 860, 856, 1004, 968]:
+        for j in range(n_select):
+            cpm_source._pixel_mask[j][i] = False
+    
     cpm_source.run_cpm(l2, model)
     
     result = None
@@ -60,7 +64,7 @@ if __name__ == "__main__":
         if result is None:
             result = cpm_source._cpm_pixel[i].cpm_residue[mask]
         else:
-            result += cpm_source._cpm_pixel[i].residue[mask]
+            result += cpm_source._cpm_pixel[i].cpm_residue[mask]
     plt.show()
     plt.plot(cpm_source.pixel_time[0][mask], result, 'o')
     plt.show()
