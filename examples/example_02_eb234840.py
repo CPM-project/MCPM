@@ -48,7 +48,7 @@ if __name__ == "__main__":
     model_flux[model_dt < -13.] = 0.
     model_flux[model_dt > 13.] = 0.
     
-    model = transform_model(7520., 1., 1., model_dt, model_flux, cpm_source.pixel_time[0])
+    model = transform_model(7520., 1., 1., model_dt, model_flux, cpm_source.pixel_time)
     
     for i in [510, 860, 856, 1004, 968]:
         for j in range(n_select):
@@ -56,16 +56,7 @@ if __name__ == "__main__":
     
     cpm_source.run_cpm(l2, model)
     
-    result = None
-    for i in range(cpm_source.n_pixels):
-        mask = cpm_source._cpm_pixel[i].results_mask
-        plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].residue[mask]+model[mask], '.')
-        #plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].cpm_residue[mask], '.')
-        if result is None:
-            result = cpm_source._cpm_pixel[i].residue[mask]
-        else:
-            result += cpm_source._cpm_pixel[i].residue[mask]
-    plt.show()
-    plt.plot(cpm_source.pixel_time[0][mask], result+model[mask], 'o')
+    mask = cpm_source.residue_mask
+    plt.plot(cpm_source.pixel_time[mask], cpm_source.residue[mask]+model[mask], '.')
     plt.show()
     
