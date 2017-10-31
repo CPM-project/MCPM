@@ -155,7 +155,13 @@ class CpmFitSource(object):
         """extract time vectors, flux vectors and epoch masks 
         for pixels from TPF files"""
         out = self.multiple_tpf.get_time_flux_mask_for_pixels(self._pixels)
-        self._pixel_time = out[0]
+        reference_time = out[0][0][out[2][0]]
+        for i in range(1, self.n_pixels):
+            masked_time = out[0][i][out[2][i]]
+            if (reference_time != masked_time).any():
+                msg = "we assumed time vactrors should be the same\n{:}\n{:}"
+                raise ValueError(msg.format(out[0][0], out[0][i]))
+        self._pixel_time = out[0][0]
         self._pixel_flux = out[1]
         self._pixel_mask = out[2]
 
@@ -185,10 +191,12 @@ class CpmFitSource(object):
         self._cpm_pixel = [None] * self.n_pixels
         for i in range(self.n_pixels):
             model_i = model * self.prf_values[:,i]
+            model_mask=self._prf_values_mask
+            
             self._cpm_pixel[i] = CpmFitPixel(
                     target_flux=self.pixel_flux[i], 
                     target_flux_err=None, target_mask=self.pixel_mask[i], 
                     predictor_matrix=self.predictor_matrix, 
-                    predictor_mask=self.predictor_matrix_mask, 
-                    l2=l2, model=model_i, model_mask=self._prf_values_mask, 
-                    time=self.pixel_time[i])
+                    predictor_matrix_mask=self.predictor_matrix_mask, 
+                    l2=l2, model=model_i, model_mask=model_mask, 
+                    time=self.pixel_time)

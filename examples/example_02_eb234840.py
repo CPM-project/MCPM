@@ -59,8 +59,8 @@ if __name__ == "__main__":
     result = None
     for i in range(cpm_source.n_pixels):
         mask = cpm_source._cpm_pixel[i].results_mask
-        #plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].residue[mask], '.')
-        plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].cpm_residue[mask], '.')
+        plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].residue[mask]+model[mask], '.')
+        #plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].cpm_residue[mask], '.')
         if result is None:
             result = cpm_source._cpm_pixel[i].residue[mask]
         else:

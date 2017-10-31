@@ -7,7 +7,7 @@ class CpmFitPixel(object):
     """Class for performing CPM fit for a single pixel"""
     
     def __init__(self, target_flux, target_flux_err, target_mask, 
-            predictor_matrix, predictor_mask,
+            predictor_matrix, predictor_matrix_mask,
             l2=None, l2_per_pixel=None, 
             model=None, model_mask=None, 
             time=None, train_lim=None):
@@ -17,7 +17,7 @@ class CpmFitPixel(object):
         self.target_mask = target_mask
         
         self.predictor_matrix = predictor_matrix
-        self.predictor_mask = predictor_mask
+        self.predictor_matrix_mask = predictor_matrix_mask
         self.n_epochs = self.predictor_matrix.shape[0]
         self.n_train_pixels = self.predictor_matrix.shape[1]
 
@@ -76,7 +76,8 @@ class CpmFitPixel(object):
     @property
     def results_mask(self):
         """the mask to be applied to all the results"""
-        return (self.target_mask * self.predictor_mask * self.model_mask)
+        return (self.target_mask * self.predictor_matrix_mask 
+                * self.model_mask)
     
     @property
     def train_mask(self):

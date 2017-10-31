@@ -27,7 +27,7 @@ def cpm_output(tpf_flux, tpf_epoch_mask, predictor_matrix, predictor_mask,
     for i in range(len(tpf_flux)):
         cpm_pixel = CpmFitPixel(
             target_flux=tpf_flux[i], target_flux_err=None, target_mask=tpf_epoch_mask[i], 
-            predictor_matrix=predictor_matrix, predictor_mask=predictor_mask,
+            predictor_matrix=predictor_matrix, predictor_matrix_mask=predictor_mask,
             l2=l2, 
             model=model[i]*prfs[:,i], model_mask=mask_prfs,
             time=times[i]
