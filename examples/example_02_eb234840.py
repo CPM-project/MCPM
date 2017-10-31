@@ -62,10 +62,10 @@ if __name__ == "__main__":
         #plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].residue[mask], '.')
         plt.plot(cpm_source.pixel_time[i][mask], cpm_source._cpm_pixel[i].cpm_residue[mask], '.')
         if result is None:
-            result = cpm_source._cpm_pixel[i].cpm_residue[mask]
+            result = cpm_source._cpm_pixel[i].residue[mask]
         else:
-            result += cpm_source._cpm_pixel[i].cpm_residue[mask]
+            result += cpm_source._cpm_pixel[i].residue[mask]
     plt.show()
-    plt.plot(cpm_source.pixel_time[0][mask], result, 'o')
+    plt.plot(cpm_source.pixel_time[0][mask], result+model[mask], 'o')
     plt.show()
     

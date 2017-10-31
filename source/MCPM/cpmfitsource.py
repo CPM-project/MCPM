@@ -190,4 +190,5 @@ class CpmFitSource(object):
                     target_flux_err=None, target_mask=self.pixel_mask[i], 
                     predictor_matrix=self.predictor_matrix, 
                     predictor_mask=self.predictor_matrix_mask, 
-                    l2=l2, model=model_i, time=self.pixel_time)
+                    l2=l2, model=model_i, model_mask=self._prf_values_mask, 
+                    time=self.pixel_time[i])
