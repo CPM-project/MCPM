@@ -204,13 +204,16 @@ class MultipleTpf(object):
         pixel_median = self.get_median_fluxes(epics)
         
         pixel_mask = None
-        if median_flux_ratio_limits is not None:            
-            ref_median_flux = ref_tpf.median_flux[target_index]
-            lim_1 = median_flux_ratio_limits[0] * ref_median_flux
-            lim_2 = median_flux_ratio_limits[1] * ref_median_flux
-            mask_1 = (lim_1 <= pixel_median)
-            mask_2 = (lim_2 >= pixel_median)
-            pixel_mask = (mask_1 & mask_2)
+        if median_flux_ratio_limits is not None: 
+            if not (median_flux_ratio_limits[0] is None 
+                    and median_flux_ratio_limits[1] is None):
+                        
+                ref_median_flux = ref_tpf.median_flux[target_index]
+                lim_1 = median_flux_ratio_limits[0] * ref_median_flux
+                lim_2 = median_flux_ratio_limits[1] * ref_median_flux
+                mask_1 = (lim_1 <= pixel_median)
+                mask_2 = (lim_2 >= pixel_median)
+                pixel_mask = (mask_1 & mask_2)
             
         if median_flux_limits is not None:
             mask_1 = (median_flux_limits[0] <= pixel_median)
@@ -290,7 +293,7 @@ class MultipleTpf(object):
         return self._tpf_rectangles
         
     def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=15, 
-            exclude=1, median_flux_ratio_limits=(0.2, 5.0), 
+            exclude=1, median_flux_ratio_limits=(None, None), 
             median_flux_limits=(100., 1.e5)):
         """Calculate predictor matrix.
         exclude - number or rows and columns around the target that would be

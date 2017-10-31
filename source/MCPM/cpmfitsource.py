@@ -94,9 +94,25 @@ class CpmFitSource(object):
         self._pixels = utils.pixel_list_center(self.mean_x, self.mean_y, 
                 half_size)
     
-    def get_predictor_matrix(self):
+    def get_predictor_matrix(self, n_pixel=None, min_distance=None, 
+            exclude=None, median_flux_ratio_limits=None, 
+            median_flux_limits=None):
         """calculate predictor_matrix and its mask"""
-        out = self.multiple_tpf.get_predictor_matrix(ra=self.ra, dec=self.dec)
+        kwargs = {}
+        if n_pixel is not None:
+            kwargs['n_pixel'] = n_pixel
+        if min_distance is not None:
+            kwargs['min_distance'] = min_distance
+        if exclude is not None:
+            kwargs['exclude'] = exclude
+        if median_flux_ratio_limits is not None:
+            kwargs['median_flux_ratio_limits'] = median_flux_ratio_limits
+        if median_flux_limits is not None:
+            kwargs['median_flux_limits'] = median_flux_limits
+            
+        out = self.multiple_tpf.get_predictor_matrix(ra=self.ra, dec=self.dec, 
+                **kwargs)
+        
         self._predictor_matrix = out[0]
         self._predictor_matrix_mask = out[1]
         
