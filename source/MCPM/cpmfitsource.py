@@ -251,4 +251,12 @@ class CpmFitSource(object):
         if self._residue_mask is None:
             self.residue
         return self._residue_mask
+    
+    @property
+    def residual_rms(self):
+        out = []
+        for i in range(self.n_pixels):
+            out.append(self.pixel_residue[i][self.residue_mask])
+        rms = np.sqrt(np.mean(np.square(np.array(out))))
+        return rms
         

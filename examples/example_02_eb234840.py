@@ -56,6 +56,8 @@ if __name__ == "__main__":
     
     cpm_source.run_cpm(l2, model)
     
+    print(cpm_source.residual_rms)
+    
     mask = cpm_source.residue_mask
     plt.plot(cpm_source.pixel_time[mask], cpm_source.residue[mask]+model[mask], '.')
     plt.show()
