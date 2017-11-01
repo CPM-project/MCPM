@@ -35,7 +35,7 @@ def fun_3(inputs, cpm_source, l2):
 
     cpm_source.run_cpm(l2, model)
     
-    #print(t_0, u_0, t_E, f_s, cpm_source.residual_rms)
+    print(t_0, u_0, t_E, f_s, cpm_source.residual_rms)
     return cpm_source.residual_rms
     
 def fun_4(inputs, cpm_source, l2):
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     start = np.array([7556., 0.14, 21., 300.])
     start_3 = np.array([7556., 0.1, 105.])
     tol = 0.0001
-    method = 'Nelder-Mead' # only these 2 make sense
-    #method = 'Powell'
+    #method = 'Nelder-Mead' # only these 2 make sense
+    method = 'Powell'
     
     cpm_source = CpmFitSource(ra=ra, dec=dec, campaign=campaign, 
             channel=channel)
