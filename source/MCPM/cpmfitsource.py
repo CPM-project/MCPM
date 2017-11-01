@@ -38,6 +38,9 @@ class CpmFitSource(object):
                 grids=self.campaign_grids, 
                 prf_data=self.prf_data)
         
+        self._x_positions = None
+        self._y_positions = None
+        self._xy_positions_mask = None
         self._mean_x = None
         self._mean_y = None
         self._mean_xy_mask = None
@@ -62,6 +65,33 @@ class CpmFitSource(object):
             return 0
         return len(self._pixels)        
         
+    def _calculate_positions(self):
+        """calcualte the pixel position of the source for all epochs"""
+        out = self.campaign_grids.apply_grids(ra=self.ra, dec=self.dec)
+        (self._x_positions, self._y_positions) = out
+        self._xy_positions_mask = self.campaign_grids.mask
+        
+    @property
+    def x_positions(self):
+        """x-coordinate of pixel positions of the source for all epochs"""
+        if self._x_positions is None:
+            self._calculate_positions()
+        return self._x_positions
+
+    @property
+    def y_positions(self):
+        """y-coordinate of pixel positions of the source for all epochs"""
+        if self._y_positions is None:
+            self._calculate_positions()
+        return self._y_positions
+
+    @property
+    def xy_positions_mask(self):
+        """epoch mask for x_positions and y_positions"""
+        if self._xy_positions_mask is None:
+            self._calculate_positions()
+        return self._xy_positions_mask
+
     def _calculate_mean_xy(self):
         """calculate mean position of the source in pixels"""
         out = self.campaign_grids.mean_position_clipped(ra=self.ra, dec=self.dec)
@@ -222,7 +252,6 @@ class CpmFitSource(object):
         mask = self.residue_mask
         mask_bad = (self.residue[mask]**2 >= limit**2)
         indexes = np.arange(len(mask))[mask][mask_bad]
-        print(self.residue[indexes])
         self.mask_bad_epochs(indexes)                    
     
     def run_cpm(self, l2, model):
