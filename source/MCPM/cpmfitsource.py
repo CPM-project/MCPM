@@ -206,6 +206,25 @@ class CpmFitSource(object):
             self._get_time_flux_mask_for_pixels()
         return self._pixel_mask
     
+    def mask_bad_epochs(self, epoch_indexes):
+        """for every index in epoch_indexes each pixel_mask will be made False"""
+        masks = self.pixel_mask
+        for index in epoch_indexes:
+            for i in range(self.n_pixels):
+                masks[i][index] = False
+                
+    def mask_bad_epochs_residual(self, limit=None):
+        """mask epochs with residuals lrager than limit or smaller than -limit;
+        if limit is not provided than 5*residual_rms is assumed
+        """
+        if limit is None:
+            limit = 5 * self.residual_rms
+        mask = self.residue_mask
+        mask_bad = (self.residue[mask]**2 >= limit**2)
+        indexes = np.arange(len(mask))[mask][mask_bad]
+        print(self.residue[indexes])
+        self.mask_bad_epochs(indexes)                    
+    
     def run_cpm(self, l2, model):
         """run CPM on all pixels"""
         self._cpm_pixel = [None] * self.n_pixels
