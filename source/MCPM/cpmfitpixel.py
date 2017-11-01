@@ -46,11 +46,17 @@ class CpmFitPixel(object):
             raise ValueError('you must set either l2 or l2_per_pixel')
         if l2_per_pixel is not None:
             if not isinstance(l2_per_pixel, (float, np.floating)):
-                raise TypeError('l2_per_pixel must be of float type')
+                if isinstance(l2_per_pixel, (int, np.integer)):
+                    l2_per_pixel = float(l2_per_pixel)
+                else:
+                    raise TypeError('l2_per_pixel must be of float type')
             l2 = l2_per_pixel * self.n_train_pixels
         else:
             if not isinstance(l2, (float, np.floating)):
-                raise TypeError('l2 must be of float type')
+                if isinstance(l2, (int, np.integer)):
+                    l2 = float(l2)
+                else:
+                    raise TypeError('l2 must be of float type')
         self.l2 = l2
         self.l2_per_pixel = self.l2 / self.n_train_pixels
 
