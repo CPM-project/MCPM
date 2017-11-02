@@ -317,10 +317,17 @@ class CpmFitSource(object):
         return self._residue_mask
     
     @property
-    def residual_rms(self):
+    def pixel_residual_rms(self):
+        """calculate RMS of residuals using each pixel separately"""
         out = []
         for i in range(self.n_pixels):
             out.append(self.pixel_residue[i][self.residue_mask])
         rms = np.sqrt(np.mean(np.square(np.array(out))))
+        return rms
+        
+    @property
+    def residual_rms(self):
+        """calculate RMS of residuals combining all pixels"""
+        rms = np.sqrt(np.mean(np.square(self.residue[self.residue_mask])))
         return rms
         
