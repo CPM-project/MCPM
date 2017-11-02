@@ -243,12 +243,12 @@ class CpmFitSource(object):
             for i in range(self.n_pixels):
                 masks[i][index] = False
                 
-    def mask_bad_epochs_residual(self, limit=None):
+    def mask_bad_epochs_residuals(self, limit=None):
         """mask epochs with residuals lrager than limit or smaller than -limit;
-        if limit is not provided than 5*residual_rms is assumed
+        if limit is not provided than 5*residuals_rms is assumed
         """
         if limit is None:
-            limit = 5 * self.residual_rms
+            limit = 5 * self.residuals_rms
         mask = self.residuals_mask
         mask_bad = (self.residuals[mask]**2 >= limit**2)
         indexes = np.arange(len(mask))[mask][mask_bad]
@@ -317,7 +317,7 @@ class CpmFitSource(object):
         return self._residuals_mask
     
     @property
-    def pixel_residual_rms(self):
+    def pixel_residuals_rms(self):
         """calculate RMS of residuals using each pixel separately"""
         out = []
         for i in range(self.n_pixels):
@@ -326,7 +326,7 @@ class CpmFitSource(object):
         return rms
         
     @property
-    def residual_rms(self):
+    def residuals_rms(self):
         """calculate RMS of residuals combining all pixels"""
         rms = np.sqrt(np.mean(np.square(self.residuals[self.residuals_mask])))
         return rms
