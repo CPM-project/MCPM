@@ -126,7 +126,7 @@ class CpmFitPixel(object):
         return self._fitted_flux
         
     @property
-    def residue(self):
+    def residuals(self):
         """residuals of the fit itself i.e., if there was model then 
         it's not added here"""
         out = np.zeros(self.n_epochs, dtype=float)
@@ -138,7 +138,7 @@ class CpmFitPixel(object):
         return out
         
     @property
-    def cpm_residue(self):
+    def cpm_residuals(self):
         """residuals of the fit with added model"""
         out = np.zeros(self.n_epochs, dtype=float)
         mask = self.results_mask

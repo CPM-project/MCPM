@@ -53,10 +53,10 @@ class CpmFitSource(object):
         self._pixel_flux = None
         self._pixel_mask = None  
         self._cpm_pixel = None
-        self._pixel_residue = None
-        self._pixel_residue_mask = None
-        self._residue = None
-        self._residue_mask = None
+        self._pixel_residuals = None
+        self._pixel_residuals_mask = None
+        self._residuals = None
+        self._residuals_mask = None
     
     @property
     def n_pixels(self):
@@ -249,18 +249,18 @@ class CpmFitSource(object):
         """
         if limit is None:
             limit = 5 * self.residual_rms
-        mask = self.residue_mask
-        mask_bad = (self.residue[mask]**2 >= limit**2)
+        mask = self.residuals_mask
+        mask_bad = (self.residuals[mask]**2 >= limit**2)
         indexes = np.arange(len(mask))[mask][mask_bad]
         self.mask_bad_epochs(indexes)                    
     
     def run_cpm(self, l2, model):
         """run CPM on all pixels"""
         self._cpm_pixel = [None] * self.n_pixels
-        self._pixel_residue = None
-        self._pixel_residue_mask = None
-        self._residue = None
-        self._residue_mask = None
+        self._pixel_residuals = None
+        self._pixel_residuals_mask = None
+        self._residuals = None
+        self._residuals_mask = None
         
         for i in range(self.n_pixels):
             model_i = model * self.prf_values[:,i]
@@ -275,59 +275,59 @@ class CpmFitSource(object):
                     time=self.pixel_time)
 
     @property
-    def pixel_residue(self):
+    def pixel_residuals(self):
         """list of residuals for every pixel"""
-        if self._pixel_residue is None:
-            self._pixel_residue = [None] * self.n_pixels
-            self._pixel_residue_mask = [None] * self.n_pixels
+        if self._pixel_residuals is None:
+            self._pixel_residuals = [None] * self.n_pixels
+            self._pixel_residuals_mask = [None] * self.n_pixels
             for i in range(self.n_pixels):
                 residuals = self.pixel_time * 0.
                 cpm = self._cpm_pixel[i]
-                residuals[cpm.results_mask] = cpm.residue[cpm.results_mask]
-                self._pixel_residue[i] = residuals
-                self._pixel_residue_mask[i] = cpm.results_mask
-        return self._pixel_residue
+                residuals[cpm.results_mask] = cpm.residuals[cpm.results_mask]
+                self._pixel_residuals[i] = residuals
+                self._pixel_residuals_mask[i] = cpm.results_mask
+        return self._pixel_residuals
             
     @property
-    def pixel_residue_mask(self):
-        """epoch mask for pixel_residue"""
-        if self._pixel_residue_mask is None:
-            self.pixel_residue
-        return self._pixel_residue_mask
+    def pixel_residuals_mask(self):
+        """epoch mask for pixel_residuals"""
+        if self._pixel_residuals_mask is None:
+            self.pixel_residuals
+        return self._pixel_residuals_mask
     
     @property
-    def residue(self):
+    def residuals(self):
         """residuals summed over pixels"""
-        if self._residue is None:
+        if self._residuals is None:
             residuals = self.pixel_time * 0.
             residuals_mask = np.ones_like(residuals, dtype=bool)
             for i in range(self.n_pixels):
-                mask = self.pixel_residue_mask[i]
-                residuals[mask] += self.pixel_residue[i][mask]
+                mask = self.pixel_residuals_mask[i]
+                residuals[mask] += self.pixel_residuals[i][mask]
                 residuals_mask &= mask
-            self._residue = residuals
-            self._residue_mask = residuals_mask
-        return self._residue
+            self._residuals = residuals
+            self._residuals_mask = residuals_mask
+        return self._residuals
 
     @property
-    def residue_mask(self):
+    def residuals_mask(self):
         """epoch mask for residuals summed over pixels"""
-        if self._residue_mask is None:
-            self.residue
-        return self._residue_mask
+        if self._residuals_mask is None:
+            self.residuals
+        return self._residuals_mask
     
     @property
     def pixel_residual_rms(self):
         """calculate RMS of residuals using each pixel separately"""
         out = []
         for i in range(self.n_pixels):
-            out.append(self.pixel_residue[i][self.residue_mask])
+            out.append(self.pixel_residuals[i][self.residuals_mask])
         rms = np.sqrt(np.mean(np.square(np.array(out))))
         return rms
         
     @property
     def residual_rms(self):
         """calculate RMS of residuals combining all pixels"""
-        rms = np.sqrt(np.mean(np.square(self.residue[self.residue_mask])))
+        rms = np.sqrt(np.mean(np.square(self.residuals[self.residuals_mask])))
         return rms
         
