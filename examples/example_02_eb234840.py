@@ -27,7 +27,7 @@ def fun(inputs, model_dt, model_flux, cpm_source, l2):
 
     cpm_source.run_cpm(l2, model)
     
-    return cpm_source.residual_rms
+    return cpm_source.residuals_rms
     
 
 if __name__ == "__main__":
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     
     cpm_source.run_cpm(l2, model)
     
-    print("RMS: {:.4f}".format(cpm_source.residual_rms))
+    print("RMS: {:.4f}".format(cpm_source.residuals_rms))
     
-    mask = cpm_source.residue_mask
-    plt.plot(cpm_source.pixel_time[mask], cpm_source.residue[mask]+model[mask], '.')
+    mask = cpm_source.residuals_mask
+    plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
     plt.show()
 
     # Optimize model parameters:"
@@ -84,8 +84,8 @@ if __name__ == "__main__":
     
     model = transform_model(out.x[0], out.x[1], out.x[2], model_dt, model_flux, cpm_source.pixel_time)
     cpm_source.run_cpm(l2, model)
-    mask = cpm_source.residue_mask
-    plt.plot(cpm_source.pixel_time[mask], cpm_source.residue[mask]+model[mask], '.')
+    mask = cpm_source.residuals_mask
+    plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
     plt.show()
     
     

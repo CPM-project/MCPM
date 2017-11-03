@@ -32,7 +32,7 @@ def cpm_output(tpf_flux, tpf_epoch_mask, predictor_matrix, predictor_mask,
             model=model[i]*prfs[:,i], model_mask=mask_prfs,
             time=times[i]
         )
-        out_signal.append(cpm_pixel.residue)
+        out_signal.append(cpm_pixel.residuals)
         out_mask.append(cpm_pixel.results_mask)
     return (out_signal, out_mask)
 
