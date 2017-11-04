@@ -124,7 +124,10 @@ if __name__ == "__main__":
             mask = cpm_source.residuals_mask
             plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
             plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask], '.')
-            plt.show()    
+            plt.xlabel("HJD'")
+            plt.ylabel("counts")
+            #plt.savefig('ob160980.png')
+            plt.show()
 
     # Optimize model parameters with 4 fitted parameters:
     if False:
