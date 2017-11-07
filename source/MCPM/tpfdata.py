@@ -1,3 +1,4 @@
+from __future__ import print_function
 from os import path
 import sys
 import warnings
@@ -8,6 +9,7 @@ else:
     from urllib import URLopener
 
 from astropy.io import fits as pyfits
+
 
 import MCPM
 
