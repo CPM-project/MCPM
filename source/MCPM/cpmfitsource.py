@@ -280,12 +280,20 @@ class CpmFitSource(object):
         if self._pixel_residuals is None:
             self._pixel_residuals = [None] * self.n_pixels
             self._pixel_residuals_mask = [None] * self.n_pixels
+            failed = []
             for i in range(self.n_pixels):
                 residuals = self.pixel_time * 0.
                 cpm = self._cpm_pixel[i]
-                residuals[cpm.results_mask] = cpm.residuals[cpm.results_mask]
+                try:
+                    residuals[cpm.results_mask] = cpm.residuals[cpm.results_mask]
+                except np.linalg.linalg.LinAlgError as inst:
+                    failed.append(inst)
+                    continue
                 self._pixel_residuals[i] = residuals
                 self._pixel_residuals_mask[i] = cpm.results_mask
+            if len(failed) > 0:
+                fmt = "Failed: {:} of {:}" + len(failed) * "\n{:}"
+                raise ValueError(fmt.format(len(failed), self.n_pixels, *failed))
         return self._pixel_residuals
             
     @property
