@@ -11,4 +11,6 @@ __pycache__/
 *.py~
 .*.swp
 
+# output files
+*.png
 
