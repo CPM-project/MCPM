@@ -60,8 +60,7 @@ if __name__ == "__main__":
     # Save plot with pixel curves:
     if False:
         cpm_source.plot_pixel_curves()
-        plt.savefig("fig2.png")
-        sys.exit()
+        plt.savefig("eb234840_pixel_curve.png")
 
     (model_dt, model_flux) = np.loadtxt(model_file, unpack=True)
     model_flux[model_dt < -13.] = 0.
