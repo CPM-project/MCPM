@@ -213,6 +213,26 @@ def construct_matrix_from_list(pixel_list, time_series_list):
 
     return matrix
 
+def get_l2_l2_per_pixel(n_pixel, l2=None, l2_per_pixel=None):
+    """ XXX """
+    if (l2 is None) == (l2_per_pixel is None):
+        raise ValueError('you must set either l2 or l2_per_pixel')
+
+    if l2_per_pixel is not None:
+        if not isinstance(l2_per_pixel, (float, np.floating)):
+            if isinstance(l2_per_pixel, (int, np.integer)):
+                l2_per_pixel = float(l2_per_pixel)
+            else:
+                raise TypeError('l2_per_pixel must be of float or int type')
+        l2 = l2_per_pixel * n_pixel
+    else:
+        if not isinstance(l2, (float, np.floating)):
+            if isinstance(l2, (int, np.integer)):
+                l2 = float(l2)
+            else:
+                raise TypeError('l2 must be of float type')
+    return (l2, l2 / float(n_pixel))
+
 # For K2 channel number give corresponding module and output numbers.
 module_output_for_channel = {
 1: (2, 1), 2: (2, 2), 3: (2, 3), 4: (2, 4), 5: (3, 1), 

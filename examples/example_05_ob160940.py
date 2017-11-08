@@ -22,7 +22,7 @@ def pspl_model(t_0, u_0, t_E, f_s, time=None, cpm_source=None):
     
     return model
     
-def fun_3(inputs, cpm_source, l2, t_E):
+def fun_3(inputs, cpm_source, t_E):
     """3-parameter function for optimisation; t_E - fixed"""
     t_0 = inputs[0]
     u_0 = inputs[1]
@@ -34,12 +34,12 @@ def fun_3(inputs, cpm_source, l2, t_E):
 
     model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
 
-    cpm_source.run_cpm(l2, model)
+    cpm_source.run_cpm(model)
     
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
     return cpm_source.residuals_rms
     
-def fun_4(inputs, cpm_source, l2):
+def fun_4(inputs, cpm_source):
     """4-parameter function for optimisation"""
     t_0 = inputs[0]
     u_0 = inputs[1]
@@ -51,7 +51,7 @@ def fun_4(inputs, cpm_source, l2):
 
     model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
 
-    cpm_source.run_cpm(l2, model)
+    cpm_source.run_cpm(model)
     
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
     return cpm_source.residuals_rms
@@ -80,17 +80,18 @@ if __name__ == "__main__":
             channel=channel)
     
     cpm_source.get_predictor_matrix()
+    cpm_source.set_l2_l2_per_pixel(l2=l2)
     cpm_source.set_pixels_square(half_size)
     cpm_source.select_highest_prf_sum_pixels(n_select)
 
     # Optimize model parameters:
-    args = (cpm_source, l2, t_E)
+    args = (cpm_source, t_E)
     out = minimize(fun_3, start_3, args=args, tol=tol, method=method)
     print(out)
     
     # plot the best model
     model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
-    cpm_source.run_cpm(l2, model)
+    cpm_source.run_cpm(model)
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
     mask = cpm_source.residuals_mask
     plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
@@ -107,7 +108,7 @@ if __name__ == "__main__":
         limit = np.sort(np.abs(cpm_source.residuals[mask]))[-n_remove]
         cpm_source.mask_bad_epochs_residuals(limit)
         model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
-        cpm_source.run_cpm(l2, model)
+        cpm_source.run_cpm(model)
         print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
 
     # Optimize model parameters once more:
@@ -116,7 +117,7 @@ if __name__ == "__main__":
         print(out)
         
         model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
-        cpm_source.run_cpm(l2, model)
+        cpm_source.run_cpm(model)
         print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
         
         # plot it:

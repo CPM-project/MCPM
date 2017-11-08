@@ -48,6 +48,8 @@ class CpmFitSource(object):
         self._pixels = None
         self._predictor_matrix = None
         self._predictor_matrix_mask = None
+        self._l2 = None
+        self._l2_per_pixel = None
         self._prf_values = None
         self._prf_values_mask = None
         self._pixel_time = None
@@ -163,6 +165,23 @@ class CpmFitSource(object):
             raise ValueError(msg)
         return self._predictor_matrix_mask
 
+    def set_l2_l2_per_pixel(self, l2=None, l2_per_pixel=None):
+        """sets values of l2 and l2_per_pixel - provide ONE of them in input"""
+        (self._l2, self._l2_per_pixel) = utils.get_l2_l2_per_pixel(
+                                            self.predictor_matrix.shape[1],
+                                            l2, l2_per_pixel)
+
+    @property
+    def l2(self):
+        """strength of L2 regularization"""
+        return self._l2
+
+    @property
+    def l2_per_pixel(self):
+        """strength of L2 regularization divided by number of training
+        pixels"""
+        return self._l2_per_pixel
+
     def _get_prf_values(self):
         """calculates PRF values"""
         out = self.prf_for_campaign.apply_grids_and_prf(
@@ -255,7 +274,7 @@ class CpmFitSource(object):
         indexes = np.arange(len(mask))[mask][mask_bad]
         self.mask_bad_epochs(indexes)                    
     
-    def run_cpm(self, l2, model):
+    def run_cpm(self, model):
         """run CPM on all pixels"""
         self._cpm_pixel = [None] * self.n_pixels
         self._pixel_residuals = None
@@ -272,7 +291,7 @@ class CpmFitSource(object):
                     target_flux_err=None, target_mask=self.pixel_mask[i], 
                     predictor_matrix=self.predictor_matrix, 
                     predictor_matrix_mask=self.predictor_matrix_mask, 
-                    l2=l2, model=model_i, model_mask=model_mask, 
+                    l2=self.l2, model=model_i, model_mask=model_mask, 
                     time=self.pixel_time)
 
     @property

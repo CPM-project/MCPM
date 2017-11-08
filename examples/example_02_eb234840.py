@@ -16,7 +16,7 @@ def transform_model(t_0, amplitude_ratio, width_ratio, model_dt, model_flux, tim
     model = np.interp(time, model_time, model_flux) * amplitude_ratio
     return model
 
-def fun(inputs, model_dt, model_flux, cpm_source, l2):
+def fun(inputs, model_dt, model_flux, cpm_source):
     """3-parameter function for optimisation"""
     t_0 = inputs[0]
     amplitude_factor = inputs[1]
@@ -25,7 +25,7 @@ def fun(inputs, model_dt, model_flux, cpm_source, l2):
     model = transform_model(t_0, amplitude_factor, width_ratio, model_dt, 
                             model_flux, cpm_source.pixel_time)
 
-    cpm_source.run_cpm(l2, model)
+    cpm_source.run_cpm(model)
     
     return cpm_source.residuals_rms
     
@@ -53,6 +53,7 @@ if __name__ == "__main__":
             cpm_source.mean_y))
     
     cpm_source.get_predictor_matrix()
+    cpm_source.set_l2_l2_per_pixel(l2=l2)
     cpm_source.set_pixels_square(half_size)
     cpm_source.select_highest_prf_sum_pixels(n_select)
     
@@ -66,7 +67,7 @@ if __name__ == "__main__":
         for j in range(n_select):
             cpm_source._pixel_mask[j][i] = False
     
-    cpm_source.run_cpm(l2, model)
+    cpm_source.run_cpm(model)
     
     print("RMS: {:.4f}".format(cpm_source.residuals_rms))
     
@@ -75,7 +76,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Optimize model parameters:"
-    args = (model_dt, model_flux, cpm_source, l2)
+    args = (model_dt, model_flux, cpm_source)
     out = minimize(fun, start, args=args, tol=tol, method=method)
     print()  
     print(out.success)
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     print("{:.5f} {:.4f} {:.4f}  ==> {:.4f}".format(out.x[0], out.x[1], out.x[2], out.fun))
     
     model = transform_model(out.x[0], out.x[1], out.x[2], model_dt, model_flux, cpm_source.pixel_time)
-    cpm_source.run_cpm(l2, model)
+    cpm_source.run_cpm(model)
     mask = cpm_source.residuals_mask
     plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
     plt.show()
