@@ -288,6 +288,12 @@ class CpmFitSource(object):
                     residuals[cpm.results_mask] = cpm.residuals[cpm.results_mask]
                 except np.linalg.linalg.LinAlgError as inst:
                     failed.append(inst)
+                    txt = inst.args[0]
+                    expected = "-th leading minor of the array is not positive definite"
+                    number = txt.split("-")[0]
+                    # Remove int(number)-1
+                    #print(number)
+                    #print(number+expected==txt)
                     continue
                 self._pixel_residuals[i] = residuals
                 self._pixel_residuals_mask[i] = cpm.results_mask
