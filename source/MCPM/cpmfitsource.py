@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from MCPM.multipletpf import MultipleTpf
 from MCPM.campaigngridradec2pix import CampaignGridRaDec2Pix
@@ -344,4 +345,19 @@ class CpmFitSource(object):
         """calculate RMS of residuals combining all pixels"""
         rms = np.sqrt(np.mean(np.square(self.residuals[self.residuals_mask])))
         return rms
-        
+       
+    def plot_pixel_residuals(self, shift=None):
+        """Plot residuals for each pixel separately. Parameter
+        shift (int or float) sets the shift in Y axis between the pixel,
+        the default value is 2*RMS rounded up to nearest 10"""
+        if shift is None:
+            shift = round(2 * self.residuals_rms, -1) # -1 mean "next 10"
+
+        mask = self.residuals_mask
+        time = self.pixel_time[mask]
+        for i in range(self.n_pixels):
+            mask = self.residuals_mask
+            y_values = self.pixel_residuals[i][mask] + i * shift
+            plt.plot(time, time*0+i * shift, 'k--')
+            plt.plot(time, y_values, '.', label="pixel {:}".format(i))
+
