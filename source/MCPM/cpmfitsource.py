@@ -380,3 +380,8 @@ class CpmFitSource(object):
             plt.plot(time, time*0+i * shift, 'k--')
             plt.plot(time, y_values, '.', label="pixel {:}".format(i))
 
+    def plot_pixel_curves(self, **kwargs):
+        """Use matplotlib to plot raw data for a set of pixels. 
+        For options look at MultipleTpf.plot_pixel_curves()"""
+        self.multiple_tpf.plot_pixel_curves(self.mean_x, self.mean_y, **kwargs)
+

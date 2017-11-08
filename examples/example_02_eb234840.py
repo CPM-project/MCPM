@@ -56,7 +56,13 @@ if __name__ == "__main__":
     cpm_source.set_l2_l2_per_pixel(l2=l2)
     cpm_source.set_pixels_square(half_size)
     cpm_source.select_highest_prf_sum_pixels(n_select)
-    
+   
+    # Save plot with pixel curves:
+    if False:
+        cpm_source.plot_pixel_curves()
+        plt.savefig("fig2.png")
+        sys.exit()
+
     (model_dt, model_flux) = np.loadtxt(model_file, unpack=True)
     model_flux[model_dt < -13.] = 0.
     model_flux[model_dt > 13.] = 0.

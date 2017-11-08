@@ -214,7 +214,8 @@ def construct_matrix_from_list(pixel_list, time_series_list):
     return matrix
 
 def get_l2_l2_per_pixel(n_pixel, l2=None, l2_per_pixel=None):
-    """ XXX """
+    """function used in different places that parses the l2 and l2_per_pixel
+    parameters - exactly one of them has to be set"""
     if (l2 is None) == (l2_per_pixel is None):
         raise ValueError('you must set either l2 or l2_per_pixel')
 

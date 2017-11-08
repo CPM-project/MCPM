@@ -1,7 +1,8 @@
 import numpy as np
 from bisect import bisect
+import matplotlib.pyplot as plt
 
-from MCPM import tpfdata, hugetpf
+from MCPM import tpfdata, hugetpf, utils
 from MCPM.tpfgrid import TpfGrid
 from MCPM.tpfrectangles import TpfRectangles
 
@@ -337,9 +338,37 @@ class MultipleTpf(object):
         flux = []
         mask = []
         for (x, y) in pixels:
-            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
+            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y) 
+            # This could be faster - most probably current pixel is in 
+            # the same TPF as the previous one.
             tpf = self.tpf_for_epic_id(epic)
             time.append(tpf.jd_short)
             flux.append(tpf.get_flux_for_pixel(row=y, column=x))
             mask.append(tpf.epoch_mask)
         return (time, flux, mask)
+
+    def plot_pixel_curves(self, mean_x, mean_y, half_size=2, 
+            figsize=(15, 10.3), dpi=300, point_size=2):
+        """Plot raw light curves for pixels in a square. 
+        Default settings produce large but readable file."""
+        fig_args = {"left":0.035, "bottom":0.023, "right":.995, "top":.995}
+
+        pixels = utils.pixel_list_center(mean_x, mean_y, half_size)
+        
+        fluxes = []
+        for (x, y) in pixels:
+            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
+            # This could be faster - most probably current pixel is in
+            # the same TPF as the previous one.
+            tpf = self.tpf_for_epic_id(epic)
+            fluxes.append(tpf.get_flux_for_pixel(row=y, column=x))
+        
+        flux_matrix = utils.construct_matrix_from_list(pixels, fluxes)
+        flux_matrix[flux_matrix == 0.] = None
+
+        # Plotting starts here.
+        (fig, ax) = plt.subplots(figsize=figsize, dpi=dpi)
+        utils.plot_matrix_subplots(fig, tpf.jd_short, flux_matrix, 
+            ms=point_size)
+        plt.subplots_adjust(**fig_args)
+
