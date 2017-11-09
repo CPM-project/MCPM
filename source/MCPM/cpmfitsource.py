@@ -274,17 +274,23 @@ class CpmFitSource(object):
         indexes = np.arange(len(mask))[mask][mask_bad]
         self.mask_bad_epochs(indexes)                    
     
-    def run_cpm(self, model):
-        """run CPM on all pixels"""
+    def run_cpm(self, model, model_mask=None):
+        """Run CPM on all pixels. Model has to be provided for epochs in
+        self.pixel_time. If the epoch mask model_mask is None, then it's 
+        assumed it's True for each epoch. Mask of PRF is applied inside 
+        this function."""
         self._cpm_pixel = [None] * self.n_pixels
         self._pixel_residuals = None
         self._pixel_residuals_mask = None
         self._residuals = None
         self._residuals_mask = None
         
+        if model_mask is None:
+            model_mask = np.ones_like(model, dtype=bool)
+        model_mask *= self._prf_values_mask
+
         for i in range(self.n_pixels):
             model_i = model * self.prf_values[:,i]
-            model_mask=self._prf_values_mask
             
             self._cpm_pixel[i] = CpmFitPixel(
                     target_flux=self.pixel_flux[i], 
@@ -384,4 +390,30 @@ class CpmFitSource(object):
         """Use matplotlib to plot raw data for a set of pixels. 
         For options look at MultipleTpf.plot_pixel_curves()"""
         self.multiple_tpf.plot_pixel_curves(self.mean_x, self.mean_y, **kwargs)
+
+    def run_cpm_and_plot_model(self, model, model_mask=None, 
+            plot_residuals=False):
+        """Run CPM on given model and plot the model and model+residuals;
+        also plot residuals if requested via plot_residuals=True"""
+        self.run_cpm(model=model, model_mask=model_mask)
+
+        mask = self.residuals_mask
+        if model_mask is None:
+            model_mask = np.ones_like(self.pixel_time, dtype=bool)
+
+        plt.xlabel("HJD'")
+        plt.ylabel("counts")
+        plt.plot(self.pixel_time[model_mask], model[model_mask], '-')
+        plt.plot(self.pixel_time[mask], self.residuals[mask] + model[mask], 
+                                                                        '.')
+        if plot_residuals:
+            plt.plot(self.pixel_time[mask], self.residuals[mask], '.')
+
+    def plot_residuals_of_last_model(self):
+        """plot residuals of last model run"""
+        mask = self.residuals_mask
+
+        plt.xlabel("HJD'")
+        plt.ylabel("residual counts")
+        plt.plot(self.pixel_time[mask], self.residuals[mask], '.')
 

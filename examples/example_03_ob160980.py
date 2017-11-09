@@ -93,9 +93,8 @@ if __name__ == "__main__":
     model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
     cpm_source.run_cpm(model)
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
-    mask = cpm_source.residuals_mask
-    plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
-    plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask], '.')
+    
+    cpm_source.run_cpm_and_plot_model(model, plot_residuals=True)
     plt.show()
     
     # you may want to plot residuals as a function of position:
@@ -105,6 +104,7 @@ if __name__ == "__main__":
     
     # Remove most outlying points:
     if True:
+        mask = cpm_source.residuals_mask
         limit = np.sort(np.abs(cpm_source.residuals[mask]))[-n_remove]
         cpm_source.mask_bad_epochs_residuals(limit)
         model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
