@@ -11,7 +11,7 @@ class CpmFitPixel(object):
             predictor_matrix, predictor_matrix_mask,
             l2=None, l2_per_pixel=None, 
             model=None, model_mask=None, 
-            time=None, train_lim=None):
+            time=None, train_lim=None, train_mask=None):
                 
         self.target_flux = target_flux
         self.target_flux_err = target_flux_err
@@ -42,24 +42,9 @@ class CpmFitPixel(object):
                     self.train_lim[1], self.time))
         else:
             self.train_time_mask = np.ones(self.n_epochs, dtype=bool)
+        if train_mask is not None:
+            self.train_time_mask *= train_mask
 
-        #if (l2 is None) == (l2_per_pixel is None):
-        #    raise ValueError('you must set either l2 or l2_per_pixel')
-        #if l2_per_pixel is not None:
-        #    if not isinstance(l2_per_pixel, (float, np.floating)):
-        #        if isinstance(l2_per_pixel, (int, np.integer)):
-        #            l2_per_pixel = float(l2_per_pixel)
-        #        else:
-        #            raise TypeError('l2_per_pixel must be of float type')
-        #    l2 = l2_per_pixel * self.n_train_pixels
-        #else:
-        #    if not isinstance(l2, (float, np.floating)):
-        #        if isinstance(l2, (int, np.integer)):
-        #            l2 = float(l2)
-        #        else:
-        #            raise TypeError('l2 must be of float type')
-        #self.l2 = l2
-        #self.l2_per_pixel = self.l2 / self.n_train_pixels
         (self.l2, self.l2_per_pixel) = utils.get_l2_l2_per_pixel(
                                         self.n_train_pixels, l2, l2_per_pixel)
 

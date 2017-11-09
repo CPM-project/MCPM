@@ -274,7 +274,7 @@ class CpmFitSource(object):
         indexes = np.arange(len(mask))[mask][mask_bad]
         self.mask_bad_epochs(indexes)                    
     
-    def run_cpm(self, model, model_mask=None):
+    def run_cpm(self, model, model_mask=None, train_mask=None):
         """Run CPM on all pixels. Model has to be provided for epochs in
         self.pixel_time. If the epoch mask model_mask is None, then it's 
         assumed it's True for each epoch. Mask of PRF is applied inside 
@@ -298,7 +298,7 @@ class CpmFitSource(object):
                     predictor_matrix=self.predictor_matrix, 
                     predictor_matrix_mask=self.predictor_matrix_mask, 
                     l2=self.l2, model=model_i, model_mask=model_mask, 
-                    time=self.pixel_time)
+                    time=self.pixel_time, train_mask=train_mask)
 
     @property
     def pixel_residuals(self):
@@ -391,11 +391,11 @@ class CpmFitSource(object):
         For options look at MultipleTpf.plot_pixel_curves()"""
         self.multiple_tpf.plot_pixel_curves(self.mean_x, self.mean_y, **kwargs)
 
-    def run_cpm_and_plot_model(self, model, model_mask=None, 
+    def run_cpm_and_plot_model(self, model, model_mask=None, train_mask=None,  
             plot_residuals=False):
         """Run CPM on given model and plot the model and model+residuals;
         also plot residuals if requested via plot_residuals=True"""
-        self.run_cpm(model=model, model_mask=model_mask)
+        self.run_cpm(model=model, model_mask=model_mask, train_mask=train_mask)
 
         mask = self.residuals_mask
         if model_mask is None:
@@ -407,13 +407,16 @@ class CpmFitSource(object):
         plt.plot(self.pixel_time[mask], self.residuals[mask] + model[mask], 
                                                                         '.')
         if plot_residuals:
-            plt.plot(self.pixel_time[mask], self.residuals[mask], '.')
+            self._plot_residuals_of_last_model(mask)
+
+    def _plot_residuals_of_last_model(self, mask):
+        """inner function that makes the plotting"""
+        plt.plot(self.pixel_time[mask], self.pixel_time[mask]*0., 'k--')
+        plt.plot(self.pixel_time[mask], self.residuals[mask], '.')
 
     def plot_residuals_of_last_model(self):
         """plot residuals of last model run"""
-        mask = self.residuals_mask
-
         plt.xlabel("HJD'")
         plt.ylabel("residual counts")
-        plt.plot(self.pixel_time[mask], self.residuals[mask], '.')
+        self._plot_residuals_of_last_model(self.residuals_mask)
 
