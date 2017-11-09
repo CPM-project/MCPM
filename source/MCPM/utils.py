@@ -137,7 +137,7 @@ def fit_two_poly_2d(x_in, y_in, x_out, y_out, degree):
     return (coeffs_x, coeffs_y)
 
 def plot_matrix_subplots(figure, time, matrix, same_y_axis=True, 
-                        data_mask=None, **kwargs):
+                        data_mask=None, y_lim=None, **kwargs):
     """
     Plot given 3D matrix in subpanels. Note that 3rd component of matrix.shape 
     must be the same as time.size i.e., matrix.shape[2]==time.size
@@ -156,13 +156,14 @@ def plot_matrix_subplots(figure, time, matrix, same_y_axis=True,
     x_lim_expand = 0.06
     y_lim_expand = 0.08
 
-    if data_mask is not None:
-        y_lim = [np.nanmin(matrix[:,:,data_mask]), np.nanmax(matrix[:,:,data_mask])]
-    else:    
-        y_lim = [np.nanmin(matrix), np.nanmax(matrix)]
-    d_y_lim = y_lim[1] - y_lim[0]  
-    y_lim[0] -= d_y_lim * y_lim_expand / 2.
-    y_lim[1] += d_y_lim * y_lim_expand / 2.
+    if y_lim is None:
+        if data_mask is not None:
+            y_lim = [np.nanmin(matrix[:,:,data_mask]), np.nanmax(matrix[:,:,data_mask])]
+        else:    
+            y_lim = [np.nanmin(matrix), np.nanmax(matrix)]
+        d_y_lim = y_lim[1] - y_lim[0]  
+        y_lim[0] -= d_y_lim * y_lim_expand / 2.
+        y_lim[1] += d_y_lim * y_lim_expand / 2.
 
     (i_max, j_max, _) = matrix.shape
     panels = np.flipud(np.arange(i_max*j_max).reshape(i_max, j_max)) + 1
