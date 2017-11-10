@@ -60,14 +60,19 @@ class CpmFitSource(object):
         self._pixel_residuals_mask = None
         self._residuals = None
         self._residuals_mask = None
-    
+
     @property
     def n_pixels(self):
         """number of pixels"""
         if self._pixels is None:
             return 0
         return len(self._pixels)        
-        
+
+    @property
+    def pixels(self):
+        """list of currently used pixels"""
+        return self._pixels
+    
     def _calculate_positions(self):
         """calcualte the pixel position of the source for all epochs"""
         out = self.campaign_grids.apply_grids(ra=self.ra, dec=self.dec)
