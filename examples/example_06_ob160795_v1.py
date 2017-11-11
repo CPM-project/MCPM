@@ -69,6 +69,7 @@ if __name__ == "__main__":
     # Plot pixel curves:
     cpm_source.plot_pixel_curves()
     plt.savefig("ob160795_pixel_curves.png")
+    plt.close()
 
     # Optimize model parameters:
     args = (cpm_source, t_E, f_s)
@@ -90,4 +91,12 @@ if __name__ == "__main__":
     ax.set_xbound(7505., 7520.)
     plt.title('MCPM for ob160795 (t_E = {:} d; f_s_Kp = {:})'.format(t_E, f_s))
     plt.savefig('ob160795_CPM_v1.png')
-   
+    plt.close()
+
+    cpm_source.plot_pixel_residuals()
+    plt.xlabel("HJD'")
+    plt.ylabel("counts + const.")
+    plt.title('MCPM residuals for each pixel separately')
+    #plt.show()
+    plt.savefig('ob160795_CPM_v1_res.png')
+

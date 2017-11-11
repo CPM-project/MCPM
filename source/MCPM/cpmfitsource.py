@@ -375,6 +375,13 @@ class CpmFitSource(object):
         """calculate RMS of residuals combining all pixels"""
         rms = np.sqrt(np.mean(np.square(self.residuals[self.residuals_mask])))
         return rms
+
+    def residuals_rms_for_mask(self, mask):
+        """calculate RMS of residuals combining all pixels and applying 
+        additional epoch mask"""
+        mask_all = mask & self.residuals_mask
+        rms = np.sqrt(np.mean(np.square(self.residuals[mask_all])))
+        return rms
        
     def plot_pixel_residuals(self, shift=None):
         """Plot residuals for each pixel separately. Parameter
@@ -405,19 +412,31 @@ class CpmFitSource(object):
         mask = self.residuals_mask
         if model_mask is None:
             model_mask = np.ones_like(self.pixel_time, dtype=bool)
+        if train_mask is None:
+            mask_2 = np.zeros_like(self.pixel_time, dtype=bool)
+        else:
+            mask_2 = mask & ~train_mask
+            mask &= train_mask
 
         plt.xlabel("HJD'")
         plt.ylabel("counts")
-        plt.plot(self.pixel_time[model_mask], model[model_mask], '-')
-        plt.plot(self.pixel_time[mask], self.residuals[mask] + model[mask], 
-                                                                        '.')
+        plt.plot(self.pixel_time[model_mask], model[model_mask], 'k-')
+        plt.plot(self.pixel_time[mask], self.residuals[mask] + model[mask],
+                'b.')
+        plt.plot(self.pixel_time[mask_2], 
+                self.residuals[mask_2] + model[mask_2], 'bo')
+        
         if plot_residuals:
-            self._plot_residuals_of_last_model(mask)
+            if train_mask is None:
+                mask_2 = None
+            self._plot_residuals_of_last_model(mask, mask_2)
 
-    def _plot_residuals_of_last_model(self, mask):
+    def _plot_residuals_of_last_model(self, mask, mask_2=None):
         """inner function that makes the plotting"""
         plt.plot(self.pixel_time[mask], self.pixel_time[mask]*0., 'k--')
-        plt.plot(self.pixel_time[mask], self.residuals[mask], '.')
+        plt.plot(self.pixel_time[mask], self.residuals[mask], 'r.')
+        if mask_2 is not None:
+            plt.plot(self.pixel_time[mask_2], self.residuals[mask_2], 'ro')
 
     def plot_residuals_of_last_model(self):
         """plot residuals of last model run"""
