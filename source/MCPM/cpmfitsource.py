@@ -319,6 +319,9 @@ class CpmFitSource(object):
             failed = []
             for i in range(self.n_pixels):
                 residuals = self.pixel_time * 0.
+                if self._cpm_pixel is None:
+                    raise ValueError("CPM not yet run but you're trying to "
+                            + "access its results")
                 cpm = self._cpm_pixel[i]
                 try:
                     residuals[cpm.results_mask] = cpm.residuals[cpm.results_mask]
@@ -448,4 +451,19 @@ class CpmFitSource(object):
         plt.xlabel("HJD'")
         plt.ylabel("residual counts")
         self._plot_residuals_of_last_model(self.residuals_mask)
+
+    def plot_pixel_model_of_last_model(self, pixel_i, mask=None):
+        """plot full model for pixel with given index pixel_i and the data
+        themselves"""
+        if mask is None:
+            mask_ = self.residuals_mask
+        else:
+            mask_ = mask & self.residuals_mask
+        signal = self.pixel_flux[pixel_i] - self._pixel_residuals[pixel_i]
+
+        plt.xlabel("HJD'")
+        plt.ylabel("counts")
+        plt.plot(self.pixel_time[mask_], signal[mask_], 'k-')
+        plt.plot(self.pixel_time[mask_], signal[mask_], 'ks')
+        plt.plot(self.pixel_time[mask_], self.pixel_flux[pixel_i][mask_], 'ro')
 
