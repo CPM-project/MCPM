@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 # File with short functions used in different parts of the code.
 # Contains:
+# - pspl_model()
 # - pixel_list_center()
 # - load_matrix_xy()
 # - save_matrix_xy()
@@ -19,6 +20,14 @@ import matplotlib.pyplot as plt
 # - plot_matrix_subplots()
 # - construct_matrix_from_list()
 # - module_output_for_channel
+
+def pspl_model(t_0, u_0, t_E, f_s, times):
+    """Paczynski model for given times"""
+    tau = (times - t_0) / t_E
+    u_2 = tau**2 + u_0**2
+    model = (u_2 + 2.) / np.sqrt(u_2 * (u_2 + 4.))
+    model *= f_s
+    return model
 
 def pixel_list_center(center_x, center_y, half_size):
     """Return list of pixels centered on (center_x,center_y) 

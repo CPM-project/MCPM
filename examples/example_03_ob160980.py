@@ -7,20 +7,6 @@ import sys
 from MCPM import utils
 from MCPM.cpmfitsource import CpmFitSource
 
-
-def pspl_model(t_0, u_0, t_E, f_s, time=None, cpm_source=None):
-    """Paczyncki model, provide either time vector or CpmFitSource instance cpm_source"""
-    if (time is None) == (cpm_source is None):
-        raise ValueError('provide time or cpm_source')
-    if time is None:
-        time = cpm_source.pixel_time
-
-    tau = (cpm_source.pixel_time - t_0) / t_E
-    u_2 = tau**2 + u_0**2
-    model = (u_2 + 2.) / np.sqrt(u_2 * (u_2 + 4.))
-    model *= f_s
-    
-    return model
     
 def fun_3(inputs, cpm_source, t_E):
     """3-parameter function for optimisation; t_E - fixed"""
@@ -28,30 +14,26 @@ def fun_3(inputs, cpm_source, t_E):
     u_0 = inputs[1]
     t_E = t_E
     f_s = inputs[2]
-    
     if u_0 < 0. or t_E < 0. or f_s < 0.:
         return 1.e6
+        
+    model = cpm_source.pspl_model(t_0, u_0, t_E, f_s)
+    cpm_source.run_cpm(model)        
 
-    model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
-
-    cpm_source.run_cpm(model)
-    
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
     return cpm_source.residuals_rms
-    
+
 def fun_4(inputs, cpm_source):
     """4-parameter function for optimisation"""
     t_0 = inputs[0]
     u_0 = inputs[1]
     t_E = inputs[2]
-    f_s = inputs[3]
-    
+    f_s = inputs[3]    
     if u_0 < 0. or t_E < 0. or f_s < 0.:
         return 1.e6
 
-    model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
-
-    cpm_source.run_cpm(model)
+    model = cpm_source.pspl_model(t_0, u_0, t_E, f_s)
+    cpm_source.run_cpm(model)        
     
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
     return cpm_source.residuals_rms
@@ -67,7 +49,6 @@ if __name__ == "__main__":
     half_size = 2
     n_select = 10
     l2 = 10**8.5
-    #l2 = 10**6
     start = np.array([7556., 0.14, 21., 300.])
     start_3 = np.array([7556., .1, 150.])
     t_E = 21.
@@ -79,7 +60,7 @@ if __name__ == "__main__":
     cpm_source = CpmFitSource(ra=ra, dec=dec, campaign=campaign, 
             channel=channel)
     
-    cpm_source.get_predictor_matrix()
+    cpm_source.get_predictor_matrix() #n_pixel=100)
     cpm_source.set_l2_l2_per_pixel(l2=l2)
     cpm_source.set_pixels_square(half_size)
     cpm_source.select_highest_prf_sum_pixels(n_select)
@@ -90,7 +71,7 @@ if __name__ == "__main__":
     print(out)
     
     # plot the best model
-    model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
+    model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, out.x[2])
     cpm_source.run_cpm(model)
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
     
@@ -107,7 +88,7 @@ if __name__ == "__main__":
         mask = cpm_source.residuals_mask
         limit = np.sort(np.abs(cpm_source.residuals[mask]))[-n_remove]
         cpm_source.mask_bad_epochs_residuals(limit)
-        model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
+        model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, out.x[2])
         cpm_source.run_cpm(model)
         print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
 
@@ -116,7 +97,7 @@ if __name__ == "__main__":
         out = minimize(fun_3, out.x, args=args, tol=tol, method=method)
         print(out)
         
-        model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
+        model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, out.x[2])
         cpm_source.run_cpm(model)
         print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
         
@@ -134,7 +115,7 @@ if __name__ == "__main__":
     #print("{:.5f} {:.4f} {:.4f}  ==> {:.4f}".format(out.x[0], out.x[1], out.x[2], out.fun))
     
     #model = transform_model(out.x[0], out.x[1], out.x[2], model_dt, model_flux, cpm_source.pixel_time)
-        model = pspl_model(out.x[0], out.x[1], out.x[2], out.x[3], cpm_source=cpm_source)
+        model = cpm_source.pspl_model(out.x[0], out.x[1], out.x[2], out.x[3])
         cpm_source.run_cpm(model)
         mask = cpm_source.residuals_mask
         plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')

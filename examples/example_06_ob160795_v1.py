@@ -9,32 +9,14 @@ from MCPM import utils
 from MCPM.cpmfitsource import CpmFitSource
 
 
-def pspl_model(t_0, u_0, t_E, f_s, time=None, cpm_source=None):
-    """Paczyncki model, provide either time vector or CpmFitSource instance cpm_source"""
-    if (time is None) == (cpm_source is None):
-        raise ValueError('provide time or cpm_source')
-    if time is None:
-        time = cpm_source.pixel_time
-
-    tau = (cpm_source.pixel_time - t_0) / t_E
-    u_2 = tau**2 + u_0**2
-    model = (u_2 + 2.) / np.sqrt(u_2 * (u_2 + 4.))
-    model *= f_s
-    
-    return model
-
 def fun_2(inputs, cpm_source, t_E, f_s):
-    """2-parameter function for optimisation; t_E and f_S- fixed"""
+    """2-parameter function for optimisation; t_E and f_s - fixed"""
     t_0 = inputs[0]
     u_0 = inputs[1]
-    t_E = t_E
-    f_s = f_s
-    
     if u_0 < 0. or t_E < 0. or f_s < 0.:
         return 1.e6
 
-    model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
-
+    model = cpm_source.pspl_model(t_0, u_0, t_E, f_s)
     cpm_source.run_cpm(model)
     
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
@@ -77,7 +59,7 @@ if __name__ == "__main__":
     print(out)
     
     # plot the best model
-    model = pspl_model(out.x[0], out.x[1], t_E, f_s, cpm_source=cpm_source)
+    model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, f_s)
     cpm_source.run_cpm(model)
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask))) 
     mask = cpm_source.residuals_mask

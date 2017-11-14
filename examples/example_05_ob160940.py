@@ -8,34 +8,18 @@ from MCPM import utils
 from MCPM.cpmfitsource import CpmFitSource
 
 
-def pspl_model(t_0, u_0, t_E, f_s, time=None, cpm_source=None):
-    """Paczyncki model, provide either time vector or CpmFitSource instance cpm_source"""
-    if (time is None) == (cpm_source is None):
-        raise ValueError('provide time or cpm_source')
-    if time is None:
-        time = cpm_source.pixel_time
-
-    tau = (cpm_source.pixel_time - t_0) / t_E
-    u_2 = tau**2 + u_0**2
-    model = (u_2 + 2.) / np.sqrt(u_2 * (u_2 + 4.))
-    model *= f_s
-    
-    return model
-    
 def fun_3(inputs, cpm_source, t_E):
     """3-parameter function for optimisation; t_E - fixed"""
     t_0 = inputs[0]
     u_0 = inputs[1]
     t_E = t_E
     f_s = inputs[2]
-    
     if u_0 < 0. or t_E < 0. or f_s < 0.:
         return 1.e6
+        
+    model = cpm_source.pspl_model(t_0, u_0, t_E, f_s)
+    cpm_source.run_cpm(model)        
 
-    model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
-
-    cpm_source.run_cpm(model)
-    
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
     return cpm_source.residuals_rms
     
@@ -48,9 +32,7 @@ def fun_4(inputs, cpm_source):
     
     if u_0 < 0. or t_E < 0. or f_s < 0.:
         return 1.e6
-
-    model = pspl_model(t_0, u_0, t_E, f_s, cpm_source=cpm_source)
-
+    model = cpm_source.pspl_model(t_0, u_0, t_E, f_s)
     cpm_source.run_cpm(model)
     
     #print(t_0, u_0, t_E, f_s, cpm_source.residuals_rms)
@@ -90,7 +72,7 @@ if __name__ == "__main__":
     print(out)
     
     # plot the best model
-    model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
+    model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, out.x[2])
     cpm_source.run_cpm(model)
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
     mask = cpm_source.residuals_mask
@@ -107,7 +89,7 @@ if __name__ == "__main__":
     if True:
         limit = np.sort(np.abs(cpm_source.residuals[mask]))[-n_remove]
         cpm_source.mask_bad_epochs_residuals(limit)
-        model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
+        model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, out.x[2])
         cpm_source.run_cpm(model)
         print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
 
@@ -116,7 +98,7 @@ if __name__ == "__main__":
         out = minimize(fun_3, out.x, args=args, tol=tol, method=method)
         print(out)
         
-        model = pspl_model(out.x[0], out.x[1], t_E, out.x[2], cpm_source=cpm_source)
+        model = cpm_source.pspl_model(out.x[0], out.x[1], t_E, out.x[2])
         cpm_source.run_cpm(model)
         print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
         

@@ -284,6 +284,10 @@ class CpmFitSource(object):
         """sets the epoch mask used for training in CPM"""
         self._train_mask = train_mask
 
+    def pspl_model(self, t_0, u_0, t_E, f_s):
+        """Paczynski (or point-source/point-lens) microlensing model"""
+        return utils.pspl_model(t_0, u_0, t_E, f_s, self.pixel_time)
+
     def run_cpm(self, model, model_mask=None):
         """Run CPM on all pixels. Model has to be provided for epochs in
         self.pixel_time. If the epoch mask model_mask is None, then it's 
