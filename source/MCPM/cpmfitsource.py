@@ -400,7 +400,7 @@ class CpmFitSource(object):
         shift (int or float) sets the shift in Y axis between the pixel,
         the default value is 2*RMS rounded up to nearest 10"""
         if shift is None:
-            shift = round(2 * self.residuals_rms, -1) # -1 mean "next 10"
+            shift = round(2 * self.residuals_rms + 10./2, -1) # -1 mean "next 10"
 
         mask = self.residuals_mask
         time = self.pixel_time[mask]
@@ -409,6 +409,9 @@ class CpmFitSource(object):
             y_values = self.pixel_residuals[i][mask] + i * shift
             plt.plot(time, time*0+i * shift, 'k--')
             plt.plot(time, y_values, '.', label="pixel {:}".format(i))
+            
+        plt.xlabel("HJD'")
+        plt.ylabel("counts + const.")
 
     def plot_pixel_curves(self, **kwargs):
         """Use matplotlib to plot raw data for a set of pixels. 
@@ -434,13 +437,13 @@ class CpmFitSource(object):
             mask &= self._train_mask
 
         plt.xlabel("HJD'")
+        residuals = np.copy(self.residuals)
         if f_s is None:
             y_label = 'counts'
-            residuals = self.residuals 
         else:
             y_label = 'magnification'
             model /= f_s
-            residuals = self.residuals / f_s
+            residuals /= f_s
             
         plt.ylabel(y_label)
         plt.plot(self.pixel_time[model_mask], model[model_mask], 'k-', lw=lw)
@@ -459,7 +462,7 @@ class CpmFitSource(object):
         lw = 5
         plt.plot(self.pixel_time[mask], self.pixel_time[mask]*0., 'k--', lw=lw)
 
-        residuals = self.residuals
+        residuals = np.copy(self.residuals)
         if f_s is not None:
             residuals /= f_s
 
