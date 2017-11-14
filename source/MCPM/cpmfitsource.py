@@ -416,9 +416,12 @@ class CpmFitSource(object):
         self.multiple_tpf.plot_pixel_curves(self.mean_x, self.mean_y, **kwargs)
 
     def run_cpm_and_plot_model(self, model, model_mask=None, 
-            plot_residuals=False):
+            plot_residuals=False, f_s=None):
         """Run CPM on given model and plot the model and model+residuals;
-        also plot residuals if requested via plot_residuals=True"""
+        also plot residuals if requested via plot_residuals=True.
+        Magnification is used instead of counts if f_s is provided
+        """
+        lw = 5
         self.run_cpm(model=model, model_mask=model_mask)
 
         mask = self.residuals_mask
@@ -431,24 +434,38 @@ class CpmFitSource(object):
             mask &= self._train_mask
 
         plt.xlabel("HJD'")
-        plt.ylabel("counts")
-        plt.plot(self.pixel_time[model_mask], model[model_mask], 'k-')
-        plt.plot(self.pixel_time[mask], self.residuals[mask] + model[mask],
-                'b.')
-        plt.plot(self.pixel_time[mask_2], 
-                self.residuals[mask_2] + model[mask_2], 'bo')
+        if f_s is None:
+            y_label = 'counts'
+            residuals = self.residuals 
+        else:
+            y_label = 'magnification'
+            model /= f_s
+            residuals = self.residuals / f_s
+            
+        plt.ylabel(y_label)
+        plt.plot(self.pixel_time[model_mask], model[model_mask], 'k-', lw=lw)
+        plt.plot(self.pixel_time[mask], residuals[mask] + model[mask], 'b.')
+        plt.plot(self.pixel_time[mask_2], residuals[mask_2] + model[mask_2], 
+                'bo')
         
         if plot_residuals:
             if self._train_mask is None:
                 mask_2 = None
-            self._plot_residuals_of_last_model(mask, mask_2)
+            self._plot_residuals_of_last_model(mask, mask_2, f_s)
 
-    def _plot_residuals_of_last_model(self, mask, mask_2=None):
-        """inner function that makes the plotting"""
-        plt.plot(self.pixel_time[mask], self.pixel_time[mask]*0., 'k--')
-        plt.plot(self.pixel_time[mask], self.residuals[mask], 'r.')
+    def _plot_residuals_of_last_model(self, mask, mask_2=None, f_s=None):
+        """inner function that makes the plotting; magnification is plotted instead of counts 
+        if f_s is provided"""
+        lw = 5
+        plt.plot(self.pixel_time[mask], self.pixel_time[mask]*0., 'k--', lw=lw)
+
+        residuals = self.residuals
+        if f_s is not None:
+            residuals /= f_s
+
+        plt.plot(self.pixel_time[mask], residuals[mask], 'r.')
         if mask_2 is not None:
-            plt.plot(self.pixel_time[mask_2], self.residuals[mask_2], 'ro')
+            plt.plot(self.pixel_time[mask_2], residuals[mask_2], 'ro')
 
     def plot_residuals_of_last_model(self):
         """plot residuals of last model run"""

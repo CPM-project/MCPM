@@ -104,6 +104,6 @@ if __name__ == "__main__":
         
         # plot it:
         if True:
-            cpm_source.run_cpm_and_plot_model(model, plot_residuals=True)
+            cpm_source.run_cpm_and_plot_model(model, plot_residuals=True, f_s=out.x[2])
             plt.savefig('ob160940.png')
             

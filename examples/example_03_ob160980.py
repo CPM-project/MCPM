@@ -75,7 +75,7 @@ if __name__ == "__main__":
     cpm_source.run_cpm(model)
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
     
-    cpm_source.run_cpm_and_plot_model(model, plot_residuals=True)
+    cpm_source.run_cpm_and_plot_model(model, plot_residuals=True, f_s = out.x[2])
     plt.show()
     
     # you may want to plot residuals as a function of position:
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         
         # plot it:
         if True:
-            cpm_source.run_cpm_and_plot_model(model, plot_residuals=True)
+            cpm_source.run_cpm_and_plot_model(model, plot_residuals=True, f_s = out.x[2])
             plt.savefig('ob160980.png')
 
     # Optimize model parameters with 4 fitted parameters:
