@@ -104,10 +104,10 @@ class TpfData(object):
         url_to_load = url_template.format(self.campaign, d1, d2, self.file_name)
         
         fmt = "Downloading {:} ..... "
-        print(fmt.format(self.file_name), end='', file=sys.stderr)
+        print(fmt.format(self.file_name), end='', file=sys.stderr, flush=True)
         url_retriver = URLopener()
         url_retriver.retrieve(url_to_load, self._path)
-        print(" done", file=sys.stderr)
+        print(" done", file=sys.stderr, flush=True)
     
     @property
     def reference_pixel(self):

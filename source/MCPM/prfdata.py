@@ -108,7 +108,7 @@ class PrfData(object):
             weights = np.linalg.solve(equation, np.array([x, y, 1.]))
             if np.all(weights >= 0.): # i.e. we found triangle in which 
                 return (np.array([i, j, -1]), weights) # the point is located
-        raise ValueError("Point doesn't lie in any of the triangles")
+        raise ValueError("Point ({:}, {:}) doesn't lie in any of the triangles".format(x, y))
 
     def _interpolate_prf(self, x, y):
         """barycentric interpolation on a traiangle grid"""
