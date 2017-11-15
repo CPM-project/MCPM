@@ -28,7 +28,8 @@ def linear_least_squares(A, y, yvar=None, l2=None):
     """
     # Check if A, l2, and yvar are the same as before, if so, then use 
     # previously remembered factor.
-    if linear_least_squares.A is not None:
+    if (linear_least_squares.A is not None
+            and linear_least_squares.factor is not None):
         if (linear_least_squares.A.shape == A.shape
                     and linear_least_squares.l2 == l2
                     and linear_least_squares.yvar == yvar):
@@ -75,3 +76,4 @@ def linear_least_squares(A, y, yvar=None, l2=None):
     return linalg.cho_solve(factor, np.dot(AT, Ciy), overwrite_b=True)
     
 linear_least_squares.A = None
+linear_least_squares.factor = None
