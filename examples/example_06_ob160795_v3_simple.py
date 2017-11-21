@@ -1,10 +1,3 @@
-import numpy as np
-from scipy.optimize import minimize
-from scipy.stats import sigmaclip
-from os import path
-import matplotlib.pyplot as plt
-import sys
-
 from MCPM import utils
 from MCPM.cpmfitsource import CpmFitSource
 
