@@ -9,18 +9,6 @@ from MCPM import utils
 from MCPM.cpmfitsource import CpmFitSource
 
 
-def fun_2(inputs, cpm_source, t_E, f_s):
-    """2-parameter function for optimisation; t_E and f_s - fixed"""
-    t_0 = inputs[0]
-    u_0 = inputs[1]
-    if u_0 < 0. or t_E < 0. or f_s < 0.:
-        return 1.e6
-
-    model = cpm_source.pspl_model(t_0, u_0, t_E, f_s)
-    cpm_source.run_cpm(model)
-    
-    return cpm_source.residuals_rms 
-
 if __name__ == "__main__":
     # We want to extract the light curve of ob160795
     channel = 52
