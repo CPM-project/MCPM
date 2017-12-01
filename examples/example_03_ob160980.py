@@ -76,12 +76,14 @@ if __name__ == "__main__":
     print("RMS: {:.4f}  {:}".format(cpm_source.residuals_rms, np.sum(cpm_source.residuals_mask)))
     
     cpm_source.run_cpm_and_plot_model(model, plot_residuals=True, f_s = out.x[2])
-    plt.show()
+    #plt.show()
+    plt.close()
     
     # you may want to plot residuals as a function of position:
     if False:
         plt.scatter(cpm_source.x_positions[mask], cpm_source.y_positions[mask], c=np.abs(cpm_source.residuals[mask]))
         plt.show()
+        plt.close()
     
     # Remove most outlying points:
     if True:
@@ -104,7 +106,14 @@ if __name__ == "__main__":
         # plot it:
         if True:
             cpm_source.run_cpm_and_plot_model(model, plot_residuals=True, f_s = out.x[2])
-            plt.savefig('ob160980.png')
+            #plt.savefig('ob160980.png')
+            plt.show()
+            plt.close()
+            
+            cpm_source.plot_pixel_residuals()
+            #plt.savefig('ob160980_pixel_res.png')
+            plt.show()
+            plt.close()
 
     # Optimize model parameters with 4 fitted parameters:
     if False:

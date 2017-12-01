@@ -79,11 +79,13 @@ if __name__ == "__main__":
     plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask]+model[mask], '.')
     plt.plot(cpm_source.pixel_time[mask], cpm_source.residuals[mask], '.')
     plt.show()
+    plt.close()
     
     # you may want to plot residuals as a function of position:
     if False:
         plt.scatter(cpm_source.x_positions[mask], cpm_source.y_positions[mask], c=np.abs(cpm_source.residuals[mask]))
         plt.show()
+        plt.close()
     
     # Remove most outlying points:
     if True:
@@ -106,4 +108,8 @@ if __name__ == "__main__":
         if True:
             cpm_source.run_cpm_and_plot_model(model, plot_residuals=True, f_s=out.x[2])
             plt.savefig('ob160940.png')
+            plt.close()
             
+            cpm_source.plot_pixel_residuals()
+            plt.savefig('ob160940_pixel_res.png')
+            plt.close()
