@@ -12,14 +12,20 @@ class TpfRectangles(object):
     and some may have width or height of 1 pixel
     """
     
-    directory = path.join(MCPM.MODULE_PATH, 'data', 'K2C9', 'tpf_rectangles') 
-    
     def __init__(self, campaign, channel):
         self.campaign = campaign
         self.channel = channel
         
         file_name = "tpf_rectangles_{:}_{:}.data".format(campaign, channel)
-        path_ = path.join(self.directory, file_name)
+        if int(self.campaign) in [91, 92]:
+            subdir = 'K2C9'
+        elif int(self.campaign) in [111, 112]:
+            subdir = 'K2C11'
+        else:
+            msg = 'expected campaigns: 91, 92, 111, or 112; got {:}'
+            raise ValueError(msg.format(self.campaign))
+        directory = path.join(MCPM.MODULE_PATH, 'data', subdir) 
+        path_ = path.join(directory, 'tpf_rectangles', file_name)
         load = np.loadtxt(path_, unpack=True, dtype=int)
         (epic, self.min_x, self.max_x, self.min_y, self.max_y) = load
         self.epic = np.array(epic, dtype=str)
@@ -60,3 +66,10 @@ class TpfRectangles(object):
         else:
             return self.epic[np.argmax(selection)]
            
+    def get_nearest_epic(self, x, y):
+        """find the nearest epic; return its id and distance 
+        (0 if point is inside it)"""
+        distances = self.point_distances(x=x, y=y)
+        index = np.argmin(distances)
+        return (self.epic[index], distances[index])
+        
