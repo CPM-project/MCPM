@@ -23,11 +23,9 @@ class CpmFitPixel(object):
         self.n_train_pixels = self.predictor_matrix.shape[1]
 
         self._model = model
-        if model_mask is None:
-            self.model_mask = np.ones(self.n_epochs, dtype=bool)
-        else:    
-            self.model_mask = model_mask
-        
+        self._model_mask = None
+        self.model_mask = model_mask
+       
         self.time = time
         self.train_lim = train_lim
         
@@ -49,14 +47,22 @@ class CpmFitPixel(object):
                                         self.n_train_pixels, l2, l2_per_pixel)
 
         self.reset_results()
-    
+        self._reset_cache()
+
     def reset_results(self):
         """sets all the results to None so that they're re-calculated 
         when you access them next time"""
         self._target_masked = None
         self._coefs = None
         self._fitted_flux = None
-        
+
+    def _reset_cache(self):
+        """reset the internal variable that greatly improve speed"""
+        self._predictor_coefs = None
+        self._predictor_coefs_mask = None
+        self._predictor_fitted_flux = None
+        self._predictor_fitted_flux_mask = None
+
     @property
     def model(self):
         """the astrophysical model to be subtracted before the CPM is run"""
@@ -66,7 +72,22 @@ class CpmFitPixel(object):
     def model(self, value):
         self.reset_results()
         self._model = value
-        
+    
+    @property
+    def model_mask(self):
+        """epoch mask for the model"""
+        return self._model_mask
+
+    @model_mask.setter
+    def model_mask(self, value):
+        if value is None:
+            if self._model_mask is not None and not np.all(self._model_mask):
+                self._model_mask = np.ones(self.n_epochs, dtype=bool)
+                self._reset_cache()
+        elif np.any(self._model_mask != value):
+            self._model_mask = value
+            self._reset_cache()
+
     @property
     def results_mask(self):
         """the mask to be applied to all the results"""
@@ -95,11 +116,15 @@ class CpmFitPixel(object):
         """coefficients inside the CPM - they're multipled by 
         predictor_matrix_masked to get the prediction"""
         if self._coefs is None:
-            predictor = self.predictor_matrix[self.train_mask]
+            if (self._predictor_coefs is None 
+                    or not np.all(self._predictor_coefs_mask == self.train_mask)):
+                self._predictor_coefs = self.predictor_matrix[self.train_mask]
+                self._predictor_coefs_mask = np.copy(self.train_mask)
             target = self.target_masked
             yvar = None
             
-            self._coefs = solver.linear_least_squares(predictor, target, yvar, self.l2)
+            self._coefs = solver.linear_least_squares(self._predictor_coefs, 
+                                                        target, yvar, self.l2)
             
         return self._coefs
         
@@ -107,10 +132,14 @@ class CpmFitPixel(object):
     def fitted_flux(self):
         """predicted flux values"""
         if self._fitted_flux is None:
-            predictor = self.predictor_matrix[self.results_mask]
-            fit = np.dot(predictor, self.coefs)[:,0]
+            results_mask = self.results_mask
+            if (self._predictor_fitted_flux is None 
+                    or not np.all(self._predictor_fitted_flux_mask == results_mask)):
+                self._predictor_fitted_flux = self.predictor_matrix[results_mask]
+                self._predictor_fitted_flux_mask = np.copy(results_mask)
+            fit = np.dot(self._predictor_fitted_flux, self.coefs)[:,0]
             self._fitted_flux = np.zeros(self.n_epochs, dtype=float)
-            self._fitted_flux[self.results_mask] = fit
+            self._fitted_flux[results_mask] = fit
         return self._fitted_flux
         
     @property
