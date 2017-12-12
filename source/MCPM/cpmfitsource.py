@@ -293,7 +293,8 @@ class CpmFitSource(object):
         self.pixel_time. If the epoch mask model_mask is None, then it's 
         assumed it's True for each epoch. Mask of PRF is applied inside 
         this function."""
-        self._cpm_pixel = [None] * self.n_pixels
+        if self._cpm_pixel is None:
+            self._cpm_pixel = [None] * self.n_pixels
         self._pixel_residuals = None
         self._pixel_residuals_mask = None
         self._residuals = None
@@ -306,13 +307,17 @@ class CpmFitSource(object):
         for i in range(self.n_pixels):
             model_i = model * self.prf_values[:,i]
             
-            self._cpm_pixel[i] = CpmFitPixel(
+            if self._cpm_pixel[i] is None:
+                self._cpm_pixel[i] = CpmFitPixel(
                     target_flux=self.pixel_flux[i], 
                     target_flux_err=None, target_mask=self.pixel_mask[i], 
                     predictor_matrix=self.predictor_matrix, 
                     predictor_matrix_mask=self.predictor_matrix_mask, 
                     l2=self.l2, model=model_i, model_mask=model_mask, 
                     time=self.pixel_time, train_mask=self._train_mask)
+            else:
+                self._cpm_pixel[i].model = model_i
+                self._cpm_pixel[i].model_mask = model_mask
 
     @property
     def pixel_residuals(self):
