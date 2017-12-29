@@ -195,11 +195,13 @@ class Minimizer(object):
     def plot_sat_magnitudes(self, **kwargs):
         """Plot satellite data in reference magnitude system"""
         import matplotlib.pyplot as plt
+        data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
         (fs_sat, fb_sat) = self.event.model.get_ref_fluxes(-1)
-        self.event.model.get_ref_fluxes(0)
+        self.event.model.data_ref = data_ref
+        
         times = self._sat_time - 2450000.
-        values_1 = self._sat_magnification * self._sat_flux
-        values_2 = (values_1 - fb_sat) * (fs[0] / fs_sat[0]) + fb
-        values = Utils.get_mag_from_flux(values_2)
-        plt.plot(times, values, **kwargs)
+        flux = (self._sat_magnification * self._sat_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
+        
+        plt.plot(times, Utils.get_mag_from_flux(flux), **kwargs)
+
