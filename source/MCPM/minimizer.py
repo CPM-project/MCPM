@@ -14,6 +14,9 @@ class Minimizer(object):
     
     NOTE that here we assume that theta has an additional parameter: satellite 
     source flux. It is also assumed that the last dataset is the satellite one. 
+
+    To force periodic flush of file with all models set n_flush to 
+    100 or 1000 etc.
     """
 
     def __init__(self, event, parameters_to_fit, cpm_source):
@@ -36,6 +39,8 @@ class Minimizer(object):
         self._sat_model = None
         self._sat_magnification = None
         self._sat_flux = None
+
+        self.n_flush = None
 
     def close_file_all_models(self):
         """closes the file to which all models are saved"""
@@ -114,7 +119,7 @@ class Minimizer(object):
         if self._file_all_models is not None:
             text = " ".join([repr(chi2)] + [repr(ll) for ll in theta]) + '\n'
             self._file_all_models.write(text)
-            if self._n_calls % 100 == 0:
+            if self.n_flush is not None and self._n_calls % self.n_flush == 0:
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
         return chi2
