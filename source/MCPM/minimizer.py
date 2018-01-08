@@ -130,6 +130,22 @@ class Minimizer(object):
             chi2_0 = np.sum([d.n_epochs for d in self.event.datasets])
         self._chi2_0 = chi2_0
         
+    def set_pixel_coefs(self, models, weights=None):
+        """run a set of models, remember the coefs for every pixel,
+        then average them (using weights) and remember"""
+        n_models = len(models)
+        shape = (n_models, self.cpm_source.predictor_matrix.shape[1])
+        coefs = [np.zeros(shape) for i in range(self.cpm_source.n_pixels)]
+        
+        for i in range(n_models):
+            self._run_cpm(models[i])
+            for j in range(self.cpm_source.n_pixels):
+                coefs[j][i] = self.cpm_source._cpm_pixel[j].coefs.reshape(shape[1])
+
+        for j in range(self.cpm_source.n_pixels):
+            average = np.average(coefs[j], 0, weights=weights)
+            self.cpm_source._cpm_pixel[j].set_coefs(average.reshape((-1, 1)))            
+        
     def set_prior_boundaries(self, parameters_min_values, 
             parameters_max_values):
         """remebers 2 dictionaries that set minimum and maximum values of 

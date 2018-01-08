@@ -48,6 +48,7 @@ class CpmFitPixel(object):
 
         self.reset_results()
         self._reset_cache()
+        self._coefs_fixed = None
 
     def reset_results(self):
         """sets all the results to None so that they're re-calculated 
@@ -111,20 +112,25 @@ class CpmFitPixel(object):
                 self._target_masked -= self.model[mask]
         return self._target_masked
         
+    def set_coefs(self, values):
+        """provided coefs values are remembered internally and then use 
+        for any further calculations"""
+        self._coefs_fixed = np.copy(values)
+    
     @property
     def coefs(self):
         """coefficients inside the CPM - they're multipled by 
         predictor_matrix_masked to get the prediction"""
         if self._coefs is None:
-            if (self._predictor_coefs is None 
-                    or not np.all(self._predictor_coefs_mask == self.train_mask)):
-                self._predictor_coefs = self.predictor_matrix[self.train_mask]
-                self._predictor_coefs_mask = np.copy(self.train_mask)
-            target = self.target_masked
-            yvar = None
-            
-            self._coefs = solver.linear_least_squares(self._predictor_coefs, 
-                                                        target, yvar, self.l2)
+            if self._coefs_fixed is not None:
+                self._coefs = np.copy(self._coefs_fixed)
+            else:
+                if (self._predictor_coefs is None 
+                        or not np.all(self._predictor_coefs_mask == self.train_mask)):
+                    self._predictor_coefs = self.predictor_matrix[self.train_mask]
+                    self._predictor_coefs_mask = np.copy(self.train_mask)
+                self._coefs = solver.linear_least_squares(self._predictor_coefs, 
+                        self.target_masked, None, self.l2)
             
         return self._coefs
         
