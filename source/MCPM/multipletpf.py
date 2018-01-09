@@ -255,17 +255,21 @@ class MultipleTpf(object):
             return (None, None, np.sum(distance_mask)) # enough pixels
         distance2 = distance2[distance_mask]
         index = np.argsort(distance2, kind="mergesort")
+        max_distance = distance2[index[n_pixel]]**.5
         
         pixel_numbers_masked = np.arange(pixel_flux.shape[1])[pixel_mask]
         pixel_indexes = pixel_numbers_masked[distance_mask][index[:n_pixel]]
         predictor_flux = pixel_flux[:, pixel_indexes]
+        predictor_row = pixel_row[pixel_indexes]
+        predictor_column = pixel_column[pixel_indexes]
         
         used_epic_ids = set(self._get_epic_ids_as_vector(epics)[pixel_indexes])
         epoch_mask = np.ones(predictor_flux.shape[0], dtype=bool)
         for epic_id in used_epic_ids:
             epoch_mask &= self.tpf_for_epic_id(epic_id).epoch_mask
-
-        return (predictor_flux, epoch_mask, distance2[index[n_pixel]]**.5)
+            
+        return (predictor_flux, epoch_mask, max_distance, 
+                predictor_row, predictor_column)
         
     def _guess_n_radius_min(self, n_pixel, exclude):
         """guess the minimum radius in which all pixels have to be checked"""
@@ -324,7 +328,7 @@ class MultipleTpf(object):
                 n_epics += n_add_epics
             else:
                 run = False        
-        return (out[0], out[1])
+        return (out[0], out[1], out[3], out[4])
   
     def get_epic_id_for_radec(self, ra, dec):
         """find which tpf file given (ra,dec) belong to"""

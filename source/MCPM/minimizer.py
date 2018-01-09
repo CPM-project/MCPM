@@ -225,4 +225,3 @@ class Minimizer(object):
         flux = (self._sat_magnification * self._sat_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
         
         plt.plot(times, Utils.get_mag_from_flux(flux), **kwargs)
-

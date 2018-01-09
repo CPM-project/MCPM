@@ -48,6 +48,8 @@ class CpmFitSource(object):
         self._pixels = None
         self._predictor_matrix = None
         self._predictor_matrix_mask = None
+        self._predictor_matrix_row = None
+        self._predictor_matrix_column = None
         self._l2 = None
         self._l2_per_pixel = None
         self._prf_values = None
@@ -154,6 +156,8 @@ class CpmFitSource(object):
         
         self._predictor_matrix = out[0]
         self._predictor_matrix_mask = out[1]
+        self._predictor_matrix_row = out[2]
+        self._predictor_matrix_column = out[3]
         
     @property
     def predictor_matrix(self):
@@ -508,4 +512,3 @@ class CpmFitSource(object):
         plt.plot(self.pixel_time[mask_], signal[mask_], 'k-')
         plt.plot(self.pixel_time[mask_], signal[mask_], 'ks')
         plt.plot(self.pixel_time[mask_], self.pixel_flux[pixel_i][mask_], 'ro')
-
