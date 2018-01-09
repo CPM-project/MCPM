@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.io import fits
 
 from MCPM.multipletpf import MultipleTpf
 from MCPM.campaigngridradec2pix import CampaignGridRaDec2Pix
@@ -416,7 +417,35 @@ class CpmFitSource(object):
         mask_all = mask & self.residuals_mask
         rms = np.sqrt(np.mean(np.square(self.residuals[mask_all])))
         return rms
-       
+    
+    def save_coeffs_in_fits(self, fits_name):
+        """save coeffs to a fits file; 
+        you probably want run set_pixel_coeffs() before"""
+        column_1 = fits.Column(name='x', array=self.pixels[:,0], format='I')
+        column_2 = fits.Column(name='y', array=self.pixels[:,1], format='I')
+        hdu_1 = fits.BinTableHDU.from_columns([column_1, column_2], 
+                name='event_pixels')
+                
+        column_1 = fits.Column(name='row', array=self._predictor_matrix_row, 
+                format='I')
+        column_2 = fits.Column(name='column', array=self._predictor_matrix_column, 
+                format='I')
+        hdu_2 = fits.BinTableHDU.from_columns([column_1, column_2],
+                name='predictor_matrix_pixels')
+        
+        columns = []
+        for i in range(self.n_pixels):
+            column = fits.Column(name="pix_{:}".format(i), 
+                    array=self.pixel_coeffs(i), format='E')
+            columns.append(column)
+        hdu_3 = fits.BinTableHDU.from_columns(columns, name='coeffs')
+        
+        header = fits.Header()
+        header['code'] = 'https://github.com/CPM-project/MCPM'
+        hdu_0 = fits.PrimaryHDU(header=header)
+        hdus = fits.HDUList([hdu_0, hdu_1, hdu_2, hdu_3])
+        hdus.writeto(fits_name)
+    
     def plot_pixel_residuals(self, shift=None):
         """Plot residuals for each pixel separately. Parameter
         shift (int or float) sets the shift in Y axis between the pixel,
