@@ -140,11 +140,11 @@ class Minimizer(object):
         for i in range(n_models):
             self._run_cpm(models[i])
             for j in range(self.cpm_source.n_pixels):
-                coefs[j][i] = self.cpm_source._cpm_pixel[j].coefs.reshape(shape[1])
-
+                coefs[j][i] = self.cpm_source.pixel_coefs(j).reshape(shape[1])
+                
         for j in range(self.cpm_source.n_pixels):
             average = np.average(coefs[j], 0, weights=weights)
-            self.cpm_source._cpm_pixel[j].set_coefs(average.reshape((-1, 1)))            
+            self.cpm_source.set_pixel_coefs(j, average.reshape((-1, 1)))
         
     def set_prior_boundaries(self, parameters_min_values, 
             parameters_max_values):
