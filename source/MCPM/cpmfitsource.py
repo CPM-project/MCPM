@@ -354,18 +354,18 @@ class CpmFitSource(object):
                 raise ValueError(fmt.format(len(failed), self.n_pixels, *failed))
         return self._pixel_residuals
     
-    def pixel_coefs(self, n_pixel):
-        """return CPM coefs for pixel number n_pixel"""
+    def pixel_coeffs(self, n_pixel):
+        """return CPM coeffs for pixel number n_pixel"""
         if self._cpm_pixel is None:
             raise ValueError("CPM not yet run but you're trying to "
                             + "access its results")
-        return self._cpm_pixel[n_pixel].coefs
+        return self._cpm_pixel[n_pixel].coeffs
         
-    def set_pixel_coefs(self, n_pixel, values):
-        """set coefs for given pixel"""
+    def set_pixel_coeffs(self, n_pixel, values):
+        """set coeffs for given pixel"""
         if self._cpm_pixel is None:
             raise ValueError("CPM not yet run")        
-        self._cpm_pixel[n_pixel].set_coefs(values)
+        self._cpm_pixel[n_pixel].set_coeffs(values)
         
     @property
     def pixel_residuals_mask(self):

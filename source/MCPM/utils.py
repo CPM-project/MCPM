@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 # - load_matrix_xy()
 # - save_matrix_xy()
 # - read_true_false_file()
-# - degree_to_n_coefs()
-# - n_coefs_to_degree()
-# - eval_poly_2d_no_coefs()
-# - eval_poly_2d_coefs()
+# - degree_to_n_coeffs()
+# - n_coeffs_to_degree()
+# - eval_poly_2d_no_coeffs()
+# - eval_poly_2d_coeffs()
 # - eval_poly_2d()
 # - fit_two_poly_2d()
 # - plot_matrix_subplots()
@@ -103,18 +103,18 @@ def read_true_false_file(file_name):
             out.append(parser[line[:-1].upper()])
     return np.array(out)
 
-def degree_to_n_coefs(degree):
+def degree_to_n_coeffs(degree):
     """how many coefficients has a 2d polynomial of given degree"""
     return int((degree+1)*(degree+2)/2.+0.5)
 
-def n_coefs_to_degree(n_coefs):
-    """what is degree if 2d polynomial has n_coefs coeficients"""
-    delta_sqrt = int((8 * n_coefs + 1.)**.5 + 0.5)
-    if delta_sqrt**2 != (8*n_coefs+1.):
-        raise ValueError('Wrong input in n_coefs_to_degree(): {:}'.format(n_coefs))
+def n_coeffs_to_degree(n_coeffs):
+    """what is degree if 2d polynomial has n_coeffs coeficients"""
+    delta_sqrt = int((8 * n_coeffs + 1.)**.5 + 0.5)
+    if delta_sqrt**2 != (8*n_coeffs+1.):
+        raise ValueError('Wrong input in n_coeffs_to_degree(): {:}'.format(n_coeffs))
     return int((delta_sqrt - 3.) / 2. + 0.5)
 
-def eval_poly_2d_no_coefs(x, y, deg):
+def eval_poly_2d_no_coeffs(x, y, deg):
     """evaluate powers of given values and return as a table: [1, x, y, x^2, xy, y^2] for deg = 2"""
     pow_x = np.polynomial.polynomial.polyvander(x, deg)
     pow_y = np.polynomial.polynomial.polyvander(y, deg)
@@ -124,23 +124,23 @@ def eval_poly_2d_no_coefs(x, y, deg):
             results.append(pow_x[:,i-j]*pow_y[:,j])
     return np.array(results)
 
-def eval_poly_2d_coefs(x, y, coefs):
+def eval_poly_2d_coeffs(x, y, coeffs):
     """evaluate 2d polynomial without summing up"""
-    c = np.copy(coefs).reshape(coefs.size, 1)
-    deg = n_coefs_to_degree(len(c))
-    return c * eval_poly_2d_no_coefs(x=x, y=y, deg=deg)
+    c = np.copy(coeffs).reshape(coeffs.size, 1)
+    deg = n_coeffs_to_degree(len(c))
+    return c * eval_poly_2d_no_coeffs(x=x, y=y, deg=deg)
 
-def eval_poly_2d(x, y, coefs):
+def eval_poly_2d(x, y, coeffs):
     """evaluate 2d polynomial"""
-    monomials = eval_poly_2d_coefs(x=x, y=y, coefs=coefs)
+    monomials = eval_poly_2d_coeffs(x=x, y=y, coeffs=coeffs)
     results = []
     for i in range(monomials.shape[1]):
         results.append(fsum(monomials[:,i]))
     return np.array(results)
 
 def fit_two_poly_2d(x_in, y_in, x_out, y_out, degree):
-    """fits 2 polynomials: x_out = f(x_in, y_in, coefs) and same for y_out"""
-    basis = eval_poly_2d_no_coefs(x_in, y_in, degree).T
+    """fits 2 polynomials: x_out = f(x_in, y_in, coeffs) and same for y_out"""
+    basis = eval_poly_2d_no_coeffs(x_in, y_in, degree).T
     (coeffs_x, residuals_x, rank_x, singular_x) = np.linalg.lstsq(basis, x_out)
     (coeffs_y, residuals_y, rank_y, singular_y) = np.linalg.lstsq(basis, y_out)
     return (coeffs_x, coeffs_y)

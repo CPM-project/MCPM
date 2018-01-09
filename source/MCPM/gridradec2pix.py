@@ -6,30 +6,30 @@ from MCPM import utils
 class GridRaDec2Pix(object):
     """a single transformation from (RA, Dec) to (x,y)"""
 
-    def __init__(self, coefs_x, coefs_y):
-        """coefs_x and coefs_y has to be of the same type: np.array, list, string"""
-        if type(coefs_x) != type(coefs_y):
+    def __init__(self, coeffs_x, coeffs_y):
+        """coeffs_x and coeffs_y has to be of the same type: np.array, list, string"""
+        if type(coeffs_x) != type(coeffs_y):
             raise TypeError('different types of input data')
 
-        if isinstance(coefs_x, np.ndarray):
-            coefs_x_in = coefs_x
-            coefs_y_in = coefs_y
-        elif isinstance(coefs_x, list):
-            if isinstance(coefs_x[0], str):
-                coefs_x_in = np.array([float(value) for value in coefs_x])
-                coefs_y_in = np.array([float(value) for value in coefs_y])
+        if isinstance(coeffs_x, np.ndarray):
+            coeffs_x_in = coeffs_x
+            coeffs_y_in = coeffs_y
+        elif isinstance(coeffs_x, list):
+            if isinstance(coeffs_x[0], str):
+                coeffs_x_in = np.array([float(value) for value in coeffs_x])
+                coeffs_y_in = np.array([float(value) for value in coeffs_y])
             else:
-                raise TypeError('unrecognized type in input list: {:}'.format(type(coefs_x[0])))
+                raise TypeError('unrecognized type in input list: {:}'.format(type(coeffs_x[0])))
         else:
-            raise TypeError('unrecognized input type: {:}'.format(type(coefs_x)))
+            raise TypeError('unrecognized input type: {:}'.format(type(coeffs_x)))
 
-        self.coefs_x = coefs_x_in
-        self.coefs_y = coefs_y_in
+        self.coeffs_x = coeffs_x_in
+        self.coeffs_y = coeffs_y_in
 
     def apply_grid(self, ra, dec):
         """calculate pixel coordinates for given (RA,Dec) which can be floats, lists, or numpy.arrays"""
-        x_out = utils.eval_poly_2d(ra, dec, self.coefs_x)
-        y_out = utils.eval_poly_2d(ra, dec, self.coefs_y)
+        x_out = utils.eval_poly_2d(ra, dec, self.coeffs_x)
+        y_out = utils.eval_poly_2d(ra, dec, self.coeffs_y)
         return (x_out, y_out)
     
     def apply_grid_single(self, ra, dec):

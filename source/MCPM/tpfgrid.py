@@ -5,7 +5,7 @@ from MCPM.gridradec2pix import GridRaDec2Pix
 
 poly_x = {}
 poly_y = {}
-# The coefs below come from fitting 2D polynomial of second order to WCS info 
+# The coeffs below come from fitting 2D polynomial of second order to WCS info 
 # in TPF files. 
 poly_x[(91, 30)] = np.array([277642.8375, -1113.86318265, 1787.9985768, 
     0.236717733144, -7.42780150635, -0.157826637598])

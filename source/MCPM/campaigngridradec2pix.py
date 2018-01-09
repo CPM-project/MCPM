@@ -58,8 +58,8 @@ class CampaignGridRaDec2Pix(object):
                     continue
                 columns = line.split()
                 index = int(columns[0]) - cadence_begin
-                self.grids[index] = GridRaDec2Pix(coefs_x=columns[4:10], 
-                                                  coefs_y=columns[10:16])
+                self.grids[index] = GridRaDec2Pix(coeffs_x=columns[4:10], 
+                                                  coeffs_y=columns[10:16])
                 bjd[index] = float(columns[1])
                 stars_used[index] = int(columns[2])
                 sigma[index] = float(columns[3])
