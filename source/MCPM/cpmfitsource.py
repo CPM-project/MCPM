@@ -155,6 +155,7 @@ class CpmFitSource(object):
         out = self.multiple_tpf.get_predictor_matrix(ra=self.ra, dec=self.dec, 
                 **kwargs)
         
+        self._predictor_matrix_kwargs = kwargs
         self._predictor_matrix = out[0]
         self._predictor_matrix_mask = out[1]
         self._predictor_matrix_row = out[2]
@@ -441,7 +442,13 @@ class CpmFitSource(object):
         hdu_3 = fits.BinTableHDU.from_columns(columns, name='coeffs')
         
         header = fits.Header()
+        header['RA'] = self.ra
+        header['Dec'] = self.dec
+        header['CAMPAIGN'] = self.campaign
+        header['CHANNEL'] = self.channel
+        header['L2'] = self._l2
         header['code'] = 'https://github.com/CPM-project/MCPM'
+        header.update(self._predictor_matrix_kwargs)
         hdu_0 = fits.PrimaryHDU(header=header)
         hdus = fits.HDUList([hdu_0, hdu_1, hdu_2, hdu_3])
         hdus.writeto(fits_name)
