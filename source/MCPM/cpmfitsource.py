@@ -446,7 +446,7 @@ class CpmFitSource(object):
         header['Dec'] = self.dec
         header['CAMPAIGN'] = self.campaign
         header['CHANNEL'] = self.channel
-        header['L2'] = self._l2
+        header['L2'] = (self._l2, 'REGULARISATION')
         header['code'] = 'https://github.com/CPM-project/MCPM'
         header.update(self._predictor_matrix_kwargs)
         hdu_0 = fits.PrimaryHDU(header=header)
