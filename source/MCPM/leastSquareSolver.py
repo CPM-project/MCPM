@@ -43,7 +43,8 @@ def linear_least_squares(A, y, yvar=None, l2=None):
                 fac = linear_least_squares.factor
                 AT = linear_least_squares.AT
                 return linalg.cho_solve(fac, np.dot(AT, Ciy), overwrite_b=True)
-    
+                #return np.dot(fac, np.dot(AT, Ciy))
+
     linear_least_squares.l2 = l2
     linear_least_squares.yvar = yvar
     linear_least_squares.A = A
@@ -70,7 +71,15 @@ def linear_least_squares(A, y, yvar=None, l2=None):
             l2 = l2 + np.zeros(A.shape[1])
         ATA[np.diag_indices_from(ATA)] += l2
     
-    # Solve the equations overwriting the temporary arrays for speed.
+    # Solve the equations overwriting the temporary arrays for speed.    
+    #(U, s, Vh) = np.linalg.svd(ATA, full_matrices=False) 
+    #ss = np.diag(1./s)
+    #mask = (s < np.max(s) * 1.e-6)
+    #ss[mask] = 0.
+    #factor = np.dot(np.dot(U, ss), Vh).T
+    #linear_least_squares.factor = factor
+    #return np.dot(factor, np.dot(AT, Ciy))
+
     factor = linalg.cho_factor(ATA, overwrite_a=True)
     linear_least_squares.factor = factor
     return linalg.cho_solve(factor, np.dot(AT, Ciy), overwrite_b=True)

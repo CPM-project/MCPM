@@ -122,6 +122,7 @@ class Minimizer(object):
             if self.n_flush is not None and self._n_calls % self.n_flush == 0:
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
+        #print(chi2, flush=True)
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
