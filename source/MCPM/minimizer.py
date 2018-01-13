@@ -40,6 +40,7 @@ class Minimizer(object):
         self._sat_magnification = None
         self._sat_flux = None
 
+        self._coefs_cache = None
         self.n_flush = None
 
     def close_file_all_models(self):
@@ -123,6 +124,9 @@ class Minimizer(object):
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
         #print(chi2, flush=True)
+        if self._coefs_cache is not None:
+            self._coefs_cache[tuple(theta.tolist())] = np.array([
+                    self.cpm_source.pixel_coeffs(j).flatten() for j in range(self.cpm_source.n_pixels)])
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
@@ -130,7 +134,19 @@ class Minimizer(object):
         if chi2_0 is None:
             chi2_0 = np.sum([d.n_epochs for d in self.event.datasets])
         self._chi2_0 = chi2_0
-        
+    
+    def set_pixel_coeffs_from_dicts(self, coeffs, weights=None):
+        """XXX"""
+        keys = list(coeffs.keys())
+        if weights is None:
+            weights_ = None
+        else:
+            weights_ = [weights[key] for key in keys]
+        for j in range(self.cpm_source.n_pixels):
+            data = [coeffs[key][j] for key in keys]
+            average = np.average(np.array(data), 0, weights=weights_)
+            self.cpm_source.set_pixel_coeffs(j, average.reshape((-1, 1)))
+
     def set_pixel_coeffs(self, models, weights=None):
         """run a set of models, remember the coeffs for every pixel,
         then average them (using weights) and remember"""
@@ -146,7 +162,22 @@ class Minimizer(object):
         for j in range(self.cpm_source.n_pixels):
             average = np.average(coeffs[j], 0, weights=weights)
             self.cpm_source.set_pixel_coeffs(j, average.reshape((-1, 1)))
-        
+    
+    def start_coeffs_cache(self):
+        """XXX"""
+        self._coefs_cache = dict()
+
+    def get_cached_coeffs(self, theta):
+        """XXX"""
+        if not isinstance(theta, tuple):
+            raise TypeError('wrong type of get_cached_coeffs() input: \n' +
+                    'got {:}, expected tuple'.format(type(theta)))
+        return self._coefs_cache[theta]
+
+    def stop_coeffs_cache(self):
+        """XXX"""
+        self._coefs_cache = None
+
     def set_prior_boundaries(self, parameters_min_values, 
             parameters_max_values):
         """remebers 2 dictionaries that set minimum and maximum values of 
