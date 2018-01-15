@@ -136,20 +136,36 @@ class Minimizer(object):
         self._chi2_0 = chi2_0
     
     def set_pixel_coeffs_from_dicts(self, coeffs, weights=None):
-        """XXX"""
+        """
+        Take coeffs, average them, and set pixel coeffs to the averages.
+       
+        Arguments :
+            coeffs: *dict*
+                Dictionary of pixel coeffs. Each value specifies coeffs for all 
+                pixels i.e., coeffs[key][j] is for j-th pixel. The keys can be 
+                whatever, but most probably you want 
+                tuple(list(model_parameters)) to be the keys.
+            weights: *dict*, optional
+                Dictionary of weights - uses the same keys as coeffs.
+        """
         keys = list(coeffs.keys())
         if weights is None:
             weights_ = None
         else:
             weights_ = [weights[key] for key in keys]
+        
         for j in range(self.cpm_source.n_pixels):
             data = [coeffs[key][j] for key in keys]
             average = np.average(np.array(data), 0, weights=weights_)
             self.cpm_source.set_pixel_coeffs(j, average.reshape((-1, 1)))
 
-    def set_pixel_coeffs(self, models, weights=None):
+    def set_pixel_coeffs_from_models(self, models, weights=None):
         """run a set of models, remember the coeffs for every pixel,
-        then average them (using weights) and remember"""
+        then average them (using weights) and remember
+        
+        NOTE: this version may be not very stable numerically. Try using 
+        e.g., set_pixel_coeffs_from_dicts()
+        """
         n_models = len(models)
         shape = (n_models, self.cpm_source.predictor_matrix.shape[1])
         coeffs = [np.zeros(shape) for i in range(self.cpm_source.n_pixels)]
@@ -164,18 +180,27 @@ class Minimizer(object):
             self.cpm_source.set_pixel_coeffs(j, average.reshape((-1, 1)))
     
     def start_coeffs_cache(self):
-        """XXX"""
+        """
+        Start internally remembering coeffs; also resets cache if cacheing was 
+        working.
+        """
         self._coefs_cache = dict()
 
     def get_cached_coeffs(self, theta):
-        """XXX"""
+        """
+        Get pixel coeffs for model defined by theta; note that 
+        theta = tuple(list(model_parameters))
+        """
+        if self._coefs_cache is None:
+            raise ValueError("You want to get cached values and you haven't " + 
+                "turned on caching (see start_coeffs_cache())? Strange...")
         if not isinstance(theta, tuple):
             raise TypeError('wrong type of get_cached_coeffs() input: \n' +
                     'got {:}, expected tuple'.format(type(theta)))
         return self._coefs_cache[theta]
 
     def stop_coeffs_cache(self):
-        """XXX"""
+        """turn off internally remembering coeffs"""
         self._coefs_cache = None
 
     def set_prior_boundaries(self, parameters_min_values, 
