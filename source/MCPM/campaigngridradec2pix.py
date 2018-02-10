@@ -23,7 +23,13 @@ class CampaignGridRaDec2Pix(object):
             for i in range(3):
                 path_ = path.dirname(path_)
             name = "grids_RADEC2pix_{:}_{:}.data".format(campaign, channel)
-            file_name = path.join(path_, "data", "K2C9", 'grids', name)
+            if campaign in [91, 92]:
+                k2c = "K2C9"
+            elif campaign in [111, 112]:
+                k2c = "K2C11"
+            else:
+                raise ValueError('Unrecognized campaign: {:}'.format(campaign))
+            file_name = path.join(path_, "data", k2c, 'grids', name)
 
         self._read_from_file(file_name, campaign)
 
@@ -41,6 +47,12 @@ class CampaignGridRaDec2Pix(object):
         elif campaign == 92:
             cadence_begin = 126713
             cadence_end = 128734
+        elif campaign == 111:
+            cadence_begin = 132839
+            cadence_end = 133979
+        elif campaign == 112:
+            cadence_begin = 134134
+            cadence_end = 136469
         else:
             msg = 'no internal data for campaign {:}'.format(campaign)
             raise ValueError(msg)
