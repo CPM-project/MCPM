@@ -74,12 +74,12 @@ class TpfData(object):
         self.epoch_mask = (foo > 0) & np.isfinite(self.jd_short) & quality_flags_ok
         self.jd_short_masked = self.jd_short[self.epoch_mask]
         flux = flux[:, self.mask>0]
-        if not np.isfinite(flux).all():
+        if not np.isfinite(flux[self.epoch_mask]).all():
             raise ValueError('non-finite value in flux table of {:} - feature not done yet'.format(file_name))
             # TO_BE_DONE - code interpolation using e.g. k2_cpm.py lines: 89-92
             # TO_BE_DONE - also checks on flux_err?
         self.flux = flux
-        self.median_flux = np.median(flux, axis=0)
+        self.median_flux = np.median(flux[self.epoch_mask], axis=0)
 
         flux_err = data["flux_err"]
         flux_err = flux_err[:, self.mask>0]
@@ -180,7 +180,7 @@ class TpfData(object):
         only int on input"""
         if (self._row is None) or (self._column is None):
             self._make_column_row_vectors()
-        index = np.arange(self.n_pixels)
+        index = np.arange(len(self._row))
         index_mask = ((self._row == row) & (self._column == column))
         try:
             out = index[index_mask][0]
