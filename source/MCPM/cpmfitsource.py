@@ -419,25 +419,24 @@ class CpmFitSource(object):
         rms = np.sqrt(np.mean(np.square(self.residuals[mask_all])))
         return rms
     
-    def save_coeffs_in_fits(self, fits_name):
-        """save coeffs to a fits file; 
-        you probably want run set_pixel_coeffs() before"""
+    def _save_coeffs_to_fits(self, fits_name, coeffs):
+        """save coeffs to a fits file"""
         column_1 = fits.Column(name='x', array=self.pixels[:,0], format='I')
         column_2 = fits.Column(name='y', array=self.pixels[:,1], format='I')
         hdu_1 = fits.BinTableHDU.from_columns([column_1, column_2], 
                 name='event_pixels')
                 
-        column_1 = fits.Column(name='row', array=self._predictor_matrix_row, 
-                format='I')
-        column_2 = fits.Column(name='column', array=self._predictor_matrix_column, 
-                format='I')
+        column_1 = fits.Column(name='row', 
+                array=self._predictor_matrix_row, format='I')
+        column_2 = fits.Column(name='column', 
+                array=self._predictor_matrix_column, format='I')
         hdu_2 = fits.BinTableHDU.from_columns([column_1, column_2],
                 name='predictor_matrix_pixels')
         
         columns = []
+        names = ["pix_{:}".format(i) for i in range(self.n_pixels)]
         for i in range(self.n_pixels):
-            column = fits.Column(name="pix_{:}".format(i), 
-                    array=self.pixel_coeffs(i), format='E')
+            column = fits.Column(name=names[i], array=coeffs[i], format='E')
             columns.append(column)
         hdu_3 = fits.BinTableHDU.from_columns(columns, name='coeffs')
         
@@ -452,7 +451,13 @@ class CpmFitSource(object):
         hdu_0 = fits.PrimaryHDU(header=header)
         hdus = fits.HDUList([hdu_0, hdu_1, hdu_2, hdu_3])
         hdus.writeto(fits_name)
-    
+
+    def save_coeffs_to_fits(self, fits_name):
+        """save coeffs to a fits file; 
+        you probably want run set_pixel_coeffs() before"""
+        coeffs = [self.pixel_coeffs(i) for i in range(self.n_pixels)]
+        self._save_coeffs_to_fits(self, fits_name, coeffs=coeffs)
+
     def plot_pixel_residuals(self, shift=None):
         """Plot residuals for each pixel separately. Parameter
         shift (int or float) sets the shift in Y axis between the pixel,
@@ -548,3 +553,4 @@ class CpmFitSource(object):
         plt.plot(self.pixel_time[mask_], signal[mask_], 'k-')
         plt.plot(self.pixel_time[mask_], signal[mask_], 'ks')
         plt.plot(self.pixel_time[mask_], self.pixel_flux[pixel_i][mask_], 'ro')
+
