@@ -321,9 +321,9 @@ class MultipleTpf(object):
                 median_flux_limits=median_flux_limits, 
                 epics=epics[:n_epics])
             if out[0] is None:
-                guess = n_epics * (n_pixel/out[1]) # Some rough guess of how 
+                guess = n_epics * (n_pixel/float(out[2])) # Some rough guess of how 
                 # many more epics we need.
-                n_epics = max(n_epics + n_add_epics, guess)
+                n_epics = max(n_epics + n_add_epics, int(guess+.5))
             elif out[2] > epics_distances[n_epics-2]:
                 n_epics += n_add_epics
             else:
