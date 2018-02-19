@@ -30,6 +30,7 @@ class Minimizer(object):
         self._prior_min_values = None
         self._prior_max_values = None
         self._n_calls = 0
+        self._color_constraint = None
 
         self._file_all_models_name = None
         self._file_all_models = None
@@ -103,15 +104,43 @@ class Minimizer(object):
                 self.event.datasets[-1].err_flux, zeropoint=K2_MAG_ZEROPOINT)
         self.event.datasets[-1]._mag = mag_and_err[0]
         self.event.datasets[-1]._err_mag = mag_and_err[1]
+
+    def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
+        """
+        Specify parameters that are used to constrain the source flux in 
+        satellite band: 
+            ref_dataset (int) - reference dataset
+            ref_zero_point (float) - magnitude zeropoint of reference dataset
+            color (float) - (satellite-ref_dataset) color (NOTE ORDER)
+            sigma_color (float) - sigma of color        
+        """
+        self._color_constraint = [ref_dataset, ref_zero_point, color, sigma_color]
+        
+    def _chi2_for_color_constraint(self, satellite_flux):
+        """calculate chi2 for flux constraint"""
+        (ref_dataset, ref_zero_point, color, sigma_color) = self._color_constraint 
+        
+        before_ref = self.event.data_ref
+        flux_ref = self.event.get_ref_fluxes(ref_dataset)[0][0]
+        self.event.get_ref_fluxes(before_ref)
+        
+        mag_ref = ref_zero_point - 2.5 * np.log10(flux_ref)
+        mag_sat = K2_MAG_ZEROPOINT - 2.5 * np.log10(satellite_flux)
+        color_value = mag_sat - mag_ref
+        out = ((color_value - color) / sigma_color)**2
+        return out
         
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
         chi2 = (self.cpm_source.residuals_rms / np.mean(self.event.datasets[-1].err_flux))**2
         chi2 *= np.sum(self._sat_mask)
-        n = len(self.event.datasets) - 1
+        n = len(self.event.datasets) - 1 # We subtract 1 because satellite 
+        # chi2 is calculated above
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2.append(chi2)
+        if self._color_constraint is not None:
+            self.chi2.append(self._chi2_for_color_constraint(theta[-1]))
         chi2 = sum(self.chi2)
         if self._min_chi2 is None or chi2 < self._min_chi2:
             self._min_chi2 = chi2
@@ -132,7 +161,8 @@ class Minimizer(object):
     def set_chi2_0(self, chi2_0=None):
         """set reference value of chi2"""
         if chi2_0 is None:
-            chi2_0 = np.sum([d.n_epochs for d in self.event.datasets])
+            #chi2_0 = np.sum([d.n_epochs for d in self.event.datasets])
+            chi2_0 = np.sum([np.sum(d.good) for d in self.event.datasets])
         self._chi2_0 = chi2_0
     
     def set_pixel_coeffs_from_dicts(self, coeffs, weights=None):
@@ -237,7 +267,7 @@ class Minimizer(object):
 
     def ln_like(self, theta):
         """logarithm of likelihood"""
-        return -0.5 * (self.chi2_fun(theta) - self._chi2_0)
+        return -0.5 * (self.chi2_fun(theta) - self._chi2_0) #/ 10.
 
     def ln_prob(self, theta):
         """combines prior and likelihood"""
