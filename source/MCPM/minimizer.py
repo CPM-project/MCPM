@@ -152,7 +152,6 @@ class Minimizer(object):
             if self.n_flush is not None and self._n_calls % self.n_flush == 0:
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
-        #print(chi2, flush=True)
         if self._coefs_cache is not None:
             self._coefs_cache[tuple(theta.tolist())] = np.array([
                     self.cpm_source.pixel_coeffs(j).flatten() for j in range(self.cpm_source.n_pixels)])

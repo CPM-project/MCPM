@@ -456,7 +456,7 @@ class CpmFitSource(object):
         """save coeffs to a fits file; 
         you probably want run set_pixel_coeffs() before"""
         coeffs = [self.pixel_coeffs(i) for i in range(self.n_pixels)]
-        self._save_coeffs_to_fits(self, fits_name, coeffs=coeffs)
+        self._save_coeffs_to_fits(fits_name, coeffs=coeffs)
 
     def plot_pixel_residuals(self, shift=None):
         """Plot residuals for each pixel separately. Parameter
