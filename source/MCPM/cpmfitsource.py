@@ -305,7 +305,7 @@ class CpmFitSource(object):
         self._pixel_residuals_mask = None
         self._residuals = None
         self._residuals_mask = None
-        
+       
         if model_mask is None:
             model_mask = np.ones_like(model, dtype=bool)
         model_mask *= self._prf_values_mask
@@ -355,7 +355,7 @@ class CpmFitSource(object):
                 fmt = "Failed: {:} of {:}" + len(failed) * "\n{:}"
                 raise ValueError(fmt.format(len(failed), self.n_pixels, *failed))
         return self._pixel_residuals
-    
+
     def pixel_coeffs(self, n_pixel):
         """return CPM coeffs for pixel number n_pixel"""
         if self._cpm_pixel is None:
@@ -368,7 +368,26 @@ class CpmFitSource(object):
         if self._cpm_pixel is None:
             raise ValueError("CPM not yet run")        
         self._cpm_pixel[n_pixel].set_coeffs(values)
-        
+          
+    def read_coeffs_from_fits(self, fits_name):
+        """read and store coeffs from a fits file"""
+        with fits.open(fits_name) as hdu:
+            head = hdu[0].header
+            np.testing.assert_almost_equal(head['RA'], self.ra, decimal=3)
+            np.testing.assert_almost_equal(head['DEC'], self.dec, decimal=3)
+            assert head['campaign'] == self.campaign
+            assert head['channel'] == self.channel
+            pixels = np.array([[a,b] for (a, b) in hdu[1].data])
+            assert np.all([[a,b] for (a, b) in hdu[1].data] == self.pixels) 
+            rows = [a[0] for a in hdu[2].data]
+            assert np.all(rows == self._predictor_matrix_row)
+            columns = [a[1] for a in hdu[2].data]
+            assert np.all(columns == self._predictor_matrix_column)
+            
+            coeffs = np.array([list(v) for v in hdu[3].data]).T
+            for (i, coeffs_) in enumerate(coeffs):
+                self.set_pixel_coeffs(i, coeffs_)
+
     @property
     def pixel_residuals_mask(self):
         """epoch mask for pixel_residuals"""
@@ -418,7 +437,7 @@ class CpmFitSource(object):
         mask_all = mask & self.residuals_mask
         rms = np.sqrt(np.mean(np.square(self.residuals[mask_all])))
         return rms
-    
+
     def _save_coeffs_to_fits(self, fits_name, coeffs):
         """save coeffs to a fits file"""
         column_1 = fits.Column(name='x', array=self.pixels[:,0], format='I')
