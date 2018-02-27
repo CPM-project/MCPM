@@ -123,7 +123,7 @@ class CpmFitPixel(object):
         predictor_matrix_masked to get the prediction"""
         if self._coeffs is None:
             if self._coeffs_fixed is not None:
-                self._coeffs = np.copy(self._coeffs_fixed)
+                self._coeffs = np.copy(self._coeffs_fixed).reshape(-1, 1)
             else:
                 if (self._predictor_coeffs is None 
                         or not np.all(self._predictor_coeffs_mask == self.train_mask)):
