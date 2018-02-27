@@ -164,6 +164,24 @@ class Minimizer(object):
             chi2_0 = np.sum([np.sum(d.good) for d in self.event.datasets])
         self._chi2_0 = chi2_0
     
+    def set_pixel_coeffs_from_samples(self, samples):
+        """
+        Provide a matrix samples[n_models, n_params] and for each 
+        model there get the cached coeffs (caching MUST be turned ON)
+        and set pixel coeffs to the mean of these cached coeffs. 
+        You may want to run stop_coeffs_cache() afterwards.
+        """
+        weights = dict()
+        coeffs = dict()
+        for sample in samples:
+            key = tuple(sample.tolist())
+            if key in weights:
+                weights[key] += 1
+            else:
+                weights[key] = 1
+                coeffs[key] = self.get_cached_coeffs(key)
+        self.set_pixel_coeffs_from_dicts(coeffs, weights)
+
     def set_pixel_coeffs_from_dicts(self, coeffs, weights=None):
         """
         Take coeffs, average them, and set pixel coeffs to the averages.
