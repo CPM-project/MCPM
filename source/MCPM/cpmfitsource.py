@@ -22,9 +22,7 @@ class CpmFitSource(object):
         self.channel = channel
         
         if multiple_tpf is None:
-            multiple_tpf = MultipleTpf()
-            multiple_tpf.campaign = campaign
-            multiple_tpf.channel = channel
+            multiple_tpf = MultipleTpf(campaign, channel)
         self.multiple_tpf = multiple_tpf
         
         if campaign_grids is None:

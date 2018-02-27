@@ -7,22 +7,23 @@ from MCPM.tpfgrid import TpfGrid
 from MCPM.tpfrectangles import TpfRectangles
 
 
-def singleton(cls):
-    instance_container = []
-    def getinstance():
-        if not len(instance_container):
-            instance_container.append(cls())
-        return instance_container[0]
+def limited_instances(class_):
+    instances = {}
+    def getinstance(campaign, channel, *args, **kwargs):
+        key = tuple([int(campaign), int(channel)])
+        if key not in instances:
+            instances[key] = class_(campaign, channel, *args, **kwargs)
+        return instances[key]
     return getinstance
+# See also https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
 
-# We define MultipleTpf as a singleton.
-# I don't how to make this construct work with args/kwargs, 
-# so I make it without arguemtns at all.
-@singleton
+# We want to make sure that for given campaign and channel there is only
+# a single instance.
+@limited_instances
 class MultipleTpf(object):
-    def __init__(self):
-        self._campaign = None
-        self._channel = None
+    def __init__(self, campaign, channel):
+        self.campaign = campaign
+        self.channel = channel
         self.n_remove_huge = None
 
         self._tpfs = [] # This list has TpfData instances and the order 
