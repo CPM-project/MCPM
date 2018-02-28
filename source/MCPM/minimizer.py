@@ -9,32 +9,12 @@ from MulensModel.utils import Utils
 K2_MAG_ZEROPOINT = 25.
 
 # Multiple cpm_source-s to be done:
-# +   def __init__
-# 2   def close_file_all_models
-# +   def file_all_models - @property
-# +   def reset_min_chi2
-# 1   def print_min_chi2
-# +   def set_parameters
-# +   def _run_cpm
-#    def set_satellite_data
-# 7   def add_color_constraint
-# 6   def _chi2_for_color_constraint
-# +   def chi2_fun
-# +   def set_chi2_0
-# 8   def set_pixel_coeffs_from_samples
-# 9   def set_pixel_coeffs_from_dicts
-# 10   def set_pixel_coeffs_from_models
-# 3   def start_coeffs_cache
-# 4   def get_cached_coeffs
-# 5   def stop_coeffs_cache
-# +   def set_prior_boundaries
-# +   def ln_prior
-# +   def ln_like
-# +   def ln_prob
-#    def set_MN_cube
-#    def transform_MN_cube
-#    def satellite_maximum
-#    def plot_sat_magnitudes
+# 11   def set_satellite_data
+#     def set_pixel_coeffs_from_models
+# 12   def set_MN_cube
+# 13   def transform_MN_cube
+# 11   def satellite_maximum
+# 14   def plot_sat_magnitudes
 
 class Minimizer(object): 
     """
@@ -185,8 +165,13 @@ class Minimizer(object):
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
         if self._coefs_cache is not None:
-            self._coefs_cache[tuple(theta.tolist())] = np.array([
-                    self.cpm_source.pixel_coeffs(j).flatten() for j in range(self.cpm_source.n_pixels)])
+            coeffs = []
+            for i in range(len(self.cpm_sources))
+                n_pixels = self.cpm_sources[i].n_pixels
+                c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
+                coeffs.append(np.array(c))
+            self._coefs_cache[tuple(theta.tolist())] = coeffs
+            #np.array([self.cpm_source.pixel_coeffs(j).flatten() for j in range(self.cpm_source.n_pixels)])
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
@@ -220,9 +205,10 @@ class Minimizer(object):
        
         Arguments :
             coeffs: *dict*
-                Dictionary of pixel coeffs. Each value specifies coeffs for all 
-                pixels i.e., coeffs[key][j] is for j-th pixel. The keys can be 
-                whatever, but most probably you want 
+                Dictionary of pixel coeffs. Each value specifies a list 
+                (length same as number of satellite datasets) of coeffs for all 
+                pixels i.e., coeffs[key][i][j] is for j-th pixel in i-th cpm_source. 
+                The keys can be whatever, but most probably you want 
                 tuple(list(model_parameters)) to be the keys.
             weights: *dict*, optional
                 Dictionary of weights - uses the same keys as coeffs.
@@ -232,11 +218,12 @@ class Minimizer(object):
             weights_ = None
         else:
             weights_ = [weights[key] for key in keys]
-        
-        for j in range(self.cpm_source.n_pixels):
-            data = [coeffs[key][j] for key in keys]
-            average = np.average(np.array(data), 0, weights=weights_)
-            self.cpm_source.set_pixel_coeffs(j, average.reshape((-1, 1)))
+       
+        for i in range(len(self.cpm_sources)):
+            for j in range(self.cpm_sources[i].n_pixels):
+                data = [coeffs[key][i][j] for key in keys]
+                average = np.average(np.array(data), 0, weights=weights_)
+                self.cpm_sources[i].set_pixel_coeffs(j, average.reshape((-1, 1)))
 
     def set_pixel_coeffs_from_models(self, models, weights=None):
         """run a set of models, remember the coeffs for every pixel,
