@@ -9,28 +9,28 @@ from MulensModel.utils import Utils
 K2_MAG_ZEROPOINT = 25.
 
 # Multiple cpm_source-s to be done:
-# 1   def __init__
-#    def close_file_all_models
-# 3   def file_all_models - @property
-# 2   def reset_min_chi2
-#    def print_min_chi2
-# 10   def set_parameters
-# 9   def _run_cpm
+# +   def __init__
+# 2   def close_file_all_models
+# +   def file_all_models - @property
+# +   def reset_min_chi2
+# 1   def print_min_chi2
+# +   def set_parameters
+# +   def _run_cpm
 #    def set_satellite_data
-#    def add_color_constraint
-#    def _chi2_for_color_constraint
-# 8   def chi2_fun
-# 3   def set_chi2_0
-#    def set_pixel_coeffs_from_samples
-#    def set_pixel_coeffs_from_dicts
-#    def set_pixel_coeffs_from_models
-#    def start_coeffs_cache
-#    def get_cached_coeffs
-#    def stop_coeffs_cache
-# 4   def set_prior_boundaries
-# 5   def ln_prior
-# 7   def ln_like
-# 6   def ln_prob
+# 7   def add_color_constraint
+# 6   def _chi2_for_color_constraint
+# +   def chi2_fun
+# +   def set_chi2_0
+# 8   def set_pixel_coeffs_from_samples
+# 9   def set_pixel_coeffs_from_dicts
+# 10   def set_pixel_coeffs_from_models
+# 3   def start_coeffs_cache
+# 4   def get_cached_coeffs
+# 5   def stop_coeffs_cache
+# +   def set_prior_boundaries
+# +   def ln_prior
+# +   def ln_like
+# +   def ln_prob
 #    def set_MN_cube
 #    def transform_MN_cube
 #    def satellite_maximum
@@ -47,12 +47,12 @@ class Minimizer(object):
     100 or 1000 etc.
     """
 
-    def __init__(self, event, parameters_to_fit, cpm_source):
+    def __init__(self, event, parameters_to_fit, cpm_sources):
         self.event = event
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
         self.n_parameters += 1
-        self.cpm_source = cpm_source
+        self.cpm_sources = cpm_sources
         self.reset_min_chi2()
         self._chi2_0 = None
         self._prior_min_values = None
@@ -63,10 +63,10 @@ class Minimizer(object):
         self._file_all_models_name = None
         self._file_all_models = None
 
-        self._sat_mask = None
-        self._sat_time = None
-        self._sat_model = None
-        self._sat_magnification = None
+        self._sat_masks = None
+        self._sat_times = None
+        self._sat_models = None
+        self._sat_magnifications = None
         self._sat_flux = None
 
         self._coefs_cache = None
@@ -111,16 +111,22 @@ class Minimizer(object):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
         self._sat_flux = theta[-1]
-        if self._sat_mask is None:
-            self._sat_mask = self.cpm_source.residuals_mask
-            self._sat_time = self.cpm_source.pixel_time[self._sat_mask] + 2450000.
-            self._sat_model = np.zeros(len(self.cpm_source.pixel_time))
-        # Here we prepare the satellite lightcurve:
-        self._sat_magnification = self.event.model.magnification(
-                time = self._sat_time,
-                satellite_skycoord = self.event.datasets[-1].satellite_skycoord)
-        self._sat_model[self._sat_mask] = self._sat_magnification * self._sat_flux
-        self.cpm_source.run_cpm(self._sat_model)
+        n_sat = len(self.cpm_sources)
+        n_0 = len(self.event.datasets) - n_sat
+
+        if self._sat_masks is None:
+            self._sat_masks = [cpm_source.residuals_mask for cpm_source in self.cpm_sources]
+            self._sat_times = [self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000. for i in range(n_sat)]
+            self._sat_models = [np.zeros(len(cpm_source.pixel_time)) for cpm_source in self.cpm_sources]
+            self._sat_magnifications = [None] * n_sat
+
+        for i in range(n_sat):
+            # Here we prepare the satellite lightcurves:
+            self._sat_magnifications[i] = self.event.model.magnification(
+                    time = self._sat_times[i],
+                    satellite_skycoord = self.event.datasets[n_0+i].satellite_skycoord)
+            self._sat_models[i][self._sat_masks[i]] = self._sat_magnifications[i] * self._sat_flux
+            self.cpm_sources[i].run_cpm(self._sat_models[i])
 
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
@@ -161,12 +167,10 @@ class Minimizer(object):
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
-        chi2 = (self.cpm_source.residuals_rms / np.mean(self.event.datasets[-1].err_flux))**2
-        chi2 *= np.sum(self._sat_mask)
-        n = len(self.event.datasets) - 1 # We subtract 1 because satellite 
-        # chi2 is calculated above
+        n = len(self.event.datasets) - len(self.cpm_sources) 
+        chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(len(self.cpm_sources))]
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
-        self.chi2.append(chi2)
+        self.chi2 += chi2_sat
         if self._color_constraint is not None:
             self.chi2.append(self._chi2_for_color_constraint(theta[-1]))
         chi2 = sum(self.chi2)
