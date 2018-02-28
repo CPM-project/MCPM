@@ -8,6 +8,34 @@ from MulensModel.utils import Utils
 
 K2_MAG_ZEROPOINT = 25.
 
+# Multiple cpm_source-s to be done:
+# 1   def __init__
+#    def close_file_all_models
+# 3   def file_all_models - @property
+# 2   def reset_min_chi2
+#    def print_min_chi2
+# 10   def set_parameters
+# 9   def _run_cpm
+#    def set_satellite_data
+#    def add_color_constraint
+#    def _chi2_for_color_constraint
+# 8   def chi2_fun
+# 3   def set_chi2_0
+#    def set_pixel_coeffs_from_samples
+#    def set_pixel_coeffs_from_dicts
+#    def set_pixel_coeffs_from_models
+#    def start_coeffs_cache
+#    def get_cached_coeffs
+#    def stop_coeffs_cache
+# 4   def set_prior_boundaries
+# 5   def ln_prior
+# 7   def ln_like
+# 6   def ln_prob
+#    def set_MN_cube
+#    def transform_MN_cube
+#    def satellite_maximum
+#    def plot_sat_magnitudes
+
 class Minimizer(object): 
     """
     An object to link an Event to the functions necessary to minimize chi2.
