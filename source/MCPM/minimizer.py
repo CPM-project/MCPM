@@ -9,12 +9,13 @@ from MulensModel.utils import Utils
 K2_MAG_ZEROPOINT = 25.
 
 # Multiple cpm_source-s to be done:
-# 11   def set_satellite_data
 #     def set_pixel_coeffs_from_models
-# 12   def set_MN_cube
-# 13   def transform_MN_cube
-# 11   def satellite_maximum
-# 14   def plot_sat_magnitudes
+#     def satellite_maximum
+#
+# ADD wrappers fot cpmfitsource:
+#  read_coeffs_from_fits()
+#  save_coeffs_to_fits()
+
 
 class Minimizer(object): 
     """
@@ -111,13 +112,17 @@ class Minimizer(object):
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
         self._run_cpm(theta)
-        sat_residuals = self.cpm_source.residuals[self._sat_mask]
-        flux = self._sat_model[self._sat_mask] + sat_residuals 
-        self.event.datasets[-1].flux = flux
-        mag_and_err = Utils.get_mag_and_err_from_flux(flux, 
-                self.event.datasets[-1].err_flux, zeropoint=K2_MAG_ZEROPOINT)
-        self.event.datasets[-1]._mag = mag_and_err[0]
-        self.event.datasets[-1]._err_mag = mag_and_err[1]
+        n_sat = len(self.cpm_sources)
+        n_0 = len(self.event.datasets) - n_sat
+        for i in range(n_sat):
+            ii = n_0 + i
+            sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
+            flux = self._sat_models[i][self._sat_masks[i]] + sat_residuals
+            self.event.datasets[ii].flux = flux
+            mag_and_err = Utils.get_mag_and_err_from_flux(flux,
+                self.event.datasets[ii].err_flux, zeropoint=K2_MAG_ZEROPOINT)
+            self.event.datasets[ii]._mag = mag_and_err[0]
+            self.event.datasets[ii]._err_mag = mag_and_err[1]
 
     def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
         """
@@ -341,10 +346,13 @@ class Minimizer(object):
         import matplotlib.pyplot as plt
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
-        (fs_sat, fb_sat) = self.event.model.get_ref_fluxes(-1)
+        n = len(self.event.datasets) - len(self.cpm_sources)
+
+        for i in range(len(self.cpm_sources)):
+            times = self._sat_times[i] - 2450000.
+            (fs_sat, fb_sat) = self.event.model.get_ref_fluxes(n+i)
+            mags = self._sat_magnifications[i]
+            flux = (mags * self._sat_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
+            plt.plot(times, Utils.get_mag_from_flux(flux), **kwargs)
         self.event.model.data_ref = data_ref
-        
-        times = self._sat_time - 2450000.
-        flux = (self._sat_magnification * self._sat_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
-        
-        plt.plot(times, Utils.get_mag_from_flux(flux), **kwargs)
+
