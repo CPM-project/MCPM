@@ -11,11 +11,6 @@ K2_MAG_ZEROPOINT = 25.
 # Multiple cpm_source-s to be done:
 #     def set_pixel_coeffs_from_models
 #     def satellite_maximum
-#
-# ADD wrappers fot cpmfitsource:
-#  read_coeffs_from_fits()
-#  save_coeffs_to_fits()
-
 
 class Minimizer(object): 
     """
@@ -273,6 +268,16 @@ class Minimizer(object):
     def stop_coeffs_cache(self):
         """turn off internally remembering coeffs"""
         self._coefs_cache = None
+
+    def save_coeffs_to_fits(self, files):
+        """saves coeffs to fits files"""
+        for (file_, cpm_source) in zip(files, self.cpm_sources):
+            cpm_source.save_coeffs_to_fits(file_)
+
+    def read_coeffs_from_fits(self, files):
+        """read coeffs from fits files"""
+        for (file_, cpm_source) in zip(files, self.cpm_sources):
+            cpm_source.read_coeffs_from_fits(file_)
 
     def set_prior_boundaries(self, parameters_min_values, 
             parameters_max_values):
