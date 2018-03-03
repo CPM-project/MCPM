@@ -28,6 +28,8 @@ class Minimizer(object):
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
         self.n_parameters += 1
+        if not isinstance(cpm_sources, list):
+            cpm_sources = [cpm_sources]
         self.cpm_sources = cpm_sources
         self.reset_min_chi2()
         self._chi2_0 = None
@@ -166,7 +168,7 @@ class Minimizer(object):
                 os.fsync(self._file_all_models.fileno()) 
         if self._coefs_cache is not None:
             coeffs = []
-            for i in range(len(self.cpm_sources))
+            for i in range(len(self.cpm_sources)):
                 n_pixels = self.cpm_sources[i].n_pixels
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
