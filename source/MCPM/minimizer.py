@@ -32,6 +32,7 @@ class Minimizer(object):
         if not isinstance(cpm_sources, list):
             cpm_sources = [cpm_sources]
         self.cpm_sources = cpm_sources
+        self.n_sat = len(self.cpm_sources)
         self.reset_min_chi2()
         self._chi2_0 = None
         self._prior_min_values = None
@@ -90,16 +91,15 @@ class Minimizer(object):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
         self._sat_flux = theta[-1]
-        n_sat = len(self.cpm_sources)
-        n_0 = len(self.event.datasets) - n_sat
+        n_0 = len(self.event.datasets) - self.n_sat
 
         if self._sat_masks is None:
             self._sat_masks = [cpm_source.residuals_mask for cpm_source in self.cpm_sources]
-            self._sat_times = [self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000. for i in range(n_sat)]
+            self._sat_times = [self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000. for i in range(self.n_sat)]
             self._sat_models = [np.zeros(len(cpm_source.pixel_time)) for cpm_source in self.cpm_sources]
-            self._sat_magnifications = [None] * n_sat
+            self._sat_magnifications = [None] * self.n_sat
 
-        for i in range(n_sat):
+        for i in range(self.n_sat):
             # Here we prepare the satellite lightcurves:
             self._sat_magnifications[i] = self.event.model.magnification(
                     time = self._sat_times[i],
@@ -110,9 +110,8 @@ class Minimizer(object):
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
         self._run_cpm(theta)
-        n_sat = len(self.cpm_sources)
-        n_0 = len(self.event.datasets) - n_sat
-        for i in range(n_sat):
+        n_0 = len(self.event.datasets) - self.n_sat
+        for i in range(self.n_sat):
             ii = n_0 + i
             sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
             flux = self._sat_models[i][self._sat_masks[i]] + sat_residuals
@@ -150,8 +149,8 @@ class Minimizer(object):
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
-        n = len(self.event.datasets) - len(self.cpm_sources) 
-        chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(len(self.cpm_sources))]
+        n = len(self.event.datasets) - self.n_sat
+        chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:
@@ -169,7 +168,7 @@ class Minimizer(object):
                 os.fsync(self._file_all_models.fileno()) 
         if self._coefs_cache is not None:
             coeffs = []
-            for i in range(len(self.cpm_sources)):
+            for i in range(self.n_sat):
                 n_pixels = self.cpm_sources[i].n_pixels
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
@@ -222,7 +221,7 @@ class Minimizer(object):
         else:
             weights_ = [weights[key] for key in keys]
        
-        for i in range(len(self.cpm_sources)):
+        for i in range(self.n_sat):
             for j in range(self.cpm_sources[i].n_pixels):
                 data = [coeffs[key][i][j] for key in keys]
                 average = np.average(np.array(data), 0, weights=weights_)
@@ -353,9 +352,9 @@ class Minimizer(object):
         """Plot satellite data in reference magnitude system"""
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
-        n = len(self.event.datasets) - len(self.cpm_sources)
+        n = len(self.event.datasets) - self.n_sat
 
-        for i in range(len(self.cpm_sources)):
+        for i in range(self.n_sat):
             times = self._sat_times[i] - 2450000.
             (fs_sat, fb_sat) = self.event.model.get_ref_fluxes(n+i)
             mags = self._sat_magnifications[i]
@@ -371,7 +370,7 @@ class Minimizer(object):
         if title is not None:
             plt.title(title)
         alphas = [0.35] * len(self.event.datasets)
-        for i in range(len(self.cpm_sources)):
+        for i in range(self.n_sat):
             alphas[-(i+1)] = 1.
             
         self.event.plot_model(
