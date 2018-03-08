@@ -1,7 +1,8 @@
 import os
 import sys
 import numpy as np
-# for import matplotlib.pyplot -- see below
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 from MulensModel.utils import Utils
 
@@ -350,7 +351,6 @@ class Minimizer(object):
 
     def plot_sat_magnitudes(self, **kwargs):
         """Plot satellite data in reference magnitude system"""
-        import matplotlib.pyplot as plt
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
         n = len(self.event.datasets) - len(self.cpm_sources)
@@ -363,3 +363,26 @@ class Minimizer(object):
             plt.plot(times, Utils.get_mag_from_flux(flux), **kwargs)
         self.event.model.data_ref = data_ref
 
+    def standard_plot(self, t_start, t_stop, ylim, title=None):
+        """Make plot of the event and residuals. """
+        grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1])
+        plt.figure()
+        plt.subplot(grid_spec[0])
+        if title is not None:
+            plt.title(title)
+        alphas = [0.35] * len(self.event.datasets)
+        for i in range(len(self.cpm_sources)):
+            alphas[-(i+1)] = 1.
+            
+        self.event.plot_model(
+            color='black', subtract_2450000=True, 
+            t_start=t_start+2450000., t_stop=t_stop+2450000.)
+        self.event.plot_data(alpha_list=alphas, 
+            zorder_list=np.arange(len(self.event.datasets), 0, -1), 
+            marker='o', markersize=5, subtract_2450000=True)
+        plt.ylim(ylim[0], ylim[1])
+        plt.xlim(t_start, t_stop)
+        
+        plt.subplot(grid_spec[1])
+        self.event.plot_residuals(subtract_2450000=True)
+        plt.xlim(t_start, t_stop)
