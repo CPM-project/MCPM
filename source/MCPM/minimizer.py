@@ -103,8 +103,8 @@ class Minimizer(object):
         for i in range(self.n_sat):
             # Here we prepare the satellite lightcurves:
             self._sat_magnifications[i] = self.event.model.magnification(
-                    time = self._sat_times[i],
-                    satellite_skycoord = self.event.datasets[n_0+i].satellite_skycoord)
+                    time=self._sat_times[i],
+                    satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
             self._sat_models[i][self._sat_masks[i]] = self._sat_magnifications[i] * self._sat_flux
             self.cpm_sources[i].run_cpm(self._sat_models[i])
 
@@ -377,6 +377,8 @@ class Minimizer(object):
         self.event.plot_model(
             color='black', subtract_2450000=True, 
             t_start=t_start+2450000., t_stop=t_stop+2450000.)
+        self.plot_sat_magnitudes(color='yellow')
+        
         self.event.plot_data(alpha_list=alphas, 
             zorder_list=np.arange(self.n_datasets, 0, -1), 
             marker='o', markersize=5, subtract_2450000=True)
