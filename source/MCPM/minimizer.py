@@ -26,6 +26,7 @@ class Minimizer(object):
 
     def __init__(self, event, parameters_to_fit, cpm_sources):
         self.event = event
+        self.n_datasets = len(self.event.datasets)
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
         self.n_parameters += 1
@@ -91,7 +92,7 @@ class Minimizer(object):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
         self._sat_flux = theta[-1]
-        n_0 = len(self.event.datasets) - self.n_sat
+        n_0 = self.n_datasets - self.n_sat
 
         if self._sat_masks is None:
             self._sat_masks = [cpm_source.residuals_mask for cpm_source in self.cpm_sources]
@@ -110,7 +111,7 @@ class Minimizer(object):
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
         self._run_cpm(theta)
-        n_0 = len(self.event.datasets) - self.n_sat
+        n_0 = self.n_datasets - self.n_sat
         for i in range(self.n_sat):
             ii = n_0 + i
             sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
@@ -149,7 +150,7 @@ class Minimizer(object):
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
-        n = len(self.event.datasets) - self.n_sat
+        n = self.n_datasets - self.n_sat
         chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
@@ -352,7 +353,7 @@ class Minimizer(object):
         """Plot satellite data in reference magnitude system"""
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
-        n = len(self.event.datasets) - self.n_sat
+        n = self.n_datasets - self.n_sat
 
         for i in range(self.n_sat):
             times = self._sat_times[i] - 2450000.
@@ -369,7 +370,7 @@ class Minimizer(object):
         plt.subplot(grid_spec[0])
         if title is not None:
             plt.title(title)
-        alphas = [0.35] * len(self.event.datasets)
+        alphas = [0.35] * self.n_datasets
         for i in range(self.n_sat):
             alphas[-(i+1)] = 1.
             
@@ -377,7 +378,7 @@ class Minimizer(object):
             color='black', subtract_2450000=True, 
             t_start=t_start+2450000., t_stop=t_stop+2450000.)
         self.event.plot_data(alpha_list=alphas, 
-            zorder_list=np.arange(len(self.event.datasets), 0, -1), 
+            zorder_list=np.arange(self.n_datasets, 0, -1), 
             marker='o', markersize=5, subtract_2450000=True)
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
