@@ -55,6 +55,7 @@ class CpmFitSource(object):
         self._prf_values_mask = None
         self._pixel_time = None
         self._pixel_flux = None
+        self._pixel_flux_err = None
         self._pixel_mask = None  
         self._train_mask = None
         self._cpm_pixel = None
@@ -228,6 +229,7 @@ class CpmFitSource(object):
 
         self._pixel_time = None
         self._pixel_flux = None
+        self._pixel_flux_err = None
         self._pixel_mask = None
         self._cpm_pixel = None
 
@@ -235,15 +237,16 @@ class CpmFitSource(object):
         """extract time vectors, flux vectors and epoch masks 
         for pixels from TPF files"""
         out = self.multiple_tpf.get_time_flux_mask_for_pixels(self._pixels)
-        reference_time = out[0][0][out[2][0]]
+        reference_time = out[0][0][out[3][0]]
         for i in range(1, self.n_pixels):
-            masked_time = out[0][i][out[2][i]]
+            masked_time = out[0][i][out[3][i]]
             if (reference_time != masked_time).any():
                 msg = "we assumed time vactrors should be the same\n{:}\n{:}"
                 raise ValueError(msg.format(out[0][0], out[0][i]))
         self._pixel_time = out[0][0]
         self._pixel_flux = out[1]
-        self._pixel_mask = out[2]
+        self._pixel_flux_err = out[2]
+        self._pixel_mask = out[3]
 
     @property
     def pixel_time(self):
@@ -254,10 +257,17 @@ class CpmFitSource(object):
         
     @property
     def pixel_flux(self):
-        """fluxe vectors for all pixels"""
+        """flux vectors for all pixels"""
         if self._pixel_flux is None:
             self._get_time_flux_mask_for_pixels()
         return self._pixel_flux
+
+    @property
+    def pixel_flux_err(self):
+        """flux error vectors for all pixels"""
+        if self._pixel_flux_err is None:
+            self._get_time_flux_mask_for_pixels()
+        return self._pixel_flux_err
         
     @property
     def pixel_mask(self):
@@ -314,7 +324,8 @@ class CpmFitSource(object):
             if self._cpm_pixel[i] is None:
                 self._cpm_pixel[i] = CpmFitPixel(
                     target_flux=self.pixel_flux[i], 
-                    target_flux_err=None, target_mask=self.pixel_mask[i], 
+                    target_flux_err=self.pixel_flux_err[i], 
+                    target_mask=self.pixel_mask[i], 
                     predictor_matrix=self.predictor_matrix, 
                     predictor_matrix_mask=self.predictor_matrix_mask, 
                     l2=self.l2, model=model_i, model_mask=model_mask, 

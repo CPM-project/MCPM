@@ -341,6 +341,7 @@ class MultipleTpf(object):
         from appropriate TPF files; pixels is a list of input pixels"""
         time = []
         flux = []
+        flux_err = []
         mask = []
         for (x, y) in pixels:
             epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y) 
@@ -349,8 +350,9 @@ class MultipleTpf(object):
             tpf = self.tpf_for_epic_id(epic)
             time.append(tpf.jd_short)
             flux.append(tpf.get_flux_for_pixel(row=y, column=x))
+            flux_err.append(tpf.get_flux_err_for_pixel(row=y, column=x))
             mask.append(tpf.epoch_mask)
-        return (time, flux, mask)
+        return (time, flux, flux_err, mask)
 
     def plot_pixel_curves(self, mean_x, mean_y, half_size=2, 
             figsize=(15, 10.3), dpi=300, point_size=2, **kwargs):
