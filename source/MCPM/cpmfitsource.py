@@ -159,7 +159,23 @@ class CpmFitSource(object):
         self._predictor_matrix_mask = out[1]
         self._predictor_matrix_row = out[2]
         self._predictor_matrix_column = out[3]
-        
+
+    def plot_predictor_pixels(self, **kwargs):
+        """
+        Plot pixels that are used for predictor matrix relative 
+        to mean position of the target.
+        Use plt.show() or plt.savefig(FILE_NAME) afterwards.
+        **kwargs are passed to pyplot.plot. 
+        """
+        if self._predictor_matrix_row is None:
+            raise ValueError('You cannot plot the predictor_matrix pixels' +
+                "before running get_predictor_matrix()")
+        difference_1 = self._predictor_matrix_column - int(round(self.mean_x))
+        difference_2 = self._predictor_matrix_row - int(round(self.mean_y))
+
+        kwargs['linestyle']='None'
+        plt.plot(difference_1, difference_2, marker='s', **kwargs)
+
     @property
     def predictor_matrix(self):
         """matrix of predictor fluxes"""
