@@ -1,12 +1,14 @@
 import sys
 import numpy as np
 from math import fsum
+from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
 
 # File with short functions used in different parts of the code.
 # Contains:
 # - pspl_model()
+# - interpolate_model()
 # - pixel_list_center()
 # - load_matrix_xy()
 # - save_matrix_xy()
@@ -28,6 +30,20 @@ def pspl_model(t_0, u_0, t_E, f_s, times):
     model = (u_2 + 2.) / np.sqrt(u_2 * (u_2 + 4.))
     model *= f_s
     return model
+
+def scale_model(t_0, width_ratio, depth_ratio, flux, times, model_time, model_value):
+    """scale and interpolate (model_time, model_value); good for single eclipse"""
+    time = model_time * width_ratio + t_0
+    value = (model_value - 1.) * depth_ratio 
+    value *= flux
+    out = 0. * times
+    mask_min = (times < np.min(time))
+    mask_max = (times > np.max(time))
+    mask = (~np.isnan(times) & ~mask_min & ~mask_max)
+    out[mask] = interp1d(time, value, kind='cubic')(times[mask])
+    out[mask_min] = value[0]
+    out[mask_max] = value[-1]
+    return out
 
 def pixel_list_center(center_x, center_y, half_size):
     """Return list of pixels centered on (center_x,center_y) 
