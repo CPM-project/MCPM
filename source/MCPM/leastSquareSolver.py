@@ -32,7 +32,7 @@ def linear_least_squares(A, y, yvar=None, l2=None):
             and linear_least_squares.factor is not None):
         if (linear_least_squares.A.shape == A.shape
                     and linear_least_squares.l2 == l2
-                    and linear_least_squares.yvar == yvar):
+                    and np.all(linear_least_squares.yvar == yvar)):
             if (linear_least_squares.A == A).all():
                 if len(y.shape)==1:
                     y = y[:, None]

@@ -11,7 +11,8 @@ class CpmFitPixel(object):
             predictor_matrix, predictor_matrix_mask,
             l2=None, l2_per_pixel=None, 
             model=None, model_mask=None, 
-            time=None, train_lim=None, train_mask=None):
+            time=None, train_lim=None, train_mask=None,
+            use_undertainties=True):
                 
         self.target_flux = target_flux
         self.target_flux_err = target_flux_err
@@ -28,6 +29,8 @@ class CpmFitPixel(object):
        
         self.time = time
         self.train_lim = train_lim
+
+        self.use_undertainties = use_undertainties
         
         if self.train_lim is not None:
             if self.time is None:
@@ -97,7 +100,8 @@ class CpmFitPixel(object):
     
     @property
     def train_mask(self):
-        """Full mask to be applied for training part of CPM.
+        """
+        Full mask to be applied for training part of CPM.
         Note that it differs from train_time_mask.
         """
         return self.results_mask * self.train_time_mask
@@ -129,8 +133,14 @@ class CpmFitPixel(object):
                         or not np.all(self._predictor_coeffs_mask == self.train_mask)):
                     self._predictor_coeffs = self.predictor_matrix[self.train_mask]
                     self._predictor_coeffs_mask = np.copy(self.train_mask)
-                self._coeffs = solver.linear_least_squares(self._predictor_coeffs, 
-                        self.target_masked, None, self.l2)
+
+                if self.use_undertainties:
+                    undertainties = self.target_flux_err[self.train_mask]
+                else:
+                    undertainties = None
+
+                self._coeffs = solver.linear_least_squares(self._predictor_coeffs,
+                        self.target_masked, undertainties, self.l2) 
             
         return self._coeffs
         

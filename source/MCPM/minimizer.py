@@ -180,7 +180,6 @@ class Minimizer(object):
     def set_chi2_0(self, chi2_0=None):
         """set reference value of chi2"""
         if chi2_0 is None:
-            #chi2_0 = np.sum([d.n_epochs for d in self.event.datasets])
             chi2_0 = np.sum([np.sum(d.good) for d in self.event.datasets])
         self._chi2_0 = chi2_0
     
