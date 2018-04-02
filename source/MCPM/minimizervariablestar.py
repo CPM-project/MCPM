@@ -14,19 +14,15 @@ K2_MAG_ZEROPOINT = 25.
 # Several methods are still not checked or converted - 
 # see NotImplementedError below. 
 
-# Most important to be converted:
-# - set_pixel_coeffs_from_dicts
-# - set_pixel_coeffs_from_samples
+# To be converted:
 
 # parameters - NEW - check in detail
 # model_time - NEW
 # model_value - NEW
 
-# Less importnant:
 # - set_satellite_data
 # - add_color_constraint - also call to it
 # - set_pixel_coeffs_from_models
-# - get_cached_coeffs
 # - satellite_maximum
 # - plot_sat_magnitudes
 # - standard_plot
@@ -186,7 +182,6 @@ class MinimizerVariableStar(object):
         and set pixel coeffs to the mean of these cached coeffs. 
         You may want to run stop_coeffs_cache() afterwards.
         """
-        raise NotImplementedError("set_pixel_coeffs_from_samples")
         weights = dict()
         coeffs = dict()
         for sample in samples:
@@ -212,7 +207,6 @@ class MinimizerVariableStar(object):
             weights: *dict*, optional
                 Dictionary of weights - uses the same keys as coeffs.
         """
-        raise NotImplementedError("set_pixel_coeffs_from_dicts")
         keys = list(coeffs.keys())
         if weights is None:
             weights_ = None
@@ -258,7 +252,6 @@ class MinimizerVariableStar(object):
         Get pixel coeffs for model defined by theta; note that 
         theta = tuple(list(model_parameters))
         """
-        raise NotImplementedError("get_cached_coeffs")
         if self._coefs_cache is None:
             raise ValueError("You want to get cached values and you haven't " + 
                 "turned on caching (see start_coeffs_cache())? Strange...")
