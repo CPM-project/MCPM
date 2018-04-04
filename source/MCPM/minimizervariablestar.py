@@ -15,11 +15,6 @@ K2_MAG_ZEROPOINT = 25.
 # see NotImplementedError below. 
 
 # To be converted:
-
-# parameters - NEW - check in detail
-# model_time - NEW
-# model_value - NEW
-
 # - set_satellite_data
 # - add_color_constraint - also call to it
 # - set_pixel_coeffs_from_models
@@ -40,6 +35,8 @@ class MinimizerVariableStar(object):
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
         #self.n_parameters += 1
+        self.parameters = dict()
+        self.set_parameters([None]*self.n_parameters)
         if not isinstance(cpm_sources, list):
             cpm_sources = [cpm_sources]
         self.cpm_sources = cpm_sources
@@ -61,6 +58,9 @@ class MinimizerVariableStar(object):
 
         self._coefs_cache = None
         self.n_flush = None
+
+        self.model_time = None
+        self.model_value = None
 
     def close_file_all_models(self):
         """closes the file to which all models are saved"""
@@ -167,6 +167,7 @@ class MinimizerVariableStar(object):
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
             self._coefs_cache[tuple(theta.tolist())] = coeffs
+        #print(chi2, *theta)
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
