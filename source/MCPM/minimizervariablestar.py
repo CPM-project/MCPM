@@ -15,7 +15,6 @@ K2_MAG_ZEROPOINT = 25.
 # see NotImplementedError below. 
 
 # To be converted:
-# - set_satellite_data
 # - add_color_constraint - also call to it
 # - set_pixel_coeffs_from_models
 # - satellite_maximum
@@ -97,7 +96,7 @@ class MinimizerVariableStar(object):
         for (key, val) in enumerate(self.parameters_to_fit):
             self.parameters[val] = theta[key]
 
-    def _run_cpm(self, theta):
+    def _run_cpm(self, theta, model_mask=None):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
 
@@ -113,22 +112,18 @@ class MinimizerVariableStar(object):
                 self.parameters['width_ratio'], self.parameters['depth_ratio'],
                 self.parameters['flux'], self._sat_times[i],
                 self.model_time, self.model_value)
-            self.cpm_sources[i].run_cpm(self._sat_models[i])
+            self.cpm_sources[i].run_cpm(self._sat_models[i], model_mask)
 
-    def set_satellite_data(self, theta):
-        """set satellite dataset magnitudes and fluxes"""
-        raise NotImplementedError('set_satellite_data')
-        self._run_cpm(theta)
-        n_0 = self.n_datasets - self.n_sat
+    def get_satellite_data(self, theta, model_mask=None):# instead of set_satellite_data()
+        """run CPM and extract lightcurve"""
+        self._run_cpm(theta, model_mask)
+        out = []
         for i in range(self.n_sat):
-            ii = n_0 + i
+            flux = np.zeros_like(self._sat_masks[i], dtype=np.float)
             sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
-            flux = self._sat_models[i][self._sat_masks[i]] + sat_residuals
-            self.event.datasets[ii].flux = flux
-            mag_and_err = Utils.get_mag_and_err_from_flux(flux,
-                self.event.datasets[ii].err_flux, zeropoint=K2_MAG_ZEROPOINT)
-            self.event.datasets[ii]._mag = mag_and_err[0]
-            self.event.datasets[ii]._err_mag = mag_and_err[1]
+            flux[self._sat_masks[i]] = self._sat_models[i][self._sat_masks[i]] + sat_residuals
+            out.append(flux)
+        return out
 
     def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
         """
