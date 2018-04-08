@@ -11,8 +11,10 @@ from MCPM.cpmfitpixel import CpmFitPixel
 
 
 class CpmFitSource(object):
-    """Class for performing CPM fit for a source that combines data 
-    from a number of pixels"""
+    """
+    Class for performing CPM fit for a source that combines data 
+    from a number of pixels
+    """
     
     def __init__(self, ra, dec, campaign, channel, 
             multiple_tpf=None, campaign_grids=None, prf_data=None,
@@ -132,8 +134,10 @@ class CpmFitSource(object):
         return self._mean_xy_mask
 
     def set_pixels_square(self, half_size):
-        """set pixels to be a square of size (2*half_size+1)^2 around 
-        the mean position; e.g., half_size=2 gives 5x5 square"""
+        """
+        set pixels to be a square of size (2*half_size+1)^2 around 
+        the mean position; e.g., half_size=2 gives 5x5 square
+        """
         self._pixels = utils.pixel_list_center(self.mean_x, self.mean_y, 
                 half_size)
     
@@ -321,10 +325,15 @@ class CpmFitSource(object):
         return utils.pspl_model(t_0, u_0, t_E, f_s, self.pixel_time)
 
     def run_cpm(self, model, model_mask=None):
-        """Run CPM on all pixels. Model has to be provided for epochs in
+        """
+        Run CPM on all pixels. Model has to be provided for epochs in
         self.pixel_time. If the epoch mask model_mask is None, then it's 
         assumed it's True for each epoch. Mask of PRF is applied inside 
-        this function."""
+        this function.
+
+        If you want to train the model on only a part of the light-curve,
+        then don't change *model_mask* but use *set_train_mask()* instead.
+        """
         if self._cpm_pixel is None:
             self._cpm_pixel = [None] * self.n_pixels
         self._pixel_residuals = None

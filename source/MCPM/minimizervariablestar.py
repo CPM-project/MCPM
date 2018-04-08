@@ -96,7 +96,7 @@ class MinimizerVariableStar(object):
         for (key, val) in enumerate(self.parameters_to_fit):
             self.parameters[val] = theta[key]
 
-    def _run_cpm(self, theta, model_mask=None):
+    def _run_cpm(self, theta):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
 
@@ -112,11 +112,11 @@ class MinimizerVariableStar(object):
                 self.parameters['width_ratio'], self.parameters['depth_ratio'],
                 self.parameters['flux'], self._sat_times[i],
                 self.model_time, self.model_value)
-            self.cpm_sources[i].run_cpm(self._sat_models[i], model_mask)
+            self.cpm_sources[i].run_cpm(self._sat_models[i])
 
-    def get_satellite_data(self, theta, model_mask=None):# instead of set_satellite_data()
+    def get_satellite_data(self, theta):# instead of set_satellite_data()
         """run CPM and extract lightcurve"""
-        self._run_cpm(theta, model_mask)
+        self._run_cpm(theta)
         out = []
         for i in range(self.n_sat):
             flux = np.zeros_like(self._sat_masks[i], dtype=np.float)
