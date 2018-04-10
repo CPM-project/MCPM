@@ -258,7 +258,7 @@ class MultipleTpf(object):
         index = np.argsort(distance2, kind="mergesort")
         max_distance = distance2[index[n_pixel]]**.5
         
-        pixel_numbers_masked = np.arange(pixel_flux.shape[1])[pixel_mask]
+        pixel_numbers_masked = np.where(pixel_mask)[0]
         pixel_indexes = pixel_numbers_masked[distance_mask][index[:n_pixel]]
         predictor_flux = pixel_flux[:, pixel_indexes]
         predictor_row = pixel_row[pixel_indexes]

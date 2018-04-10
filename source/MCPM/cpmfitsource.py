@@ -313,7 +313,7 @@ class CpmFitSource(object):
             limit = 5 * self.residuals_rms
         mask = self.residuals_mask
         mask_bad = (self.residuals[mask]**2 >= limit**2)
-        indexes = np.arange(len(mask))[mask][mask_bad]
+        indexes = np.where(mask)[0][mask_bad]
         self.mask_bad_epochs(indexes)                    
     
     def set_train_mask(self, train_mask):
@@ -370,7 +370,7 @@ class CpmFitSource(object):
             self._pixel_residuals_mask = [None] * self.n_pixels
             failed = []
             for i in range(self.n_pixels):
-                residuals = self.pixel_time * 0.
+                residuals = np.zeros_like(self.pixel_time)
                 if self._cpm_pixel is None:
                     raise ValueError("CPM not yet run but you're trying to "
                             + "access its results")
@@ -436,7 +436,7 @@ class CpmFitSource(object):
     def residuals(self):
         """residuals summed over pixels"""
         if self._residuals is None:
-            residuals = self.pixel_time * 0.
+            residuals = np.zeros_like(self.pixel_time)
             residuals_mask = np.ones_like(residuals, dtype=bool)
             for i in range(self.n_pixels):
                 mask = self.pixel_residuals_mask[i]
@@ -523,10 +523,11 @@ class CpmFitSource(object):
 
         mask = self.residuals_mask
         time = self.pixel_time[mask]
+        zeros = np.zeros_like(time)
         for i in range(self.n_pixels):
             mask = self.residuals_mask
             y_values = self.pixel_residuals[i][mask] + i * shift
-            plt.plot(time, time*0+i * shift, 'k--')
+            plt.plot(time, zeros + i * shift, 'k--')
             plt.plot(time, y_values, '.', label="pixel {:}".format(i))
             
         plt.xlabel("HJD'")
@@ -579,7 +580,7 @@ class CpmFitSource(object):
         """inner function that makes the plotting; magnification is plotted instead of counts 
         if f_s is provided"""
         lw = 5
-        plt.plot(self.pixel_time[mask], self.pixel_time[mask]*0., 'k--', lw=lw)
+        plt.plot(self.pixel_time[mask], np.zeros_like(pixel_time[mask]), 'k--', lw=lw)
 
         residuals = np.copy(self.residuals)
         if f_s is not None:
