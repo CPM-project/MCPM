@@ -148,22 +148,29 @@ class CpmFitPixel(object):
     def fitted_flux(self):
         """predicted flux values"""
         if self._fitted_flux is None:
-            results_mask = self.results_mask
+            #results_mask = self.results_mask
+            mask = self.fitted_flux_mask
             if (self._predictor_fitted_flux is None 
-                    or not np.all(self._predictor_fitted_flux_mask == results_mask)):
-                self._predictor_fitted_flux = self.predictor_matrix[results_mask]
-                self._predictor_fitted_flux_mask = np.copy(results_mask)
+                    or not np.all(self._predictor_fitted_flux_mask == mask)):
+                self._predictor_fitted_flux = self.predictor_matrix[mask]
+                self._predictor_fitted_flux_mask = np.copy(mask)
             fit = np.dot(self._predictor_fitted_flux, self.coeffs)[:,0]
             self._fitted_flux = np.zeros(self.n_epochs, dtype=float)
-            self._fitted_flux[results_mask] = fit
+            self._fitted_flux[mask] = fit
         return self._fitted_flux
-        
+
+    @property
+    def fitted_flux_mask(self):
+        """mask for fitted flux; does not include model mask"""
+        return (self.target_mask * self.predictor_matrix_mask)
+
     @property
     def residuals(self):
         """residuals of the fit itself i.e., if there was model then 
         it's not added here"""
         out = np.zeros(self.n_epochs, dtype=float)
-        mask = self.results_mask
+        #mask = self.results_mask
+        mask = self.fitted_flux_mask
         out[mask] = self.target_flux[mask] - self.fitted_flux[mask]
 
         if self.model is not None:
@@ -174,6 +181,7 @@ class CpmFitPixel(object):
     def cpm_residuals(self):
         """residuals of the fit with added model"""
         out = np.zeros(self.n_epochs, dtype=float)
-        mask = self.results_mask
+        #mask = self.results_mask
+        mask = self.fitted_flux_mask
         out[mask] = self.target_flux[mask] - self.fitted_flux[mask]
         return out  

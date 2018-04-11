@@ -247,7 +247,7 @@ class CpmFitSource(object):
         sorted_indexes = np.argsort(prf_sum)[::-1][:n_select]
         
         self._pixels = self._pixels[sorted_indexes]
-        self._prf_values = self._prf_values[:, sorted_indexes]
+        self._prf_values = self.prf_values[:, sorted_indexes]
 
         self._pixel_time = None
         self._pixel_flux = None
@@ -343,7 +343,7 @@ class CpmFitSource(object):
        
         if model_mask is None:
             model_mask = np.ones_like(model, dtype=bool)
-        model_mask *= self._prf_values_mask
+        model_mask *= self.prf_values_mask
 
         for i in range(self.n_pixels):
             model_i = model * self.prf_values[:,i]
