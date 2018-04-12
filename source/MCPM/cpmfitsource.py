@@ -81,7 +81,7 @@ class CpmFitSource(object):
         return self._pixels
     
     def _calculate_positions(self):
-        """calcualte the pixel position of the source for all epochs"""
+        """calculate the pixel position of the source for all epochs"""
         out = self.campaign_grids.apply_grids(ra=self.ra, dec=self.dec)
         (self._x_positions, self._y_positions) = out
         self._xy_positions_mask = self.campaign_grids.mask
@@ -186,7 +186,7 @@ class CpmFitSource(object):
     def predictor_matrix(self):
         """matrix of predictor fluxes"""
         if self._predictor_matrix is None:
-            msg = 'run get_predictor_matrix() to get predicotor matrix'
+            msg = 'run get_predictor_matrix() to get predictor matrix'
             raise ValueError(msg)
         return self._predictor_matrix
 
@@ -194,7 +194,7 @@ class CpmFitSource(object):
     def predictor_matrix_mask(self):
         """epoch mask for matrix of predictor fluxes"""
         if self._predictor_matrix_mask  is None:
-            msg = 'run get_predictor_matrix() to get predicotor matrix mask'
+            msg = 'run get_predictor_matrix() to get predictor matrix mask'
             raise ValueError(msg)
         return self._predictor_matrix_mask
 
@@ -256,14 +256,16 @@ class CpmFitSource(object):
         self._cpm_pixel = None
 
     def _get_time_flux_mask_for_pixels(self):
-        """extract time vectors, flux vectors and epoch masks 
-        for pixels from TPF files"""
+        """
+        extract time vectors, flux vectors and epoch masks 
+        for pixels from TPF files
+        """
         out = self.multiple_tpf.get_time_flux_mask_for_pixels(self._pixels)
         reference_time = out[0][0][out[3][0]]
         for i in range(1, self.n_pixels):
             masked_time = out[0][i][out[3][i]]
             if (reference_time != masked_time).any():
-                msg = "we assumed time vactrors should be the same\n{:}\n{:}"
+                msg = "we assumed time vectors should be the same\n{:}\n{:}"
                 raise ValueError(msg.format(out[0][0], out[0][i]))
         self._pixel_time = out[0][0]
         self._pixel_flux = out[1]
@@ -306,8 +308,9 @@ class CpmFitSource(object):
                 masks[i][index] = False
                 
     def mask_bad_epochs_residuals(self, limit=None):
-        """mask epochs with residuals lrager than limit or smaller than -limit;
-        if limit is not provided than 5*residuals_rms is assumed
+        """
+        mask epochs with residuals larger than limit or smaller than -limit;
+        if limit is not provided then 5*residuals_rms is assumed
         """
         if limit is None:
             limit = 5 * self.residuals_rms
@@ -469,11 +472,36 @@ class CpmFitSource(object):
         return rms
 
     def residuals_rms_for_mask(self, mask):
-        """calculate RMS of residuals combining all pixels and applying 
-        additional epoch mask"""
+        """
+        calculate RMS of residuals combining all pixels and applying 
+        additional epoch mask
+        """
         mask_all = mask & self.residuals_mask
         rms = np.sqrt(np.mean(np.square(self.residuals[mask_all])))
         return rms
+
+    def prf_photometry(self):
+        """
+        Performs profile photometry using pixel value with subtracted 
+        fitted_flux from CPM. Currently does not include uncertainties 
+        in calculations
+        
+        Returns flux vector and mask
+        """
+        mask = self.prf_values_mask
+        for cpm_pixel in self._cpm_pixel:
+            mask *= cpm_pixel.fitted_flux_mask
+        
+        prf_flux = np.zeros(np.sum(mask), dtype=float)
+        prf_square = np.zeros(np.sum(mask), dtype=float)
+        for i in range(self.n_pixels):
+            prf = self.prf_values[:,i][mask]
+            prf_flux += prf * self._cpm_pixel[i].cpm_residuals[mask]
+            prf_square += prf**2
+        out = np.zeros_like(mask, dtype=float)
+        out[mask] = prf_flux / prf_square
+        
+        return (out, mask)
 
     def _save_coeffs_to_fits(self, fits_name, coeffs):
         """save coeffs to a fits file"""
