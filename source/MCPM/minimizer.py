@@ -50,7 +50,7 @@ class Minimizer(object):
         self._sat_magnifications = None
         self._sat_flux = None
 
-        self._coefs_cache = None
+        self._coeffs_cache = None
         self.n_flush = None
 
     def close_file_all_models(self):
@@ -79,8 +79,8 @@ class Minimizer(object):
     def print_min_chi2(self):
         """Print minimum chi2 and corresponding values"""
         fmt = " ".join(["{:.4f}"] * self.n_parameters)
-        parameteres = fmt.format(*list(self._min_chi2_theta))
-        print("{:.3f}  {:}".format(self._min_chi2, parameteres))
+        parameters = fmt.format(*list(self._min_chi2_theta))
+        print("{:.3f}  {:}".format(self._min_chi2, parameters))
 
     def set_parameters(self, theta):
         """for given event set attributes from parameters_to_fit (list of str) 
@@ -167,13 +167,13 @@ class Minimizer(object):
             if self.n_flush is not None and self._n_calls % self.n_flush == 0:
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
-        if self._coefs_cache is not None:
+        if self._coeffs_cache is not None:
             coeffs = []
             for i in range(self.n_sat):
                 n_pixels = self.cpm_sources[i].n_pixels
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
-            self._coefs_cache[tuple(theta.tolist())] = coeffs
+            self._coeffs_cache[tuple(theta.tolist())] = coeffs
             #np.array([self.cpm_source.pixel_coeffs(j).flatten() for j in range(self.cpm_source.n_pixels)])
         return chi2
 
@@ -188,7 +188,7 @@ class Minimizer(object):
         Provide a matrix samples[n_models, n_params] and for each 
         model there get the cached coeffs (caching MUST be turned ON)
         and set pixel coeffs to the mean of these cached coeffs. 
-        You may want to run stop_coeffs_cache() afterwards.
+        You may want to run stop_coeffs_cache() afterward.
         """
         weights = dict()
         coeffs = dict()
@@ -249,27 +249,27 @@ class Minimizer(object):
     
     def start_coeffs_cache(self):
         """
-        Start internally remembering coeffs; also resets cache if cacheing was 
+        Start internally remembering coeffs; also resets cache if caching was 
         working.
         """
-        self._coefs_cache = dict()
+        self._coeffs_cache = dict()
 
     def get_cached_coeffs(self, theta):
         """
         Get pixel coeffs for model defined by theta; note that 
         theta = tuple(list(model_parameters))
         """
-        if self._coefs_cache is None:
+        if self._coeffs_cache is None:
             raise ValueError("You want to get cached values and you haven't " + 
                 "turned on caching (see start_coeffs_cache())? Strange...")
         if not isinstance(theta, tuple):
             raise TypeError('wrong type of get_cached_coeffs() input: \n' +
                     'got {:}, expected tuple'.format(type(theta)))
-        return self._coefs_cache[theta]
+        return self._coeffs_cache[theta]
 
     def stop_coeffs_cache(self):
         """turn off internally remembering coeffs"""
-        self._coefs_cache = None
+        self._coeffs_cache = None
 
     def save_coeffs_to_fits(self, files):
         """saves coeffs to fits files"""
@@ -283,8 +283,10 @@ class Minimizer(object):
 
     def set_prior_boundaries(self, parameters_min_values, 
             parameters_max_values):
-        """remebers 2 dictionaries that set minimum and maximum values of 
-        parameters"""
+        """
+        remembers 2 dictionaries that set minimum and maximum values of 
+        parameters
+        """
         self._prior_min_values = parameters_min_values
         self._prior_max_values = parameters_max_values
         

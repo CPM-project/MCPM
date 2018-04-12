@@ -18,12 +18,12 @@ class CpmFitSource(object):
     
     def __init__(self, ra, dec, campaign, channel, 
             multiple_tpf=None, campaign_grids=None, prf_data=None,
-            use_undertainties=True):
+            use_uncertainties=True):
         self.ra = ra
         self.dec = dec
         self.campaign = campaign
         self.channel = channel
-        self.use_undertainties = use_undertainties
+        self.use_uncertainties = use_uncertainties
         
         if multiple_tpf is None:
             multiple_tpf = MultipleTpf(campaign, channel)
@@ -362,7 +362,7 @@ class CpmFitSource(object):
                     predictor_matrix_mask=self.predictor_matrix_mask, 
                     l2=self.l2, model=model_i, model_mask=model_mask, 
                     time=self.pixel_time, train_mask=self._train_mask,
-                    use_undertainties=self.use_undertainties)
+                    use_uncertainties=self.use_uncertainties)
             else:
                 self._cpm_pixel[i].model = model_i
                 self._cpm_pixel[i].model_mask = model_mask

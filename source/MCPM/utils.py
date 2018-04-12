@@ -124,7 +124,7 @@ def degree_to_n_coeffs(degree):
     return int((degree+1)*(degree+2)/2.+0.5)
 
 def n_coeffs_to_degree(n_coeffs):
-    """what is degree if 2d polynomial has n_coeffs coeficients"""
+    """what is degree if 2d polynomial has n_coeffs coefficients"""
     delta_sqrt = int((8 * n_coeffs + 1.)**.5 + 0.5)
     if delta_sqrt**2 != (8*n_coeffs+1.):
         raise ValueError('Wrong input in n_coeffs_to_degree(): {:}'.format(n_coeffs))

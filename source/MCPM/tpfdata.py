@@ -105,8 +105,8 @@ class TpfData(object):
         
         fmt = "Downloading {:} ..... "
         print(fmt.format(self.file_name), end='', file=sys.stderr, flush=True)
-        url_retriver = URLopener()
-        url_retriver.retrieve(url_to_load, self._path)
+        url_retriever = URLopener()
+        url_retriever.retrieve(url_to_load, self._path)
         print(" done", file=sys.stderr, flush=True)
     
     @property

@@ -5,14 +5,33 @@ from MCPM import leastSquareSolver as solver
 
 
 class CpmFitPixel(object):
-    """Class for performing CPM fit for a single pixel"""
+    """
+    Class for performing CPM fit for a single pixel
+    
+    Arguments :
+        target_flux
+        target_flux_err
+        target_mask 
+        predictor_matrix
+        predictor_matrix_mask
+        l2
+        l2_per_pixel
+        model
+        model_mask
+        time
+        train_lim
+        train_mask
+        use_uncertainties: *bool*
+            should we use flux uncertainties in training the model?
+            Default: *True*
+    """
     
     def __init__(self, target_flux, target_flux_err, target_mask, 
             predictor_matrix, predictor_matrix_mask,
             l2=None, l2_per_pixel=None, 
             model=None, model_mask=None, 
             time=None, train_lim=None, train_mask=None,
-            use_undertainties=True):
+            use_uncertainties=True):
                 
         self.target_flux = target_flux
         self.target_flux_err = target_flux_err
@@ -30,7 +49,7 @@ class CpmFitPixel(object):
         self.time = time
         self.train_lim = train_lim
 
-        self.use_undertainties = use_undertainties
+        self.use_uncertainties = use_uncertainties
         
         if self.train_lim is not None:
             if self.time is None:
@@ -134,13 +153,13 @@ class CpmFitPixel(object):
                     self._predictor_coeffs = self.predictor_matrix[self.train_mask]
                     self._predictor_coeffs_mask = np.copy(self.train_mask)
 
-                if self.use_undertainties:
-                    undertainties = self.target_flux_err[self.train_mask]
+                if self.use_uncertainties:
+                    uncertainties = self.target_flux_err[self.train_mask]
                 else:
-                    undertainties = None
+                    uncertainties = None
 
                 self._coeffs = solver.linear_least_squares(self._predictor_coeffs,
-                        self.target_masked, undertainties, self.l2) 
+                        self.target_masked, uncertainties, self.l2) 
             
         return self._coeffs
         
