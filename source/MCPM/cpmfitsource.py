@@ -322,6 +322,8 @@ class CpmFitSource(object):
     def set_train_mask(self, train_mask):
         """sets the epoch mask used for training in CPM"""
         self._train_mask = train_mask
+        for i in range(self.n_pixels):
+            self._cpm_pixel[i].train_time_mask = self._train_mask
 
     def pspl_model(self, t_0, u_0, t_E, f_s):
         """Paczynski (or point-source/point-lens) microlensing model"""
