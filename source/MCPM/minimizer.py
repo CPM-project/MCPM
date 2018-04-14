@@ -22,10 +22,18 @@ class Minimizer(object):
     """
     An object to link an Event to the functions necessary to minimize chi2.
     
-    NOTE that here we assume that theta has an additional parameter: satellite 
-    source flux. It is also assumed that the last datasets are 
-    the satellite ones. 
-
+    Arguments :
+        event: *MulensModel.Event*
+            ...
+            It is assumed that the last datasets are the satellite ones.
+            
+        parameters_to_fit: *list* of *str*
+            Parameters that will be fitted. Except 
+            the *MulensModel.ModelParameters* parameters one can use satellite 
+            source fluxes: 'f_s_sat' and  'f_b_sat'.
+            
+        cpm_sources: *CpmFitSource* or *list* of them
+    
     To force periodic flush of file with all models set n_flush to 
     100 or 1000 etc.
     """
@@ -34,7 +42,7 @@ class Minimizer(object):
         self.n_datasets = len(self.event.datasets)
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
-        self.n_parameters += 1
+        #self.n_parameters += 1
         if not isinstance(cpm_sources, list):
             cpm_sources = [cpm_sources]
         self.cpm_sources = cpm_sources
@@ -53,7 +61,8 @@ class Minimizer(object):
         self._sat_times = None
         self._sat_models = None
         self._sat_magnifications = None
-        self._sat_flux = None
+        self._sat_source_flux = None
+        self._sat_blending_flux = 0.
 
         self._coeffs_cache = None
         self.n_flush = None
@@ -92,13 +101,18 @@ class Minimizer(object):
         for given event set attributes from parameters_to_fit (list of str) 
         to values from theta list
         """
-        for (key, val) in enumerate(self.parameters_to_fit):
-            setattr(self.event.model.parameters, val, theta[key])
+        for (i, param) in enumerate(self.parameters_to_fit):
+            if param == 'f_s_sat':
+                self._sat_source_flux = theta[i]
+            elif param == 'f_b_sat':
+                self._sat_blending_flux = theta[i]
+            else:
+                setattr(self.event.model.parameters, param, theta[i])
 
     def _run_cpm(self, theta):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
-        self._sat_flux = theta[-1]
+        #self._sat_source_flux = theta[-1]
         n_0 = self.n_datasets - self.n_sat
 
         if self._sat_masks is None:
@@ -112,7 +126,8 @@ class Minimizer(object):
             self._sat_magnifications[i] = self.event.model.magnification(
                     time=self._sat_times[i],
                     satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
-            self._sat_models[i][self._sat_masks[i]] = self._sat_magnifications[i] * self._sat_flux
+            self._sat_models[i][self._sat_masks[i]] = (self._sat_blending_flux +
+                    self._sat_magnifications[i] * self._sat_source_flux)
             self.cpm_sources[i].run_cpm(self._sat_models[i])
 
     def set_satellite_data(self, theta):
@@ -307,19 +322,13 @@ class Minimizer(object):
         
         if self._prior_min_values is not None:
             for (parameter, value) in self._prior_min_values.items():
-                try:
-                    index = self.parameters_to_fit.index(parameter)
-                except ValueError:
-                    index = -1 # no better idea right now for passing f_s_sat
+                index = self.parameters_to_fit.index(parameter)
                 if theta[index] < value:
                     return outside
 
         if self._prior_max_values is not None:
             for (parameter, value) in self._prior_max_values.items():
-                try:
-                    index = self.parameters_to_fit.index(parameter)
-                except ValueError:
-                    index = -1 # no better idea right now for passing f_s_sat
+                index = self.parameters_to_fit.index(parameter)
                 if theta[index] > value:
                     return outside
         
@@ -373,9 +382,13 @@ class Minimizer(object):
 
         for i in range(self.n_sat):
             times = self._sat_times[i] - 2450000.
-            (fs_sat, fb_sat) = self.event.model.get_ref_fluxes(n+i)
-            mags = self._sat_magnifications[i]
-            flux = (mags * self._sat_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
+            #(fs_sat, fb_sat) = self.event.model.get_ref_fluxes(n+i)
+            #mags = self._sat_magnifications[i]
+            #flux = (mags * self._sat_source_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
+            flux = self._sat_magnifications[i] * self._sat_source_flux
+            flux -= self._sat_blending_flux
+            flux *= (fs[0] / self._sat_source_flux)
+            flux += fb
             plt.plot(times, Utils.get_mag_from_flux(flux), 
                 zorder=np.inf, # We want the satellite models to be at the very top. 
                 **kwargs)
