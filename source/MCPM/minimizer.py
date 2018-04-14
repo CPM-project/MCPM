@@ -13,17 +13,22 @@ K2_MAG_ZEROPOINT = 25.
 #     def set_pixel_coeffs_from_models
 #     def satellite_maximum
 
+# Issues with flux uncertsinteis read from TPF files:
+#  - not yet properly used in chi2_fun()
+#  - plot functions here and in cpmfitsource.py
+#  - also CpmFitPixel.target_masked needs _err equivalent
+
 class Minimizer(object): 
     """
     An object to link an Event to the functions necessary to minimize chi2.
     
     NOTE that here we assume that theta has an additional parameter: satellite 
-    source flux. It is also assumed that the last dataset is the satellite one. 
+    source flux. It is also assumed that the last datasets are 
+    the satellite ones. 
 
     To force periodic flush of file with all models set n_flush to 
     100 or 1000 etc.
     """
-
     def __init__(self, event, parameters_to_fit, cpm_sources):
         self.event = event
         self.n_datasets = len(self.event.datasets)
@@ -83,8 +88,10 @@ class Minimizer(object):
         print("{:.3f}  {:}".format(self._min_chi2, parameters))
 
     def set_parameters(self, theta):
-        """for given event set attributes from parameters_to_fit (list of str) 
-        to values from theta list"""
+        """
+        for given event set attributes from parameters_to_fit (list of str) 
+        to values from theta list
+        """
         for (key, val) in enumerate(self.parameters_to_fit):
             setattr(self.event.model.parameters, val, theta[key])
 
@@ -151,6 +158,7 @@ class Minimizer(object):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
         n = self.n_datasets - self.n_sat
+        # Correct the line below.
         chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
@@ -174,7 +182,6 @@ class Minimizer(object):
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
             self._coeffs_cache[tuple(theta.tolist())] = coeffs
-            #np.array([self.cpm_source.pixel_coeffs(j).flatten() for j in range(self.cpm_source.n_pixels)])
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
@@ -234,6 +241,9 @@ class Minimizer(object):
         NOTE: this version may be not very stable numerically. Try using 
         e.g., set_pixel_coeffs_from_dicts()
         """
+        if self.n_sat > 1:
+            raise ValueError("set_pixel_coeffs_from_models() doesn't allow " +
+                "multiple cpm_sources")
         n_models = len(models)
         shape = (n_models, self.cpm_source.predictor_matrix.shape[1])
         coeffs = [np.zeros(shape) for i in range(self.cpm_source.n_pixels)]
@@ -344,9 +354,14 @@ class Minimizer(object):
         return np.array(out)
 
     def satellite_maximum(self):
-        """return time of maximum magnification, its value, and corresponding 
+        """
+        return time of maximum magnification, its value, and corresponding 
         flux for the satellite dataset; takes into account the epochs when 
-        satellite data exist"""
+        satellite data exist
+        """
+        if self.n_sat > 1:
+            raise ValueError("satellite_maximum() doesn't allow " +
+                "multiple cpm_sources")
         index = np.argmax(self._sat_magnification)
         return (self._sat_time[index], self._sat_magnification[index], self._sat_magnification[index])
 
