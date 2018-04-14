@@ -351,7 +351,7 @@ class Minimizer(object):
         return (self._sat_time[index], self._sat_magnification[index], self._sat_magnification[index])
 
     def plot_sat_magnitudes(self, **kwargs):
-        """Plot satellite data in reference magnitude system"""
+        """Plot satellite model in reference magnitude system"""
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
         n = self.n_datasets - self.n_sat
