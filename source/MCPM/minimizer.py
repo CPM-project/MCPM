@@ -101,6 +101,9 @@ class Minimizer(object):
         for given event set attributes from parameters_to_fit (list of str) 
         to values from theta list
         """
+        if len(self.parameters_to_fit) != len(theta):
+            raise ValueError('wrong number of parameters {:} vs {:}'.format(
+                    len(self.parameters_to_fit), len(theta)))
         for (i, param) in enumerate(self.parameters_to_fit):
             if param == 'f_s_sat':
                 self._sat_source_flux = theta[i]
