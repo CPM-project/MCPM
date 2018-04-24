@@ -388,10 +388,7 @@ class Minimizer(object):
             #(fs_sat, fb_sat) = self.event.model.get_ref_fluxes(n+i)
             #mags = self._sat_magnifications[i]
             #flux = (mags * self._sat_source_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
-            flux = self._sat_magnifications[i] * self._sat_source_flux
-            flux -= self._sat_blending_flux
-            flux *= (fs[0] / self._sat_source_flux)
-            flux += fb
+            flux = self._sat_magnifications[i] * fs[0] + fb
             plt.plot(times, Utils.get_mag_from_flux(flux), 
                 zorder=np.inf, # We want the satellite models to be at the very top. 
                 **kwargs)
