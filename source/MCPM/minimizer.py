@@ -171,13 +171,20 @@ class Minimizer(object):
         color_value = mag_sat - mag_ref
         out = ((color_value - color) / sigma_color)**2
         return out
-        
+
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
         n = self.n_datasets - self.n_sat
         # Correct the line below.
         chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
+        # We also tried:
+        #chi2_sat = 0.
+        #for i in range(self.n_sat):
+            #ii = n + i
+            #rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
+            #rms /= np.mean(self.event.datasets[n+i].err_flux)
+            #chi2_sat += np.sum(self._sat_masks[i]) * rms**2        
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:

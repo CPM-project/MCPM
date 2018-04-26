@@ -482,6 +482,15 @@ class CpmFitSource(object):
         rms = np.sqrt(np.mean(np.square(self.residuals[mask_all])))
         return rms
 
+    #def residuals_rms_prf_photometry(self, model, model_mask=None):
+        #"""XXX"""
+        #(phot, phot_mask) = self.prf_photometry()
+        #difference = phot - model
+        #if model_mask is None:
+            #model_mask = phot_mask
+        #rms = np.sqrt(np.mean(np.square(difference[model_mask * phot_mask])))
+        #return rms
+
     def prf_photometry(self):
         """
         Performs profile photometry using pixel value with subtracted 
