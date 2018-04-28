@@ -321,6 +321,8 @@ class CpmFitSource(object):
     
     def set_train_mask(self, train_mask):
         """sets the epoch mask used for training in CPM"""
+        if self._cpm_pixel is None:
+            raise ValueError('you must run run_cpm() before set_train_mask()')
         self._train_mask = train_mask
         for i in range(self.n_pixels):
             self._cpm_pixel[i].train_time_mask = self._train_mask
