@@ -15,7 +15,8 @@ import MCPM
 
 
 class TpfData(object):
-    """Handles data read from TPF file.
+    """
+    Handles data read from TPF file.
     
     Note that there are no (x,y) coordinates! Instead there are (row, column) 
     or (column, row) and, yes, I wish one convention was used consistently.

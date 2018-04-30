@@ -123,7 +123,7 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
         int_variables = ["n_params", "n_clustering_params", "n_live_points", 
                         "seed", "max_iter"]
         for var in config[section]:
-            if var in int_vars:
+            if var in int_variables:
                 value = config.getint(section, var)
             elif var in ["evidence_tolerance"]:
                 value = config.getfloat(section, var)
@@ -285,7 +285,7 @@ def read_models(config):
                 parameter_values.append([float(value) for value in split_])
         for model in parameter_values:
             if len(model) != len(parameters_to_fit):
-                msg = 'error in reading models: got {:} parameters instead' +
+                msg = ('error in reading models: got {:} parameters instead' +
                     'of {:}\n').format(len(model), len(parameters_to_fit))
                 raise ValueError(msg, " ".join([str(x) for x in model]))
 
