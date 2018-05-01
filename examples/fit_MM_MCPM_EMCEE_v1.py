@@ -77,6 +77,9 @@ for cpm_source in cpm_sources:
     sat_model = utils.pspl_model(parameters['t_0'], parameters['u_0'], 
             parameters['t_E'], parameters['f_s_sat'], cpm_source.pixel_time)
     cpm_source.run_cpm(sat_model)
+    
+    utils.apply_limit_time(cpm_source, MCPM_options)
+
     mask = cpm_source.residuals_mask
     sat_time = cpm_source.pixel_time[mask] + 2450000.
     sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']

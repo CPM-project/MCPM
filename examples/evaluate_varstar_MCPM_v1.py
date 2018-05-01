@@ -67,15 +67,7 @@ for cpm_source in cpm_sources:
         parameters['flux'], time, model_time, model_value)
     cpm_source.run_cpm(sat_model)
 
-    if 'train_mask_time_limit' in MCPM_options:
-        mask_1 = np.zeros_like(cpm_source.pixel_time, dtype=bool)
-        mask_2 = ~np.isnan(cpm_source.pixel_time)
-        limit = MCPM_options['train_mask_time_limit'] - 2450000.
-        mask_1[mask_2] = (cpm_source.pixel_time[mask_2] < limit)
-        if np.sum(mask_1) == 0:
-            raise ValueError('value of train_mask_time_limit results in 0 ' +
-                'epochs in training mask')
-        cpm_source.set_train_mask(mask_1)
+    utils.apply_limit_time(cpm_source, MCPM_options)
 
 minimizer = MinimizerVariableStar(parameters_to_fit[:], cpm_sources)
 minimizer.model_time = model_time

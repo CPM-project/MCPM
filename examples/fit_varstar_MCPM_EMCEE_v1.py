@@ -67,6 +67,8 @@ for cpm_source in cpm_sources:
         parameters['flux'], time, model_time, model_value)
     cpm_source.run_cpm(sat_model)
 
+    utils.apply_limit_time(cpm_source, MCPM_options)
+
 # initiate event and minimizer
 minimizer = MinimizerVariableStar(parameters_to_fit[:], cpm_sources)
 minimizer.model_time = model_time
