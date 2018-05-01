@@ -60,7 +60,7 @@ class MinimizerVariableStar(object):
 
         self.model_time = None
         self.model_value = None
-        self.model_mask = None
+        self.model_masks = [None] * self.n_sat
 
     def close_file_all_models(self):
         """closes the file to which all models are saved"""
@@ -109,11 +109,12 @@ class MinimizerVariableStar(object):
 
         for i in range(self.n_sat):
             # Here we prepare the satellite lightcurves:
-            self._sat_models[i][self._sat_masks[i]] = utils.scale_model(self.parameters['t_0'], 
-                self.parameters['width_ratio'], self.parameters['depth_ratio'],
-                self.parameters['flux'], self._sat_times[i],
-                self.model_time, self.model_value)
-            self.cpm_sources[i].run_cpm(self._sat_models[i], model_mask=self.model_mask)
+            self._sat_models[i][self._sat_masks[i]] = utils.scale_model(
+                self.parameters['t_0'], self.parameters['width_ratio'], 
+                self.parameters['depth_ratio'], self.parameters['flux'], 
+                self._sat_times[i], self.model_time, self.model_value)
+            self.cpm_sources[i].run_cpm(self._sat_models[i], 
+                model_mask=self.model_masks[i])
 
     def get_satellite_data(self, theta):# instead of set_satellite_data()
         """run CPM and extract lightcurve"""
