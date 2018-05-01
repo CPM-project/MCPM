@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 # - pspl_model()
 # - scale_model()
 # - limit_time()
+# - apply_limit_time()
 # - pixel_list_center()
 # - load_matrix_xy()
 # - save_matrix_xy()
@@ -90,6 +91,26 @@ def limit_time(time, epoch_begin=None, epoch_end=None):
             '{:}\n{:}\n{:}\n'.format(time, epoch_begin, epoch_end))
 
     return out
+
+def apply_limit_time(cpm_source, options):
+    """
+    For given CpmFitSource and dictionary options check if there are 
+    keys 'train_mask_begin' or 'train_mask_end' and if so, 
+    then run limit_time() and set_train_mask().
+    """
+    if 'train_mask_begin' not in options:
+        train_mask_begin = None
+    else:
+        train_mask_begin = options['train_mask_begin']
+    if 'train_mask_end' not in options:
+        train_mask_end = None
+    else:
+        train_mask_end = options['train_mask_end']
+
+    if train_mask_begin is not None or train_mask_end is not None:
+        mask = limit_time(cpm_source.pixel_time + 2450000., 
+            train_mask_begin, train_mask_end)
+        cpm_source.set_train_mask(mask)
 
 def pixel_list_center(center_x, center_y, half_size):
     """
