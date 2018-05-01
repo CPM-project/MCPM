@@ -60,6 +60,7 @@ class MinimizerVariableStar(object):
 
         self.model_time = None
         self.model_value = None
+        self.model_mask = None
 
     def close_file_all_models(self):
         """closes the file to which all models are saved"""
@@ -112,7 +113,7 @@ class MinimizerVariableStar(object):
                 self.parameters['width_ratio'], self.parameters['depth_ratio'],
                 self.parameters['flux'], self._sat_times[i],
                 self.model_time, self.model_value)
-            self.cpm_sources[i].run_cpm(self._sat_models[i])
+            self.cpm_sources[i].run_cpm(self._sat_models[i], model_mask=self.model_mask)
 
     def get_satellite_data(self, theta):# instead of set_satellite_data()
         """run CPM and extract lightcurve"""

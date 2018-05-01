@@ -53,6 +53,7 @@ class Minimizer(object):
         self._prior_max_values = None
         self._n_calls = 0
         self._color_constraint = None
+        self.model_mask = None
 
         self._file_all_models_name = None
         self._file_all_models = None
@@ -131,7 +132,7 @@ class Minimizer(object):
                     satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
             self._sat_models[i][self._sat_masks[i]] = (self._sat_blending_flux +
                     self._sat_magnifications[i] * self._sat_source_flux)
-            self.cpm_sources[i].run_cpm(self._sat_models[i])
+            self.cpm_sources[i].run_cpm(self._sat_models[i], model_mask=self.model_mask)
 
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
