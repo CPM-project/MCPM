@@ -32,10 +32,12 @@ def pspl_model(t_0, u_0, t_E, f_s, times):
     return model
 
 def scale_model(t_0, width_ratio, depth_ratio, flux, times, model_time, model_value):
-    """scale and interpolate (model_time, model_value); good for single eclipse"""
+    """
+    scale and interpolate (model_time, model_value); good for single eclipse
+    """
     time = model_time * width_ratio + t_0
     value = (model_value - 1.) * depth_ratio 
-    value += 1.
+    #value += 1. # This is commented because we want baseline subtracted.
     value *= flux
     out = np.ones_like(times, dtype=np.float)
     mask_min = (times < np.min(time))
