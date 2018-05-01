@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 # File with short functions used in different parts of the code.
 # Contains:
 # - pspl_model()
-# - interpolate_model()
+# - scale_model()
+# - limit_time()
 # - pixel_list_center()
 # - load_matrix_xy()
 # - save_matrix_xy()
@@ -48,10 +49,54 @@ def scale_model(t_0, width_ratio, depth_ratio, flux, times, model_time, model_va
     out[mask_max] = value[-1]
     return out
 
+def limit_time(time, epoch_begin=None, epoch_end=None):
+    """
+    Make the mask for a time vector.  Limit to epochs later than epoch_begin. 
+    Limit it also to epochs earlier than epoch_end. These 2 limits are 
+    combined using AND or OR in the case epoch_begin<epoch_end and 
+    epoch_begin>epoch_end, respectively, i.e., it's inteligent and do what you
+    expect.
+    NAN epochs are masked out.
+    """
+    if epoch_begin is not None and epoch_begin == epoch_end:
+        raise ValueError('illegal input in limit_time()')
+
+    mask_nan = np.isnan(time)
+    mask_not_nan = np.logical_not(mask_nan)
+    
+    if epoch_begin is None:
+        mask_begin = np.ones_like(time, dtype=bool)
+        mask_begin[mask_nan] = False
+    else:
+        mask_begin = np.zeros_like(time, dtype=bool)
+        mask_begin[mask_not_nan] = (time[mask_not_nan] > epoch_begin)
+
+    if epoch_end is None:
+        mask_end = np.ones_like(time, dtype=bool)
+        mask_end[mask_nan] = False
+    else:
+        mask_end = np.zeros_like(time, dtype=bool)
+        mask_end[mask_not_nan] = (time[mask_not_nan] < epoch_end)
+
+    if epoch_begin is None or epoch_end is None:
+        out = mask_begin & mask_end
+    elif epoch_begin < epoch_end:
+        out = mask_begin & mask_end
+    else:
+        out = mask_begin | mask_end
+       
+    if np.sum(out) == 0:
+        raise ValueError('time limits resulted in 0 epochs accepted\n' +
+            '{:}\n{:}\n{:}\n'.format(time, epoch_begin, epoch_end))
+
+    return out
+
 def pixel_list_center(center_x, center_y, half_size):
-    """Return list of pixels centered on (center_x,center_y) 
+    """
+    Return list of pixels centered on (center_x,center_y) 
     [rounded to nearest integer] and covering 
-    n = 2*half_size+1 pixels on the side. The output shape is (n^2, 2)"""
+    n = 2*half_size+1 pixels on the side. The output shape is (n^2, 2)
+    """
     int_x = int(center_x + 0.5)
     int_y = int(center_y + 0.5)
     return np.mgrid[(int_x-half_size):(int_x+half_size+1), 
