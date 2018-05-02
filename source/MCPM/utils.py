@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 # - scale_model()
 # - limit_time()
 # - apply_limit_time()
+# - mask_nearest_epochs()
 # - pixel_list_center()
 # - load_matrix_xy()
 # - save_matrix_xy()
@@ -111,6 +112,30 @@ def apply_limit_time(cpm_source, options):
         mask = limit_time(cpm_source.pixel_time + 2450000., 
             train_mask_begin, train_mask_end)
         cpm_source.set_train_mask(mask)
+
+def mask_nearest_epochs(time, epochs, max_dt=0.005):
+    """
+    Take elements of epochs (list or array) and for each of them find closest 
+    element in vector time. Then mask out the element, if it within max_dt
+    of the searched value (do nothing otherwise). Mask out also nan epochs. 
+    Return value is a mask.
+    """
+    time_nan = np.isnan(time)
+    time_not_nan = np.logical_not(time_nan)
+    mask_cumsum_1 = np.cumsum(time_not_nan) - 1
+    masked_time = time[time_not_nan]
+    #indexes = []
+    mask = np.ones_like(time, dtype=bool)
+    for epoch in epochs:
+        delta_time = np.abs(masked_time-epoch)
+        index = delta_time.argmin()
+        if delta_time[index] < max_dt:
+            mask[mask_cumsum_1 == index] = False
+            #indexes.append(index)
+    #for index in indexes
+    mask[time_nan] = False
+    
+    return mask
 
 def pixel_list_center(center_x, center_y, half_size):
     """
