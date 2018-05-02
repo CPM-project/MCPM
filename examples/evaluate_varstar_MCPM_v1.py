@@ -63,8 +63,8 @@ for cpm_source in cpm_sources:
     time = cpm_source.pixel_time + 2450000.
     time[np.isnan(time)] = 2457530.
     sat_model = utils.scale_model(parameters['t_0'],
-        parameters['width_ratio'], parameters['depth_ratio'],
-        parameters['flux'], time, model_time, model_value)
+        parameters['width_ratio'], parameters['flux'], 
+        time, model_time, model_value)
     cpm_source.run_cpm(sat_model)
 
     utils.apply_limit_time(cpm_source, MCPM_options)

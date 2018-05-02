@@ -111,7 +111,7 @@ class MinimizerVariableStar(object):
             # Here we prepare the satellite lightcurves:
             self._sat_models[i][self._sat_masks[i]] = utils.scale_model(
                 self.parameters['t_0'], self.parameters['width_ratio'], 
-                self.parameters['depth_ratio'], self.parameters['flux'], 
+                self.parameters['flux'], 
                 self._sat_times[i], self.model_time, self.model_value)
             self.cpm_sources[i].run_cpm(self._sat_models[i], 
                 model_mask=self.model_masks[i])
