@@ -268,6 +268,8 @@ def read_models(config):
         model_ids - list - names of models
         plot_files - list - names of files where to make plots or None
         txt_files - list - names of files where data will be saved
+        txt_files_prf_phot - list - names of files where PRF-like photometry 
+                                    will be saved
         parameters_to_fit - list - corresponding names of parameters
     """
     parameter_values = []
@@ -301,4 +303,11 @@ def read_models(config):
         for var in config[section]:
             txt_files[model_ids.index(var)] = config.get(section, var)
 
-    return (parameter_values, model_ids, plot_files, txt_files, parameters_to_fit)
+    section = 'txt_files_prf_phot'
+    txt_files_prf_phot = [None] * len(model_ids)
+    if section in config.sections():
+        for var in config[section]:
+            txt_files_prf_phot[model_ids.index(var)] = config.get(section, var)
+
+    return (parameter_values, model_ids, plot_files, txt_files, 
+            txt_files_prf_phot, parameters_to_fit)

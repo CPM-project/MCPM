@@ -459,7 +459,7 @@ class CpmFitSource(object):
         if self._residuals_mask is None:
             self.residuals
         return self._residuals_mask
-    
+
     @property
     def pixel_residuals_rms(self):
         """calculate RMS of residuals using each pixel separately"""

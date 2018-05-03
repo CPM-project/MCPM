@@ -31,7 +31,7 @@ out = read_config.read_general_options(config)
 # Read models:
 out = read_config.read_models(config)
 (parameter_values, model_ids) = out[:2]
-(plot_files, txt_files, parameters_to_fit) = out[2:]
+(plot_files, txt_files, txt_files_prf_phot, parameters_to_fit) = out[2:]
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -79,17 +79,23 @@ if 'coeffs_fits_out' in MCPM_options:
 minimizer.parameters.update(parameters_fixed)
 
 # main loop:
-for (values, name, plot_file, txt_file) in zip(parameter_values, model_ids, plot_files, txt_files):
+for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_values, model_ids, plot_files, txt_files, txt_files_prf_phot):
     minimizer.set_parameters(values)
 
     print(name, minimizer.chi2_fun(values))
 
-    (y_, y_mask) = cpm_source.prf_photometry()
-    y = y_[y_mask]
-    x = cpm_source.pixel_time[y_mask]
-    #plt.scatter(x, y, marker="o")
-    #plt.show()
+    if txt_file_prf_phot is not None:
+        (y, y_mask) = cpm_source.prf_photometry()
+        x = cpm_source.pixel_time[y_mask]
+        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask]]).T)
+            #minimizer.set_satellite_data(values)
+            #y = minimizer.event.datasets[-1].flux#[y_mask]    
     if txt_file is not None:
+        y_mask = cpm_source.residuals_mask
+        x = cpm_source.pixel_time[y_mask]
+        y = cpm_source.residuals[y_mask]
+        y += utils.scale_model(values[0], values[2], values[1], x+2450000., 
+                model_time, model_value)
         np.savetxt(txt_file, np.array([x, y]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
