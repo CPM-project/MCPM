@@ -78,6 +78,10 @@ if 'coeffs_fits_out' in MCPM_options:
     raise ValueError("coeffs_fits_out cannot be set in this program")
 minimizer.parameters.update(parameters_fixed)
 
+if 'mask_model_epochs' in MCPM_options:
+    minimizer.model_masks[0] = utils.mask_nearest_epochs(
+        cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
+
 # main loop:
 for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_values, model_ids, plot_files, txt_files, txt_files_prf_phot):
     minimizer.set_parameters(values)

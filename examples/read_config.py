@@ -228,9 +228,19 @@ def read_MCPM_options(config):
     else:
         raise ValueError('l2 or l2_per_pixel must be set')
     if 'train_mask_time_limit' in config[section]:
-        mcpm_options['train_mask_time_limit'] = config.getfloat(section,
-                'train_mask_time_limit')
-    
+        raise KeyError("Upppsss... It seems you're trying to used old config "
+            + "with new code. Try train_mask_begin or train_mask_end instead "
+            + "of train_mask_time_limit")
+    if 'train_mask_begin' in config[section]:
+        mcpm_options['train_mask_begin'] = config.getfloat(section, 
+            'train_mask_begin')
+    if 'train_mask_end' in config[section]:
+        mcpm_options['train_mask_end'] = config.getfloat(section, 
+            'train_mask_end')
+    if 'mask_model_epochs' in config[section]:
+        mcpm_options['mask_model_epochs'] = [float(txt) 
+                for txt in config.get(section, 'mask_model_epochs').split()]
+
     predictor = {}
     if 'n_pix_predictor_matrix' in config[section]:
         predictor['n_pixel'] = config.getint(section, 'n_pix_predictor_matrix')
