@@ -81,6 +81,9 @@ for cpm_source in cpm_sources:
     utils.apply_limit_time(cpm_source, MCPM_options)
 
     mask = cpm_source.residuals_mask
+    if 'mask_model_epochs' in MCPM_options:
+        mask *= utils.mask_nearest_epochs(cpm_source.pixel_time+2450000., 
+            MCPM_options['mask_model_epochs'])
     sat_time = cpm_source.pixel_time[mask] + 2450000.
     sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
     data = MM.MulensData([sat_time, 0.*sat_time, sat_sigma],
@@ -97,6 +100,10 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     minimizer.start_coeffs_cache()
+
+if 'mask_model_epochs' in MCPM_options:
+    minimizer.model_masks[0] = utils.mask_nearest_epochs(
+        cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
 
 # EMCEE fit:
 print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
