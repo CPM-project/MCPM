@@ -81,6 +81,9 @@ if 'coeffs_fits_out' in MCPM_options:
     minimizer.start_coeffs_cache()
 minimizer.parameters.update(parameters_fixed)
 
+if 'mask_model_epochs' in MCPM_options:
+    minimizer.model_masks[0] = utils.mask_nearest_epochs(cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
+
 # EMCEE fit:
 print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
     emcee_settings['n_walkers'], emcee_settings['n_steps'], 
