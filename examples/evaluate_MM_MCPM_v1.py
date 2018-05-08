@@ -30,8 +30,8 @@ out = read_config.read_general_options(config)
 
 # Read models:
 out = read_config.read_models(config)
-(parameter_values, model_ids) = out[:2]
-(plot_files, txt_files, txt_files_prf_phot, parameters_to_fit) = out[2:]
+(parameter_values, model_ids, plot_files) = out[:3]
+(txt_files, txt_files_prf_phot, txt_models, parameters_to_fit) = out[3:]
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -100,7 +100,11 @@ if 'mask_model_epochs' in MCPM_options:
         cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
 
 # main loop:
-for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_values, model_ids, plot_files, txt_files, txt_files_prf_phot):
+zipped = zip(parameter_values, model_ids, plot_files, txt_files, 
+    txt_files_prf_phot, txt_models)
+for zip_single in zipped:
+    (values, name, plot_file) = zip_single[:3]
+    (txt_file, txt_file_prf_phot, txt_model) = zip_single[3:]
     for (key, value) in zip(parameters_to_fit, values):
         setattr(model.parameters, key, value)
     print(name, minimizer.chi2_fun(values))
@@ -113,10 +117,14 @@ for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_valu
     if txt_file is not None:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]
-        #minimizer.set_satellite_data(values)
         y = minimizer.event.datasets[-1].flux
         #y = minimizer._sat_models[0][y_mask]
         np.savetxt(txt_file, np.array([x, y]).T)        
+    if txt_model is not None:
+        y_mask = cpm_source.residuals_mask
+        x = cpm_source.pixel_time[y_mask]
+        y = minimizer._sat_models[0][y_mask]
+        np.savetxt(txt_model, np.array([x, y]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
         minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
@@ -127,3 +135,4 @@ for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_valu
         for i in range(len(datasets)):
             print(i, event.get_chi2_for_dataset(i))
     print()
+
