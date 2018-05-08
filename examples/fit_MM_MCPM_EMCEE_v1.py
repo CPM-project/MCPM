@@ -48,10 +48,11 @@ if skycoord is not None:
     coords = MM.Coordinates(skycoord)
 else:
     coords = None
-for (file_, fmt) in zip(files, files_formats):
-    data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt, 
-            coords=coords)
-    datasets.append(data)
+if files is not None:
+    for (file_, fmt) in zip(files, files_formats):
+        data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt, 
+                coords=coords)
+        datasets.append(data)
 
 # satellite datasets
 cpm_sources = []
@@ -91,7 +92,7 @@ for cpm_source in cpm_sources:
     datasets.append(data)
 
 # initiate event and minimizer
-event = MM.Event(datasets=datasets, model=model)
+event = MM.Event(datasets=datasets, model=model, coords=skycoord)
 params = parameters_to_fit[:]
 minimizer = Minimizer(event, params, cpm_sources)
 minimizer.file_all_models = file_all_models
