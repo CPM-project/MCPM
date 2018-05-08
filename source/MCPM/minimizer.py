@@ -141,8 +141,12 @@ class Minimizer(object):
         n_0 = self.n_datasets - self.n_sat
         for i in range(self.n_sat):
             ii = n_0 + i
+            # OLD:
             sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
             flux = self._sat_models[i][self._sat_masks[i]] + sat_residuals
+            # NEW - IF ACCEPTED!!! :
+            #sat_residuals = self.cpm_sources[i].residuals[self.cpm_sources[i].residuals_mask]
+            #flux = self._sat_models[i][self.cpm_sources[i].residuals_mask] + sat_residuals
             self.event.datasets[ii].flux = flux
             mag_and_err = Utils.get_mag_and_err_from_flux(flux,
                 self.event.datasets[ii].err_flux, zeropoint=K2_MAG_ZEROPOINT)

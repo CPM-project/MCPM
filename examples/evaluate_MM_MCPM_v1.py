@@ -31,7 +31,7 @@ out = read_config.read_general_options(config)
 # Read models:
 out = read_config.read_models(config)
 (parameter_values, model_ids) = out[:2]
-(plot_files, txt_files, parameters_to_fit) = out[2:]
+(plot_files, txt_files, txt_files_prf_phot, parameters_to_fit) = out[2:]
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -78,6 +78,8 @@ for cpm_source in cpm_sources:
     utils.apply_limit_time(cpm_source, MCPM_options)
 
     mask = cpm_source.residuals_mask
+    if 'mask_model_epochs' in MCPM_options:
+        mask *= utils.mask_nearest_epochs(cpm_source.pixel_time+2450000., MCPM_options['mask_model_epochs'])
     sat_time = cpm_source.pixel_time[mask] + 2450000.
     sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
     data = MM.MulensData([sat_time, 0.*sat_time, sat_sigma],
@@ -92,24 +94,32 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     raise ValueError("coeffs_fits_out cannot be set in this program")
-    
+
+if 'mask_model_epochs' in MCPM_options:
+    minimizer.model_masks[0] = utils.mask_nearest_epochs(
+        cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
+
 # main loop:
-for (values, name, plot_file, txt_file) in zip(parameter_values, model_ids, plot_files, txt_files):
+for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_values, model_ids, plot_files, txt_files, txt_files_prf_phot):
     for (key, value) in zip(parameters_to_fit, values):
         setattr(model.parameters, key, value)
     print(name, minimizer.chi2_fun(values))
-    if txt_file is not None:
-        (y_, y_mask) = cpm_source.prf_photometry()
-        y = y_[y_mask]
-        #else:
-            #minimizer.set_satellite_data(values)
-            #minimizer.chi2_fun(values)
-            #y = minimizer.event.datasets[-1].flux#[y_mask]
+    minimizer.set_satellite_data(values)
+    
+    if txt_file_prf_phot is not None:
+        (y, y_mask) = cpm_source.prf_photometry()
         x = cpm_source.pixel_time[y_mask]
-        np.savetxt(txt_file, np.array([x, y]).T)
+        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask]]).T)
+    if txt_file is not None:
+        y_mask = cpm_source.residuals_mask
+        x = cpm_source.pixel_time[y_mask]
+        #minimizer.set_satellite_data(values)
+        y = minimizer.event.datasets[-1].flux
+        #y = minimizer._sat_models[0][y_mask]
+        np.savetxt(txt_file, np.array([x, y]).T)        
     if plot_file is not None:
         minimizer.set_satellite_data(values)
-        minimizer.standard_plot(7530., 7573., [14.65, 13.6], title=name)
+        minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
         plt.savefig(plot_file)
         plt.close()
         print("{:} file saved".format(plot_file))
