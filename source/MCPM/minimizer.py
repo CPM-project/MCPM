@@ -36,6 +36,7 @@ class Minimizer(object):
     
     To force periodic flush of file with all models set n_flush to 
     100 or 1000 etc.
+    
     """
     def __init__(self, event, parameters_to_fit, cpm_sources):
         self.event = event
@@ -57,6 +58,7 @@ class Minimizer(object):
 
         self._file_all_models_name = None
         self._file_all_models = None
+        self.save_fluxes = True
 
         self._sat_masks = None
         self._sat_times = None
@@ -200,9 +202,16 @@ class Minimizer(object):
             self._min_chi2 = chi2
             self._min_chi2_theta = theta
         self._n_calls += 1
+        if self.save_fluxes:
+            self.event.get_chi2_per_point()
+            self.fluxes = 2 * n * [0.]
+            self.fluxes[::2] = [self.event.fit._flux_sources[self.event.datasets[i]][0] for i in range(n)]
+            self.fluxes[1::2] = [self.event.fit._flux_blending[self.event.datasets[i]] for i in range(n)]
         if self._file_all_models is not None:
-            text = " ".join([repr(chi2)] + [repr(ll) for ll in theta]) + '\n'
-            self._file_all_models.write(text)
+            text = " ".join([repr(chi2)] + [repr(ll) for ll in theta])
+            if self.save_fluxes:
+                text += " " + " ".join(["{:.5f}".format(f) for f in self.fluxes])
+            self._file_all_models.write(text + '\n')
             if self.n_flush is not None and self._n_calls % self.n_flush == 0:
                 self._file_all_models.flush()
                 os.fsync(self._file_all_models.fileno()) 
@@ -213,6 +222,7 @@ class Minimizer(object):
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
             self._coeffs_cache[tuple(theta.tolist())] = coeffs
+        
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
@@ -352,18 +362,33 @@ class Minimizer(object):
 
     def ln_like(self, theta):
         """logarithm of likelihood"""
-        return -0.5 * (self.chi2_fun(theta) - self._chi2_0) #/ 10.
+        chi2 = self.chi2_fun(theta)
+
+        ln_likelihood = -0.5 * (chi2 - self._chi2_0)
+
+        return ln_likelihood
 
     def ln_prob(self, theta):
         """combines prior and likelihood"""
         ln_prior = self.ln_prior(theta)
         if not np.isfinite(ln_prior):
-            return -np.inf
+            if self.save_fluxes:
+                return (-np.inf, self.fluxes)
+            else:
+                return -np.inf
+        
         ln_like = self.ln_like(theta)
         if np.isnan(ln_like):
-            return -np.inf
+            if self.save_fluxes:
+                return (-np.inf, self.fluxes)
+            else:
+                return -np.inf
 
-        return ln_prior + ln_like
+        ln_probability = ln_prior + ln_like
+        if self.save_fluxes:
+            return (ln_probability, self.fluxes)
+        else:
+            return ln_probability
         
     def set_MN_cube(self, min_values, max_values):
         """remembers how to transform unit cube to physical parameters for MN"""
