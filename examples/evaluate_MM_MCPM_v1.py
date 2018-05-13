@@ -81,7 +81,10 @@ for cpm_source in cpm_sources:
     if 'mask_model_epochs' in MCPM_options:
         mask *= utils.mask_nearest_epochs(cpm_source.pixel_time+2450000., MCPM_options['mask_model_epochs'])
     sat_time = cpm_source.pixel_time[mask] + 2450000.
-    sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
+    #sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
+    sat_sigma = np.sqrt(np.sum(np.array([err[mask] for err in cpm_source.pixel_flux_err])**2, axis=0))
+    if 'sat_sigma_scale' in MCPM_options:
+        sat_sigma *= MCPM_options['sat_sigma_scale']
     data = MM.MulensData([sat_time, 0.*sat_time, sat_sigma],
             phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'])
     datasets.append(data)
@@ -127,7 +130,8 @@ for zip_single in zipped:
         np.savetxt(txt_model, np.array([x, y]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
-        minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
+        minimizer.standard_plot(7505., 7520., [18.8, 15.7], title=name)
+        #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
         plt.savefig(plot_file)
         plt.close()
         print("{:} file saved".format(plot_file))

@@ -217,7 +217,11 @@ def read_MCPM_options(config):
         mcpm_options['half_size'] = config.getint(section, 'half_size')
     mcpm_options['n_select'] = config.getint(section, 'n_select')
     if 'sat_sigma' in config[section]:
-        mcpm_options['sat_sigma'] = config.getfloat(section, 'sat_sigma')
+        raise KeyError("Upppsss... It seems you're trying to used old config "
+            + "with new code. This version uses 'sat_sigma_scale', not "
+            + "'sat_sigma'")
+    if 'sat_sigma_scale' in config[section]:
+        mcpm_options['sat_sigma_scale'] = config.getfloat(section, 'sat_sigma_scale')
 
     if 'l2_per_pixel' in config[section] and 'l2' in config[section]:
         raise ValueError('l2 and l2_per_pixel cannot both be set')
