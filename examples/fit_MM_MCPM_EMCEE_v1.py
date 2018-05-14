@@ -127,6 +127,7 @@ sampler.run_mcmc(starting, emcee_settings['n_steps'])
 # cleanup and close minimizer:
 samples = sampler.chain[:, emcee_settings['n_burn']:, :].reshape((-1, n_params))
 blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
+n_fluxes = blob_sampler.shape[-1]
 blob_samples = blob_sampler[:, emcee_settings['n_burn']:, :].reshape((-1, n_fluxes))
 if 'coeffs_fits_out' in MCPM_options:
     minimizer.set_pixel_coeffs_from_samples(samples)
@@ -142,10 +143,10 @@ results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
         zip(*np.percentile(samples, [16, 50, 84], axis=0)))
 for (param, r) in zip(parameters_to_fit, results):
     print('{:7s} : {:.4f} {:.4f} {:.4f}'.format(param, *r))
-n_fluxes = blob_sampels.shape[-1]
 blob_results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*np.percentile(blob_samples, [16, 50, 84], axis=0)))
 flux_name = ['S', 'B']
 for (i, r) in zip(range(n_fluxes), blob_results):
     print('flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'.format(flux_name[i%2], i//2+1, *r))
 print('Best model:')
 minimizer.print_min_chi2()
+
