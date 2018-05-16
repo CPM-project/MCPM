@@ -45,10 +45,11 @@ if skycoord is not None:
     coords = MM.Coordinates(skycoord)
 else:
     coords = None
-for (file_, fmt) in zip(files, files_formats):
-    data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt, 
-            coords=coords)
-    datasets.append(data)
+if files is not None:
+    for (file_, fmt) in zip(files, files_formats):
+        data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt, 
+                coords=coords)
+        datasets.append(data)
     
 # satellite datasets
 cpm_sources = []
@@ -90,7 +91,7 @@ for cpm_source in cpm_sources:
     datasets.append(data)
     
 # initiate event    
-event = MM.Event(datasets=datasets, model=model)
+event = MM.Event(datasets=datasets, model=model, coords=skycoord)
 params = parameters_to_fit[:]
 minimizer = Minimizer(event, params, cpm_sources)
 if 'coeffs_fits_in' in MCPM_options:
@@ -130,8 +131,9 @@ for zip_single in zipped:
         np.savetxt(txt_model, np.array([x, y]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
-        minimizer.standard_plot(7505., 7520., [18.8, 15.7], title=name)
+        minimizer.standard_plot(7505., 7520., [18.8, 15.95], title=name)
         #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
+        #plt.ylim(0.5, -0.5)
         plt.savefig(plot_file)
         plt.close()
         print("{:} file saved".format(plot_file))
