@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+import matplotlib.lines as mlines
 
 from MulensModel.utils import Utils
 
@@ -434,7 +435,7 @@ class Minimizer(object):
 
     def standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """
-        grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1])
+        grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.1)
         plt.figure()
         plt.subplot(grid_spec[0])
         if title is not None:
@@ -446,13 +447,23 @@ class Minimizer(object):
         self.event.plot_model(
             color='black', subtract_2450000=True, 
             t_start=t_start+2450000., t_stop=t_stop+2450000.)
-        self.plot_sat_magnitudes(color='yellow')
+        self.plot_sat_magnitudes(color='blue', lw=3.5, alpha=0.75)
         
         self.event.plot_data(alpha_list=alphas, 
             zorder_list=np.arange(self.n_datasets, 0, -1), 
-            marker='o', markersize=5, subtract_2450000=True)
+            marker='o', markersize=5, subtract_2450000=True,
+            color_list=['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat)
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
+        
+        # Prepare legend "manually":
+        black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
+                          markersize=5, label='ground-based', alpha=alphas[0])
+        red_line = mlines.Line2D([], [], color='red', marker='o', lw=0, 
+                          markersize=5, label='K2C9 data')
+        blue_line = mlines.Line2D([], [], color='blue', lw=3.5, alpha=0.75,
+                          markersize=5, label='K2C9 model')
+        plt.legend(handles=[red_line, blue_line, black_line], loc='best')
         
         plt.subplot(grid_spec[1])
         self.event.plot_residuals(subtract_2450000=True)
