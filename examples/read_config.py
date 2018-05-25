@@ -62,7 +62,8 @@ def read_general_options(config):
         info = [[var, config.get(section, var).split()] for var in config[section]]
         for info_ in info:
             if len(info_[1]) != 2:
-                msg = 'Wrong input in cfg file:\n{:}'
+                msg = ('Wrong input in cfg file:\n{:}\nFiles require ' +
+                    'additional parameter: "mag" or "flux"')
                 raise ValueError(msg.format(config.get(section, info_[0])))
         files = [x[1][0] for x in info]
         files_formats = [x[1][1] for x in info]
