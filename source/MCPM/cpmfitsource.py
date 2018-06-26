@@ -575,9 +575,27 @@ class CpmFitSource(object):
         plt.ylabel("counts + const.")
 
     def plot_pixel_curves(self, **kwargs):
-        """Use matplotlib to plot raw data for a set of pixels. 
-        For options look at MultipleTpf.plot_pixel_curves()"""
-        self.multiple_tpf.plot_pixel_curves(self.mean_x, self.mean_y, **kwargs)
+        """
+        Use matplotlib to plot raw data for a set of pixels. 
+        For options look at MultipleTpf.plot_pixel_curves().
+        """
+        # OLD VERSION:
+        #dx = np.max(np.abs(self._pixels[:,0]-int(self.mean_x+.5)))
+        #dy = np.max(np.abs(self._pixels[:,1]-int(self.mean_y+.5)))
+        #self.multiple_tpf.plot_pixel_curves(
+                #mean_x=self.mean_x, mean_y=self.mean_y,
+                #half_size=max(dx, dy), **kwargs)
+        self.multiple_tpf.plot_pixel_curves(
+                pixels=self._pixels, flux=self.pixel_flux, **kwargs)
+                
+    def subtract_flux_from_star(self, star_ra, star_dec, flux):
+        """
+        Subtract the signal expected from star at given coords from all pixels.
+        """
+        (prf_values, mask) = self.prf_for_campaign.apply_grids_and_prf(
+                    ra=star_ra, dec=star_dec, pixels=self._pixels)
+        for i in range(self.n_pixels):
+            self.pixel_flux[i] -= flux * prf_values[:,i]
 
     def run_cpm_and_plot_model(self, model, model_mask=None, 
             plot_residuals=False, f_s=None):

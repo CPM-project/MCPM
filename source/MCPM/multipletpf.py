@@ -354,29 +354,44 @@ class MultipleTpf(object):
             mask.append(tpf.epoch_mask)
         return (time, flux, flux_err, mask)
 
-    def plot_pixel_curves(self, mean_x, mean_y, half_size=2, 
+    def plot_pixel_curves(self, mean_x=None, mean_y=None, half_size=2, 
+            pixels=None, flux=None,
             figsize=(15, 10.3), dpi=300, point_size=2, **kwargs):
         """Plot raw light curves for pixels in a square. 
         Default settings produce large but readable file. 
         The **kwargs are passed to utils.plot_matrix_subplots()."""
         fig_args = {"left":0.035, "bottom":0.023, "right":.995, "top":.995}
-
-        pixels = utils.pixel_list_center(mean_x, mean_y, half_size)
         
-        fluxes = []
-        for (x, y) in pixels:
-            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
-            # This could be faster - most probably current pixel is in
-            # the same TPF as the previous one.
+        if flux is not None and pixels is not None: # Data given directly. 
+            if mean_x is not None or mean_y is not None:
+                raise ValueError('error #1 in plot_pixel_curves()')
+            flux_matrix = utils.construct_matrix_from_list(pixels, flux)
+            epic = self.tpf_rectangles.get_epic_id_for_pixel(
+                    pixels[0,0], pixels[0,1])
             tpf = self.tpf_for_epic_id(epic)
-            fluxes.append(tpf.get_flux_for_pixel(row=y, column=x))
+            time = tpf.jd_short
+        # Data not given directly, it mean position specified:
+        elif mean_x is not None and mean_y is not None and half_size is not None: 
+            if flux is not None or pixels is not None:
+                raise ValueError('error #2 in plot_pixel_curves()')
+            pixels = utils.pixel_list_center(mean_x, mean_y, half_size)
+            fluxes = []
+            for (x, y) in pixels:
+                epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
+                # This could be faster - most probably current pixel is in
+                # the same TPF as the previous one.
+                tpf = self.tpf_for_epic_id(epic)
+                fluxes.append(tpf.get_flux_for_pixel(row=y, column=x))
+            flux_matrix = utils.construct_matrix_from_list(pixels, fluxes)
+            time = tpf.jd_short
+        else:
+            raise ValueError('error #3 in plot_pixel_curves()')
         
-        flux_matrix = utils.construct_matrix_from_list(pixels, fluxes)
         flux_matrix[flux_matrix == 0.] = None
 
         # Plotting starts here.
         (fig, ax) = plt.subplots(figsize=figsize, dpi=dpi)
-        utils.plot_matrix_subplots(fig, tpf.jd_short, flux_matrix, 
+        utils.plot_matrix_subplots(fig, time, flux_matrix, 
             ms=point_size, **kwargs)
         plt.subplots_adjust(**fig_args)
 
