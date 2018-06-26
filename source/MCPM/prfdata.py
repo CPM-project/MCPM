@@ -144,7 +144,9 @@ class PrfData(object):
             self._fast_x = star_x
             self._fast_y = star_y
                     
-        out = [self._spline_function(y-star_y, x-star_x)[0][0] 
-                                                    for (x, y) in pixels_list]
+        out = np.array([self._spline_function(y-star_y, x-star_x)[0][0] 
+                                                for (x, y) in pixels_list])
         # Yes, here we revert the order of x,y because of K2 PRF data format.
-        return np.array(out)
+
+        out[(out < 0.)] = 0.
+        return out
