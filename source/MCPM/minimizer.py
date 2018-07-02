@@ -134,6 +134,9 @@ class Minimizer(object):
                     time=self._sat_times[i],
                     satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
             self._sat_models[i][self._sat_masks[i]] = (self._sat_blending_flux +
+                    # f_s*(A-1) version:
+                    #(self._sat_magnifications[i] - 1.) * self._sat_source_flux)
+                    # f_s*A version:
                     self._sat_magnifications[i] * self._sat_source_flux)
             self.cpm_sources[i].run_cpm(self._sat_models[i], 
                     model_mask=self.model_masks[i])
