@@ -118,7 +118,7 @@ starting = [starting_mean + starting_sigma * np.random.randn(n_params)
             for i in range(emcee_settings['n_walkers'])]
 for start_ in starting:
     if minimizer.ln_prior(start_) <= -float('inf'):
-        raise ValueError('starting point is not in prior')
+        raise ValueError('starting point is not in prior\n', start_)
 sampler = emcee.EnsembleSampler(
     emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
 # run:
