@@ -98,6 +98,15 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     raise ValueError("coeffs_fits_out cannot be set in this program")
+if 'color_constraint' in MCPM_options:
+    cc = 'color_constraint'
+    ref_dataset = files.index(MCPM_options[cc][0])
+    if len(MCPM_options[cc]) == 3:
+        ref_mag = MM.utils.MAG_ZEROPOINT
+    else:
+        ref_mag = MCPM_options[cc][1]
+    minimizer.add_color_constraint(ref_dataset, ref_mag,
+        MCPM_options[cc][-2], MCPM_options[cc][-1])
 
 if 'mask_model_epochs' in MCPM_options:
     minimizer.model_masks[0] = utils.mask_nearest_epochs(
@@ -134,11 +143,17 @@ for zip_single in zipped:
         minimizer.standard_plot(7505., 7520., [18.8, 15.95], title=name)
         #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
         #plt.ylim(0.5, -0.5)
-        plt.savefig(plot_file)
+        if len(plot_file) == 0:
+            plt.show()
+        else:
+            plt.savefig(plot_file)
+            print("{:} file saved".format(plot_file))
         plt.close()
-        print("{:} file saved".format(plot_file))
     if len(datasets) > 1:
-        for i in range(len(datasets)):
-            print(i, event.get_chi2_for_dataset(i))
+        for (i, data) in enumerate(datasets):
+            chi2_data = event.get_chi2_for_dataset(i)
+            print(i, chi2_data,
+                event.fit.flux_of_sources(data)[0],
+                event.fit.blending_flux(data))
     print()
 

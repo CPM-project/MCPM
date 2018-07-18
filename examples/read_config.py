@@ -251,6 +251,13 @@ def read_MCPM_options(config):
         predictor['n_pixel'] = config.getint(section, 'n_pix_predictor_matrix')
     mcpm_options['predictor_matrix'] = predictor
     
+    if 'color_constraint' in config[section]:
+        tt = config.get(section, 'color_constraint').split()
+        if len(tt) not in [3, 4]:
+            raise ValueError(
+                'Wrong length of color_constraint in MCPM section of config')
+        mcpm_options['color_constraint'] = [tt[0]] + [float(t) for t in tt[1:]]        
+    
     if 'coeffs_fits_out' in config[section] and 'coeffs_fits_in' in config[section]:
         raise ValueError('coeffs_fits_out and coeffs_fits_in cannot both be set')
     if 'coeffs_fits_out' in config[section]:

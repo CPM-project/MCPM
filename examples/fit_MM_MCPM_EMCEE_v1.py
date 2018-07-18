@@ -104,6 +104,15 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     minimizer.start_coeffs_cache()
+if 'color_constraint' in MCPM_options:
+    cc = 'color_constraint'
+    ref_dataset = files.index(MCPM_options[cc][0])
+    if len(MCPM_options[cc]) == 3:
+        ref_mag = MM.utils.MAG_ZEROPOINT
+    else:
+        ref_mag = MCPM_options[cc][1]
+    minimizer.add_color_constraint(ref_dataset, ref_mag, 
+        MCPM_options[cc][-2], MCPM_options[cc][-1])
 
 if 'mask_model_epochs' in MCPM_options:
     minimizer.model_masks[0] = utils.mask_nearest_epochs(
