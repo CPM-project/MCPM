@@ -165,6 +165,7 @@ class Minimizer(object):
         satellite band: 
             ref_dataset (int) - reference dataset
             ref_zero_point (float) - magnitude zeropoint of reference dataset
+                                    probably MulensModel.utils.MAG_ZEROPOINT
             color (float) - (satellite-ref_dataset) color (NOTE ORDER)
             sigma_color (float) - sigma of color        
         """
@@ -200,7 +201,8 @@ class Minimizer(object):
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:
-            self.chi2.append(self._chi2_for_color_constraint(theta[-1]))
+            #self.chi2.append(self._chi2_for_color_constraint(theta[-1]))
+            self.chi2.append(self._chi2_for_color_constraint(self._sat_source_flux))
         chi2 = sum(self.chi2)
         if self._min_chi2 is None or chi2 < self._min_chi2:
             self._min_chi2 = chi2
