@@ -105,8 +105,14 @@ if 'color_constraint' in MCPM_options:
         ref_mag = MM.utils.MAG_ZEROPOINT
     else:
         ref_mag = MCPM_options[cc][1]
-    minimizer.add_color_constraint(ref_dataset, ref_mag,
-        MCPM_options[cc][-2], MCPM_options[cc][-1])
+
+    if len(MCPM_options[cc]) in [3, 4]:
+        minimizer.add_color_constraint(ref_dataset, ref_mag, 
+            MCPM_options[cc][-2], MCPM_options[cc][-1])
+    elif len(MCPM_options[cc]) in [5, 6, 7, 8]:
+        minimizer.add_full_color_constraint(ref_dataset,
+            files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]), 
+            *MCPM_options[cc][3:])        
 
 if 'mask_model_epochs' in MCPM_options:
     minimizer.model_masks[0] = utils.mask_nearest_epochs(

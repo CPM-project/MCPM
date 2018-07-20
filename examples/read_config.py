@@ -253,10 +253,13 @@ def read_MCPM_options(config):
     
     if 'color_constraint' in config[section]:
         tt = config.get(section, 'color_constraint').split()
-        if len(tt) not in [3, 4]:
+        if len(tt) in [3, 4]:
+            mcpm_options['color_constraint'] = [tt[0]] + [float(t) for t in tt[1:]]
+        elif len(tt) == 7:
+            mcpm_options['color_constraint'] = tt[:3] + [[float(t) for t in tt[3:6]]] + [float(t) for t in tt[6:]]
+        else:
             raise ValueError(
-                'Wrong length of color_constraint in MCPM section of config')
-        mcpm_options['color_constraint'] = [tt[0]] + [float(t) for t in tt[1:]]        
+                'Wrong length of color_constraint in MCPM section of config') 
     
     if 'coeffs_fits_out' in config[section] and 'coeffs_fits_in' in config[section]:
         raise ValueError('coeffs_fits_out and coeffs_fits_in cannot both be set')

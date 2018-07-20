@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import matplotlib.lines as mlines
 
-from MulensModel.utils import Utils
+from MulensModel.utils import Utils, MAG_ZEROPOINT
 
 
 K2_MAG_ZEROPOINT = 25.
@@ -135,9 +135,9 @@ class Minimizer(object):
                     satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
             self._sat_models[i][self._sat_masks[i]] = (self._sat_blending_flux +
                     # f_s*(A-1) version:
-                    #(self._sat_magnifications[i] - 1.) * self._sat_source_flux)
+                    (self._sat_magnifications[i] - 1.) * self._sat_source_flux)
                     # f_s*A version:
-                    self._sat_magnifications[i] * self._sat_source_flux)
+                    #self._sat_magnifications[i] * self._sat_source_flux)
             self.cpm_sources[i].run_cpm(self._sat_models[i], 
                     model_mask=self.model_masks[i])
 
@@ -159,6 +159,31 @@ class Minimizer(object):
             self.event.datasets[ii]._mag = mag_and_err[0]
             self.event.datasets[ii]._err_mag = mag_and_err[1]
 
+    def add_full_color_constraint(self,
+            ref_dataset_0, ref_dataset_1, ref_dataset_2, 
+            polynomial_2, sigma, ref_zero_point_0=MAG_ZEROPOINT, 
+            ref_zero_point_1=MAG_ZEROPOINT, ref_zero_point_2=MAG_ZEROPOINT):
+        """
+        Specify parameters that are used to constrain the source flux in 
+        satellite band:
+                Kp-m0 = polynomial_value(m1-m2)
+        In common case (e.g., Zhu+17 method: Kp-I = f(V-I)) m0 can be equal to 
+        m1 or m2.
+            ref_dataset_0 (int) - dataset to calculate satellite color
+            ref_dataset_1 (int) - first dataset for ground-based color
+            ref_dataset_2 (int) - second dataset for ground-based color
+            polynomial (np.array of floats) - color polynomial coefficients: 
+                    a0, a1, a2, that will be translated to 
+                    a0 + a1*(m1-m2) + a2*(m1-m2)**2
+            sigma (float) - scatter or color for the constraint
+            ref_zero_point_0 (float) - defines magnitude scale for 0-th dataset
+            ref_zero_point_1 (float) - defines magnitude scale for 1-st dataset
+            ref_zero_point_2 (float) - defines magnitude scale for 2-nd dataset
+        """
+        self._color_constraint = [ref_dataset_0, ref_dataset_1, ref_dataset_2, 
+            ref_zero_point_0, ref_zero_point_1, ref_zero_point_2, polynomial_2, 
+            sigma]
+
     def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
         """
         Specify parameters that are used to constrain the source flux in 
@@ -173,9 +198,26 @@ class Minimizer(object):
         
     def _chi2_for_color_constraint(self, satellite_flux):
         """calculate chi2 for flux constraint"""
-        (ref_dataset, ref_zero_point, color, sigma_color) = self._color_constraint 
-        
         before_ref = self.event.data_ref
+        if len(self._color_constraint) == 4:
+            (ref_dataset, ref_zero_point, color, sigma_color) = self._color_constraint 
+        elif len(self._color_constraint) == 8:
+            (ref_dataset, ref_dataset_1, ref_dataset_2) = self._color_constraint[:3]
+            (ref_zero_point, ref_zero_point_1, ref_zero_point_2) = self._color_constraint[3:6]
+            (polynomial, sigma_color) = self._color_constraint[6:]
+            flux_1 = self.event.get_ref_fluxes(ref_dataset_1)[0][0]
+            flux_2 = self.event.get_ref_fluxes(ref_dataset_2)[0][0]
+            mag_1 = ref_zero_point_1 - 2.5 * np.log10(flux_1)
+            mag_2 = ref_zero_point_2 - 2.5 * np.log10(flux_2)
+            c = mag_1 - mag_2
+            x = 1.
+            color = 0.
+            for p in polynomial:
+                color += x * p
+                x *= c
+        else:
+            raise ValueError('wrong size of internal variable')
+        
         flux_ref = self.event.get_ref_fluxes(ref_dataset)[0][0]
         self.event.get_ref_fluxes(before_ref)
         
@@ -201,7 +243,6 @@ class Minimizer(object):
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:
-            #self.chi2.append(self._chi2_for_color_constraint(theta[-1]))
             self.chi2.append(self._chi2_for_color_constraint(self._sat_source_flux))
         chi2 = sum(self.chi2)
         if self._min_chi2 is None or chi2 < self._min_chi2:
