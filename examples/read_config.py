@@ -58,15 +58,20 @@ def read_general_options(config):
     if section not in config:
         files = None
         files_formats = None
+        files_kwargs = None
     else:
         info = [[var, config.get(section, var).split()] for var in config[section]]
         for info_ in info:
-            if len(info_[1]) != 2:
+            if len(info_[1]) not in [2, 4]:
                 msg = ('Wrong input in cfg file:\n{:}\nFiles require ' +
                     'additional parameter: "mag" or "flux"')
                 raise ValueError(msg.format(config.get(section, info_[0])))
         files = [x[1][0] for x in info]
         files_formats = [x[1][1] for x in info]
+        files_kwargs = [{}] * len(files)
+        for i in range(len(files)):
+            if len(info[i][1]) == 4:
+                files_kwargs[i] = {info[i][1][2]: info[i][1][3]}
         formats = set(files_formats)-set(["mag", "flux"])
         if len(formats) > 0:
             raise ValueError('wrong file formats: {:}'.format(formats))
@@ -79,7 +84,7 @@ def read_general_options(config):
             parameters_fixed[var] = config.getfloat(section, var)
 
     out = (out_skycoord, methods, file_all_models, files, files_formats, 
-            parameters_fixed)
+            files_kwargs, parameters_fixed)
     return out
 
 def read_MultiNest_options(config, config_file, dir_out="chains"):

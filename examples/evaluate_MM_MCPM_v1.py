@@ -26,7 +26,7 @@ config.read(config_file)
 # Read general options:
 out = read_config.read_general_options(config)
 (skycoord, methods, file_all_models) = out[:3]
-(files, files_formats, parameters_fixed) = out[3:]
+(files, files_formats, files_kwargs, parameters_fixed) = out[3:]
 
 # Read models:
 out = read_config.read_models(config)
@@ -46,9 +46,9 @@ if skycoord is not None:
 else:
     coords = None
 if files is not None:
-    for (file_, fmt) in zip(files, files_formats):
+    for (file_, fmt, kwargs) in zip(files, files_formats, files_kwargs):
         data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt, 
-                coords=coords)
+                coords=coords, **kwargs)
         datasets.append(data)
     
 # satellite datasets
