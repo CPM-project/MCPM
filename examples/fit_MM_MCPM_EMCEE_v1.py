@@ -70,7 +70,9 @@ for campaign in MCPM_options['campaigns']:
 # initiate model
 parameters = {key: value for (key, value) in zip(parameters_to_fit, starting_mean)}
 parameters.update(parameters_fixed)
-model = MM.Model(parameters)
+parameters_ = {**parameters}
+parameters_.pop('f_s_sat', None)
+model = MM.Model(parameters_)
 if methods is not None:
     model.set_magnification_methods(methods)
 
