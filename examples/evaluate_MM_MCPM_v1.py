@@ -148,7 +148,15 @@ for zip_single in zipped:
         np.savetxt(txt_model, np.array([x, y]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
-        minimizer.standard_plot(7505., 7520., [18.8, 15.95], title=name)
+        if 91 in MCPM_options['campaigns'] and 92 in MCPM_options['campaigns']:
+            (t_beg, t_end) = (7501., 7573.5)
+        elif 91 in MCPM_options['campaigns']:
+            (t_beg, t_end) = (7501., 7528.5)
+        elif 92 in MCPM_options['campaigns']:
+            (t_beg, t_end) = (7530., 7573.5)
+        else:
+            (t_beg, t_end) = (7425., 7670.)
+        minimizer.standard_plot(t_beg, t_end, [18.8, 15.95], title=name)
         #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
         #plt.ylim(0.5, -0.5)
         if len(plot_file) == 0:
