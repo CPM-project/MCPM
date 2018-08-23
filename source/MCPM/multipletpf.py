@@ -1,6 +1,7 @@
 import numpy as np
 from bisect import bisect
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 from MCPM import tpfdata, hugetpf, utils
 from MCPM.tpfgrid import TpfGrid
@@ -230,8 +231,10 @@ class MultipleTpf(object):
     def _predictor_matrix_for_epics(self, x, y, n_pixel, min_distance, 
             exclude, median_flux_ratio_limits, median_flux_limits, 
             epics):
-        """inner function that tries to get the predictor_matrix
-        it requires epics - a list of TPF ids"""
+        """
+        inner function that tries to get the predictor_matrix
+        it requires epics - a list of TPF ids
+        """
         target_column = int(x+0.5)
         target_row = int(y+0.5)
         self.add_tpf_data_from_epic_list(epics)
@@ -300,26 +303,26 @@ class MultipleTpf(object):
         
     def get_predictor_matrix(self, ra, dec, n_pixel=400, min_distance=15, 
             exclude=1, median_flux_ratio_limits=(None, None), 
-            median_flux_limits=(100., 1.e5)):
+            median_flux_limits=(100., 1.e5), n_pca_components=0):
         """Calculate predictor matrix.
         exclude - number or rows and columns around the target that would be
             rejected
         """
         n_add_epics = 3 # How many more epics we should consider in each loop
-        
+
         (mean_x, mean_y) = self.tpf_grid.apply_grid_single(ra, dec)
         (epics, epics_distances) = self.tpf_rectangles.closest_epics(x=mean_x, y=mean_y)
         radius_min = self._guess_n_radius_min(n_pixel, exclude)
-        n_epics = np.argmax(epics_distances>radius_min) + 2   
-        
+        n_epics = np.argmax(epics_distances>radius_min) + 2
+
         run = True
         while run:
             if n_epics > len(epics):
                 raise ValueError('predictor_matrix preparation failed')
-            out = self._predictor_matrix_for_epics(x=mean_x, y=mean_y, 
-                n_pixel=n_pixel, min_distance=min_distance, exclude=exclude, 
-                median_flux_ratio_limits=median_flux_ratio_limits, 
-                median_flux_limits=median_flux_limits, 
+            out = self._predictor_matrix_for_epics(x=mean_x, y=mean_y,
+                n_pixel=n_pixel, min_distance=min_distance, exclude=exclude,
+                median_flux_ratio_limits=median_flux_ratio_limits,
+                median_flux_limits=median_flux_limits,
                 epics=epics[:n_epics])
             if out[0] is None:
                 guess = n_epics * (n_pixel/float(out[2])) # Some rough guess of how 
@@ -328,9 +331,19 @@ class MultipleTpf(object):
             elif out[2] > epics_distances[n_epics-2]:
                 n_epics += n_add_epics
             else:
-                run = False        
-        return (out[0], out[1], out[3], out[4])
-  
+                run = False
+        predictor_matrix = out[0]
+        
+        if n_pca_components > 0:
+            #pca = PCA(n_components='mle', svd_solver='full')
+            pca = PCA(n_components=n_pca_components, svd_solver='full')
+            pca.fit(predictor_matrix)
+            predictor_matrix = pca.transform(predictor_matrix)
+            #print(predictor_matrix.shape)
+            #print(pca.explained_variance_ratio_)
+        out_0 = predictor_matrix
+        return (out_0, out[1], out[3], out[4])
+
     def get_epic_id_for_radec(self, ra, dec):
         """find which tpf file given (ra,dec) belong to"""
         (mean_x, mean_y) = self.tpf_grid.apply_grid_single(ra, dec)
@@ -394,4 +407,3 @@ class MultipleTpf(object):
         utils.plot_matrix_subplots(fig, time, flux_matrix, 
             ms=point_size, **kwargs)
         plt.subplots_adjust(**fig_args)
-

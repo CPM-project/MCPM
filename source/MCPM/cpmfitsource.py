@@ -143,7 +143,7 @@ class CpmFitSource(object):
     
     def get_predictor_matrix(self, n_pixel=None, min_distance=None, 
             exclude=None, median_flux_ratio_limits=None, 
-            median_flux_limits=None):
+            median_flux_limits=None, n_pca_components=None):
         """calculate predictor_matrix and its mask"""
         kwargs = {}
         if n_pixel is not None:
@@ -156,11 +156,17 @@ class CpmFitSource(object):
             kwargs['median_flux_ratio_limits'] = median_flux_ratio_limits
         if median_flux_limits is not None:
             kwargs['median_flux_limits'] = median_flux_limits
+        kwargs_ = {**kwargs}
+        if n_pca_components is not None:
+            kwargs['n_pca_components'] = n_pca_components
+            kwargs_['n_pca'] = n_pca_components
+        else:
+            kwargs_['n_pca'] = 0
             
         out = self.multiple_tpf.get_predictor_matrix(ra=self.ra, dec=self.dec, 
                 **kwargs)
         
-        self._predictor_matrix_kwargs = kwargs
+        self._predictor_matrix_kwargs = kwargs_
         self._predictor_matrix = out[0]
         self._predictor_matrix_mask = out[1]
         self._predictor_matrix_row = out[2]
@@ -421,6 +427,10 @@ class CpmFitSource(object):
             np.testing.assert_almost_equal(head['DEC'], self.dec, decimal=3)
             assert head['campaign'] == self.campaign
             assert head['channel'] == self.channel
+            if 'n_pca' in head:
+                assert head['n_pca'] == self._predictor_matrix_kwargs['n_pca']
+            else:
+                assert self._predictor_matrix_kwargs['n_pca'] == 0
             pixels = np.array([[a,b] for (a, b) in hdu[1].data])
             assert np.all([[a,b] for (a, b) in hdu[1].data] == self.pixels) 
             rows = [a[0] for a in hdu[2].data]

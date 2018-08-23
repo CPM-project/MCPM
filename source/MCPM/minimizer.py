@@ -240,6 +240,8 @@ class Minimizer(object):
             #rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
             #rms /= np.mean(self.event.datasets[n+i].err_flux)
             #chi2_sat += np.sum(self._sat_masks[i]) * rms**2        
+        # fit_blending=False :
+        #self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=False) for i in range(n)]
         self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:
@@ -459,8 +461,10 @@ class Minimizer(object):
         if self.n_sat > 1:
             raise ValueError("satellite_maximum() doesn't allow " +
                 "multiple cpm_sources")
-        index = np.argmax(self._sat_magnification)
-        return (self._sat_time[index], self._sat_magnification[index], self._sat_magnification[index])
+        index = np.argmax(self._sat_magnifications[0])
+        magnification = self._sat_magnifications[0][index]
+        u_0 = (2*magnification*(magnification**2-1.)**-.5 - 2.)**.5
+        return (self._sat_times[0][index], magnification, u_0)
 
     def plot_sat_magnitudes(self, **kwargs):
         """Plot satellite model in reference magnitude system"""
