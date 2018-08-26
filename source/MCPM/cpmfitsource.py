@@ -245,8 +245,10 @@ class CpmFitSource(object):
         return self._prf_values_mask
 
     def select_highest_prf_sum_pixels(self, n_select):
-        """calculate sum of PRF values for every pixel and select n_select 
-        ones with the highest sum"""
+        """
+        calculate sum of PRF values for every pixel and select n_select 
+        ones with the highest sum
+        """
         if n_select >= len(self._pixels):
             raise ValueError('selection of too many pixels requested')
         prf_sum = np.sum(self.prf_values[self.prf_values_mask], axis=0)
@@ -546,7 +548,12 @@ class CpmFitSource(object):
             column = fits.Column(name=names[i], array=coeffs[i], format='E')
             columns.append(column)
         hdu_3 = fits.BinTableHDU.from_columns(columns, name='coeffs')
-        
+
+        sum_prfs = np.sum(self.prf_values[self.prf_values_mask], axis=0)
+        column = fits.Column(name='sum_prf', array=sum_prfs, format='E')
+        hdu_4 = fits.BinTableHDU.from_columns([column],
+                                              name='sum_prf_over_epochs')
+
         header = fits.Header()
         header['RA'] = self.ra
         header['Dec'] = self.dec
@@ -556,7 +563,7 @@ class CpmFitSource(object):
         header['code'] = 'https://github.com/CPM-project/MCPM'
         header.update(self._predictor_matrix_kwargs)
         hdu_0 = fits.PrimaryHDU(header=header)
-        hdus = fits.HDUList([hdu_0, hdu_1, hdu_2, hdu_3])
+        hdus = fits.HDUList([hdu_0, hdu_1, hdu_2, hdu_3, hdu_4])
         hdus.writeto(fits_name)
 
     def save_coeffs_to_fits(self, fits_name):
