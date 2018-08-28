@@ -143,7 +143,8 @@ class CpmFitSource(object):
     
     def get_predictor_matrix(self, n_pixel=None, min_distance=None, 
             exclude=None, median_flux_ratio_limits=None, 
-            median_flux_limits=None, n_pca_components=None):
+            median_flux_limits=None, n_pca_components=None,
+            selected_pixels_file=None):
         """calculate predictor_matrix and its mask"""
         kwargs = {}
         if n_pixel is not None:
@@ -163,14 +164,44 @@ class CpmFitSource(object):
         else:
             kwargs_['n_pca'] = 0
             
-        out = self.multiple_tpf.get_predictor_matrix(ra=self.ra, dec=self.dec, 
-                **kwargs)
+        out = self.multiple_tpf.get_predictor_matrix(
+                ra=self.ra, dec=self.dec, **kwargs)
+        predictor_matrix = out[0]
+        predictor_matrix_row = out[2]
+        predictor_matrix_column = out[3]
         
+        if selected_pixels_file is not None:
+            with fits.open(selected_pixels_file) as hdus:
+                np.testing.assert_almost_equal(hdus[0].header['RA'], self.ra)
+                np.testing.assert_almost_equal(hdus[0].header['DEC'], self.dec)
+                assert hdus[0].header['CHANNEL'] == self.channel
+                rows = hdus[1].data.field('row')
+                columns = hdus[1].data.field('column')
+            
+            indexes = []
+            for (row, column) in zip(rows, columns):
+                mask_1 = (row == predictor_matrix_row)
+                mask_2 = (column == predictor_matrix_column)
+                mask = mask_1 * mask_2
+                if sum(mask) != 1:
+                    print(predictor_matrix_row)
+                    print(predictor_matrix_column)
+                    print(row)
+                    print(column)
+                    print(mask)
+                    raise ValueError('something went wrong with reading the ' +
+                                     'file with selected pixels')
+                indexes.append(np.arange(len(mask))[mask][0])
+
+            predictor_matrix = predictor_matrix[:, indexes]
+            predictor_matrix_row = predictor_matrix_row[indexes]
+            predictor_matrix_column = predictor_matrix_column[indexes]
+
         self._predictor_matrix_kwargs = kwargs_
-        self._predictor_matrix = out[0]
+        self._predictor_matrix = predictor_matrix
         self._predictor_matrix_mask = out[1]
-        self._predictor_matrix_row = out[2]
-        self._predictor_matrix_column = out[3]
+        self._predictor_matrix_row = predictor_matrix_row
+        self._predictor_matrix_column = predictor_matrix_column
 
     def plot_predictor_pixels(self, **kwargs):
         """

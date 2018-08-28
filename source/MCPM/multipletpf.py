@@ -103,10 +103,10 @@ class MultipleTpf(object):
                 msg = 'EPIC {:} not in the MultipleTpf instance'
                 raise ValueError(msg.format(epic_id))
             self.add_tpf_data_from_epic_list([epic_id])
-            
+
         index = self._epic_ids.index(epic_id)
         return self._tpfs[index]  
-    
+
     def add_tpf_data_from_epic_list(self, epic_id_list, campaign=None):
         """for each epic_id in the list, construct TPF object and add it"""
         if campaign is None:
@@ -260,13 +260,13 @@ class MultipleTpf(object):
         distance2 = distance2[distance_mask]
         index = np.argsort(distance2, kind="mergesort")
         max_distance = distance2[index[n_pixel]]**.5
-        
+
         pixel_numbers_masked = np.where(pixel_mask)[0]
         pixel_indexes = pixel_numbers_masked[distance_mask][index[:n_pixel]]
         predictor_flux = pixel_flux[:, pixel_indexes]
         predictor_row = pixel_row[pixel_indexes]
         predictor_column = pixel_column[pixel_indexes]
-        
+
         used_epic_ids = set(self._get_epic_ids_as_vector(epics)[pixel_indexes])
         epoch_mask = np.ones(predictor_flux.shape[0], dtype=bool)
         for epic_id in used_epic_ids:
