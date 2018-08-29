@@ -254,6 +254,12 @@ def read_MCPM_options(config):
     predictor = {}
     if 'n_pix_predictor_matrix' in config[section]:
         predictor['n_pixel'] = config.getint(section, 'n_pix_predictor_matrix')
+    key = 'n_pca_components'
+    if key in config[section]:
+        predictor[key] = config.getint(section, key)
+    key = 'selected_pixels_file'
+    if key in config[section]:
+        predictor[key] = config.get(section, key)
     mcpm_options['predictor_matrix'] = predictor
     
     if 'color_constraint' in config[section]:

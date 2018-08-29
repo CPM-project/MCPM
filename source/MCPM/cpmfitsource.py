@@ -169,7 +169,7 @@ class CpmFitSource(object):
         predictor_matrix = out[0]
         predictor_matrix_row = out[2]
         predictor_matrix_column = out[3]
-        
+
         if selected_pixels_file is not None:
             with fits.open(selected_pixels_file) as hdus:
                 np.testing.assert_almost_equal(hdus[0].header['RA'], self.ra)
@@ -177,21 +177,9 @@ class CpmFitSource(object):
                 assert hdus[0].header['CHANNEL'] == self.channel
                 rows = hdus[1].data.field('row')
                 columns = hdus[1].data.field('column')
-            
-            indexes = []
-            for (row, column) in zip(rows, columns):
-                mask_1 = (row == predictor_matrix_row)
-                mask_2 = (column == predictor_matrix_column)
-                mask = mask_1 * mask_2
-                if sum(mask) != 1:
-                    print(predictor_matrix_row)
-                    print(predictor_matrix_column)
-                    print(row)
-                    print(column)
-                    print(mask)
-                    raise ValueError('something went wrong with reading the ' +
-                                     'file with selected pixels')
-                indexes.append(np.arange(len(mask))[mask][0])
+
+            indexes = self._get_indexes(
+                predictor_matrix_row, predictor_matrix_column, row, column)
 
             predictor_matrix = predictor_matrix[:, indexes]
             predictor_matrix_row = predictor_matrix_row[indexes]
@@ -202,6 +190,24 @@ class CpmFitSource(object):
         self._predictor_matrix_mask = out[1]
         self._predictor_matrix_row = predictor_matrix_row
         self._predictor_matrix_column = predictor_matrix_column
+
+    def _get_indexes(self, predictor_matrix_row, predictor_matrix_column,
+                     row, column):
+        """
+        find indexes of all (row, column) pixels in first 2 arrays
+        """
+        indexes = []
+        for (row, column) in zip(rows, columns):
+            mask_1 = (row == predictor_matrix_row)
+            mask_2 = (column == predictor_matrix_column)
+            mask = mask_1 * mask_2
+            if sum(mask) != 1:
+                print(predictor_matrix_row, "\n", predictor_matrix_column,
+                      "\n", row, "\n", column, "\n", mask)
+                raise ValueError('something went wrong with reading the ' +
+                                 'file with selected pixels')
+                indexes.append(np.arange(len(mask))[mask][0])
+        return indexes
 
     def plot_predictor_pixels(self, **kwargs):
         """
