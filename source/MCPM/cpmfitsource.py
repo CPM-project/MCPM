@@ -179,7 +179,7 @@ class CpmFitSource(object):
                 columns = hdus[1].data.field('column')
 
             indexes = self._get_indexes(
-                predictor_matrix_row, predictor_matrix_column, row, column)
+                predictor_matrix_row, predictor_matrix_column, rows, columns)
 
             predictor_matrix = predictor_matrix[:, indexes]
             predictor_matrix_row = predictor_matrix_row[indexes]
@@ -192,7 +192,7 @@ class CpmFitSource(object):
         self._predictor_matrix_column = predictor_matrix_column
 
     def _get_indexes(self, predictor_matrix_row, predictor_matrix_column,
-                     row, column):
+                     rows, columns):
         """
         find indexes of all (row, column) pixels in first 2 arrays
         """
@@ -206,7 +206,7 @@ class CpmFitSource(object):
                       "\n", row, "\n", column, "\n", mask)
                 raise ValueError('something went wrong with reading the ' +
                                  'file with selected pixels')
-                indexes.append(np.arange(len(mask))[mask][0])
+            indexes.append(np.arange(len(mask))[mask][0])
         return indexes
 
     def plot_predictor_pixels(self, **kwargs):
