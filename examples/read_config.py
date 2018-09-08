@@ -270,8 +270,15 @@ def read_MCPM_options(config):
             mcpm_options['color_constraint'] = tt[:3] + [[float(t) for t in tt[3:6]]] + [float(t) for t in tt[6:]]
         else:
             raise ValueError(
-                'Wrong length of color_constraint in MCPM section of config') 
-    
+                'Wrong length of color_constraint in MCPM section of config')
+    if 'magnitude_constraint' in config[section]:
+        tt = config.get(section, 'magnitude_constraint').split()
+        if len(tt) == 2:
+            mcpm_options['magnitude_constraint'] = [float(tt[0]), float(tt[1])]
+        else:
+            raise ValueError('Wrong length of magnitude_constraint in ' +
+                             'MCPM section of config')
+
     if 'coeffs_fits_out' in config[section] and 'coeffs_fits_in' in config[section]:
         raise ValueError('coeffs_fits_out and coeffs_fits_in cannot both be set')
     if 'coeffs_fits_out' in config[section]:

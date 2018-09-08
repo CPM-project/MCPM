@@ -254,8 +254,8 @@ class Minimizer(object):
         if self.save_fluxes:
             self.event.get_chi2_per_point()
             self.fluxes = 2 * n * [0.]
-            self.fluxes[::2] = [self.event.fit._flux_sources[self.event.datasets[i]][0] for i in range(n)]
-            self.fluxes[1::2] = [self.event.fit._flux_blending[self.event.datasets[i]] for i in range(n)]
+            self.fluxes[::2] = [self.event.fit.flux_of_sources(self.event.datasets[i])[0] for i in range(n)]
+            self.fluxes[1::2] = [self.event.fit.blending_flux(self.event.datasets[i]) for i in range(n)]
         if self._file_all_models is not None:
             text = " ".join([repr(chi2)] + [repr(ll) for ll in theta])
             if self.save_fluxes:

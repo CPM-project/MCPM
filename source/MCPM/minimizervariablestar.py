@@ -46,6 +46,7 @@ class MinimizerVariableStar(object):
         self._prior_max_values = None
         self._n_calls = 0
         self._color_constraint = None
+        self._flux_constraint = None
 
         self._file_all_models_name = None
         self._file_all_models = None
@@ -61,6 +62,8 @@ class MinimizerVariableStar(object):
         self.model_time = None
         self.model_value = None
         self.model_masks = [None] * self.n_sat
+
+        self.sigma_scale = 1.
 
     def close_file_all_models(self):
         """closes the file to which all models are saved"""
@@ -127,6 +130,23 @@ class MinimizerVariableStar(object):
             out.append(flux)
         return out
 
+    def add_magnitude_constraint(self, ref_mag, ref_mag_sigma):
+        """
+        Specify parameters that are used to constrain the source brightness
+        in satellite band in magnitude space:
+            ref_mag (float) - reference mag
+            ref_mag_sigma (float) - sigma of reference mag
+        """
+        ref_flux = 10.**((ref_mag - K2_MAG_ZEROPOINT) / -2.5)
+        ref_flux_sigma = ref_mag_sigma * ref_flux * np.log(10.) * 0.4
+        self._flux_constraint = [ref_flux, ref_flux_sigma]
+
+    def _chi2_for_flux_constraint(self, satellite_flux):
+        """calculate chi2 for flux constraint"""
+        (ref_flux, ref_flux_sigma) = self._flux_constraint
+        diff = (ref_flux - satellite_flux) / ref_flux_sigma
+        return diff**2
+
     def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
         """
         Specify parameters that are used to constrain the source flux in 
@@ -142,10 +162,15 @@ class MinimizerVariableStar(object):
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
-        self.chi2 = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms) for i in range(self.n_sat)]
-        # remove lines below(?):
-        #if self._color_constraint is not None:
-        #    self.chi2.append(self._chi2_for_color_constraint(theta[-1]))
+        self.chi2 = []
+        for i in range(self.n_sat):
+            source = self.cpm_sources[i]
+            residuals = source.residuals[source.residuals_mask]
+            sigma = np.sqrt(np.sum(np.array([err[source.residuals_mask] for err in source.pixel_flux_err])**2, axis=0))
+            sigma *= self.sigma_scale
+            self.chi2.append(np.sum((residuals/sigma)**2))
+        if self._flux_constraint is not None:
+            self.chi2.append(self._chi2_for_flux_constraint(self, satellite_flux))
         chi2 = sum(self.chi2)
         if self._min_chi2 is None or chi2 < self._min_chi2:
             self._min_chi2 = chi2

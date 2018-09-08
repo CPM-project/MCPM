@@ -26,12 +26,12 @@ config.read(config_file)
 # Read general options:
 out = read_config.read_general_options(config)
 (skycoord, methods, file_all_models) = out[:3]
-(files, files_formats, parameters_fixed) = out[3:]
+(_, _, _, parameters_fixed) = out[3:]
 
 # Read models:
 out = read_config.read_models(config)
-(parameter_values, model_ids) = out[:2]
-(plot_files, txt_files, txt_files_prf_phot, parameters_to_fit) = out[2:]
+(parameter_values, model_ids, plot_files) = out[:3]
+(txt_files, txt_files_prf_phot, txt_models, parameters_to_fit) = out[3:]
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -76,6 +76,11 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     raise ValueError("coeffs_fits_out cannot be set in this program")
+if 'magnitude_constraint' in MCPM_options:
+    (ref_mag, ref_mag_sigma) = MCPM_options['magnitude_constraint']
+    minimizer.add_magnitude_constraint(ref_mag, ref_mag_sigma)
+if 'sat_sigma_scale' in MCPM_options:
+    minimizer.sigma_scale = MCPM_options['sat_sigma_scale']
 minimizer.parameters.update(parameters_fixed)
 
 if 'mask_model_epochs' in MCPM_options:
@@ -83,7 +88,12 @@ if 'mask_model_epochs' in MCPM_options:
         cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
 
 # main loop:
-for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_values, model_ids, plot_files, txt_files, txt_files_prf_phot):
+zipped = zip(parameter_values, model_ids, plot_files, txt_files,
+             txt_files_prf_phot, txt_models)
+for zip_single in zipped:
+    (values, name, plot_file) = zip_single[:3]
+    (txt_file, txt_file_prf_phot, txt_model) = zip_single[3:]
+
     minimizer.set_parameters(values)
 
     print(name, minimizer.chi2_fun(values))
@@ -101,10 +111,28 @@ for (values, name, plot_file, txt_file, txt_file_prf_phot) in zip(parameter_valu
         y += utils.scale_model(values[0], values[2], values[1], x+2450000., 
                 model_time, model_value)
         np.savetxt(txt_file, np.array([x, y]).T)
+    if txt_model is not None:
+        y_mask = cpm_source.residuals_mask
+        x = cpm_source.pixel_time[y_mask]
+        y = minimizer._sat_models[0][y_mask]
+        np.savetxt(txt_model, np.array([x, y]).T)
     if plot_file is not None:
+        raise NotImplementedError("plot_file")
+        # get_satellite_data() instead below; also minimizer.standard_plot() is not implemented
         minimizer.set_satellite_data(values)
-        minimizer.standard_plot(7505., 7520., [19., 13.], title=name)
-        plt.savefig(plot_file)
+        if 91 in MCPM_options['campaigns'] and 92 in MCPM_options['campaigns']:
+            (t_beg, t_end) = (7501., 7573.5)
+        elif 91 in MCPM_options['campaigns']:
+            (t_beg, t_end) = (7501., 7528.5)
+        elif 92 in MCPM_options['campaigns']:
+            (t_beg, t_end) = (7530., 7573.5)
+        else:
+            (t_beg, t_end) = (7425., 7670.)
+        minimizer.standard_plot(t_beg, t_end, [19., 13.], title=name)
+        if len(plot_file) == 0:
+            plt.show()
+        else:
+            plt.savefig(plot_file)
+            print("{:} file saved".format(plot_file))
         plt.close()
-        print("{:} file saved".format(plot_file))
     print()

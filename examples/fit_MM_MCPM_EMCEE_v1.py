@@ -129,8 +129,10 @@ if 'color_constraint' in MCPM_options:
         raise ValueError('wrong size of "color_constraint" option')
 
 if 'mask_model_epochs' in MCPM_options:
-    minimizer.model_masks[0] = utils.mask_nearest_epochs(
-        cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
+    for i in range(minimizer.n_sat):
+        minimizer.model_masks[i] = utils.mask_nearest_epochs(
+                cpm_sources[i].pixel_time+2450000.,
+                MCPM_options['mask_model_epochs'])
 
 # EMCEE fit:
 print("EMCEE walkers, steps, burn: {:} {:} {:}".format(

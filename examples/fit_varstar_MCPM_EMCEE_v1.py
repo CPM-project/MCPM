@@ -24,7 +24,7 @@ config.read(config_file)
 # Read general options:
 out = read_config.read_general_options(config)
 (skycoord, methods, file_all_models) = out[:3]
-(files, files_formats, parameters_fixed) = out[3:]
+(_, _, _, parameters_fixed) = out[3:]
 
 # Read EMCEE options:
 out = read_config.read_EMCEE_options(config)
@@ -79,6 +79,11 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     minimizer.start_coeffs_cache()
+if 'magnitude_constraint' in MCPM_options:
+    (ref_mag, ref_mag_sigma) = MCPM_options['magnitude_constraint']
+    minimizer.add_magnitude_constraint(ref_mag, ref_mag_sigma)
+if 'sat_sigma_scale' in MCPM_options:
+    minimizer.sigma_scale = MCPM_options['sat_sigma_scale']
 minimizer.parameters.update(parameters_fixed)
 
 if 'mask_model_epochs' in MCPM_options:
