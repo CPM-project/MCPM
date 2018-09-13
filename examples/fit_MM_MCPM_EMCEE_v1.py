@@ -106,6 +106,8 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     minimizer.start_coeffs_cache()
+if 'sat_sigma_scale' in MCPM_options:
+    minimizer.sigma_scale = MCPM_options['sat_sigma_scale']
 if 'color_constraint' in MCPM_options:
     cc = 'color_constraint'
     ref_dataset = files.index(MCPM_options[cc][0])

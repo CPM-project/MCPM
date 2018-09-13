@@ -163,10 +163,9 @@ class MinimizerVariableStar(object):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
         self.chi2 = []
-        for i in range(self.n_sat):
-            source = self.cpm_sources[i]
+        for source in self.cpm_sources:
             residuals = source.residuals[source.residuals_mask]
-            sigma = np.sqrt(np.sum(np.array([err[source.residuals_mask] for err in source.pixel_flux_err])**2, axis=0))
+            sigma = source.all_pixels_flux_err[source.residuals_mask]
             sigma *= self.sigma_scale
             self.chi2.append(np.sum((residuals/sigma)**2))
         if self._flux_constraint is not None:

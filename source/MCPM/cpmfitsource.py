@@ -60,6 +60,7 @@ class CpmFitSource(object):
         self._pixel_time = None
         self._pixel_flux = None
         self._pixel_flux_err = None
+        self._all_pixels_flux_err = None
         self._pixel_mask = None  
         self._train_mask = None
         self._cpm_pixel = None
@@ -317,6 +318,9 @@ class CpmFitSource(object):
         self._pixel_flux_err = out[2]
         self._pixel_mask = out[3]
 
+        errors = np.array(self._pixel_flux_err)
+        self._all_pixels_flux_err = np.sqrt(np.sum(errors**2, axis=0))
+
     @property
     def pixel_time(self):
         """time vectors for all pixels"""
@@ -337,7 +341,17 @@ class CpmFitSource(object):
         if self._pixel_flux_err is None:
             self._get_time_flux_mask_for_pixels()
         return self._pixel_flux_err
-        
+
+    @property
+    def all_pixels_flux_err(self):
+        """
+        uncertainty of combined flux of the few pixels that are
+        combined into a source
+        """
+        if self._all_pixels_flux_err is None:
+            self._get_time_flux_mask_for_pixels()
+        return self._all_pixels_flux_err
+
     @property
     def pixel_mask(self):
         """epoch masks for pixel_flux and pixel_time"""

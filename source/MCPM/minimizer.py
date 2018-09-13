@@ -71,6 +71,8 @@ class Minimizer(object):
         self._coeffs_cache = None
         self.n_flush = None
 
+        self.sigma_scale = 1.
+
     def close_file_all_models(self):
         """closes the file to which all models are saved"""
         self._file_all_models.close()
@@ -231,8 +233,14 @@ class Minimizer(object):
         """for a given set of parameters (theta), return the chi2"""
         self._run_cpm(theta)
         n = self.n_datasets - self.n_sat
+        chi2_sat = []
+        for source in self.cpm_sources:
+            residuals = source.residuals[source.residuals_mask]
+            sigma = source.all_pixels_flux_err[source.residuals_mask]
+            sigma *= self.sigma_scale
+            chi2_sat.append(np.sum((residuals/sigma)**2))
         # Correct the line below.
-        chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
+        #chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
         # We also tried:
         #chi2_sat = 0.
         #for i in range(self.n_sat):
