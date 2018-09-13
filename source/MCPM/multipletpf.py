@@ -374,7 +374,7 @@ class MultipleTpf(object):
         Default settings produce large but readable file. 
         The **kwargs are passed to utils.plot_matrix_subplots()."""
         fig_args = {"left":0.035, "bottom":0.023, "right":.995, "top":.995}
-        
+
         if flux is not None and pixels is not None: # Data given directly. 
             if mean_x is not None or mean_y is not None:
                 raise ValueError('error #1 in plot_pixel_curves()')

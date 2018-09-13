@@ -301,9 +301,9 @@ def plot_matrix_subplots(figure, time, matrix, same_y_axis=True,
             ax.plot(time, y_axis, '.k', **kwargs)
             
             if i != 0:
-                ax.tick_params(labelbottom='off')
+                ax.tick_params(labelbottom=False)
             if j != 0:
-                ax.tick_params(labelleft='off') 
+                ax.tick_params(labelleft=False)
             if same_y_axis:
                 ax.set_ylim(y_lim)
             ax.set_xlim(x_lim)
