@@ -190,7 +190,10 @@ def read_EMCEE_options(config):
     section = 'EMCEE_settings'
     if section in config.sections():
         for var in config[section]:
-            emcee_settings[var] = config.getint(section, var)
+            if var == 'file_acceptance_fractions':
+                emcee_settings[var] = config.get(section, var)
+            else:
+                emcee_settings[var] = config.getint(section, var)
     if emcee_settings['n_steps'] < emcee_settings['n_burn']:
         raise ValueError(("This doesn't make sense:\nn_steps = {:}\n" +
             "n_burn = {:}").format(emcee_settings['n_steps'], 

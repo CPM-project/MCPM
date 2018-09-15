@@ -148,10 +148,17 @@ for start_ in starting:
         raise ValueError('starting point is not in prior\n', start_)
 sampler = emcee.EnsembleSampler(
     emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
+acceptance_fractions = []
 # run:
-sampler.run_mcmc(starting, emcee_settings['n_steps'])
+#sampler.run_mcmc(starting, emcee_settings['n_steps'])
+for results in sampler.sample(starting, iterations=emcee_settings['n_steps']):
+    acceptance_fractions.append(np.mean(sampler.acceptance_fraction))
 
 # cleanup and close minimizer:
+out_name = emcee_settings.get('file_acceptance_fractions', None)
+if out_name is not None:
+    with open(out_name, 'w') as file_out:
+        file_out.write('\n'.join([str(af) for af in acceptance_fractions]))
 samples = sampler.chain[:, emcee_settings['n_burn']:, :].reshape((-1, n_params))
 blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
 n_fluxes = blob_sampler.shape[-1]
