@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+#from matplotlib import rc
+from matplotlib import rcParams
 
 from MCPM.cpmfitsource import CpmFitSource
 
@@ -16,9 +18,9 @@ def plot_tpf_data(ra, dec, channel, campaign, file_out, half_size=2,
     if adjust is not None:
         plt.subplots_adjust(**adjust)
     if xlabel is not None:
-        plt.figtext(0.5, 0.02, xlabel)
+        plt.figtext(0.51, 0.004, xlabel)
     if ylabel is not None:
-        plt.figtext(0.02, 0.5, ylabel, rotation=90)
+        plt.figtext(0.002, 0.5, ylabel, rotation=90)
 
     plt.savefig(file_out)
     plt.close()
@@ -34,10 +36,14 @@ if __name__ == "__main__":
 
     plot_tpf_data(271.001083, -28.155111, 52, 91, "ob160795_pixel_curves.png")
     plot_tpf_data(269.5648750, -27.9635833, 31, 92, "ob160940_pixel_curves.png")
+    default = rcParams['font.size']
+    rcParams['font.size'] = 18
     plot_tpf_data(
         271.2375417, -28.6278056, 52, 92, "ob160975_pixel_curves.png",
         adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
         xlabel="HJD'", ylabel='counts')
+    rcParams['font.size'] = default
     plot_tpf_data(271.354292, -28.005583, 52, 92, "ob160980_pixel_curves.png")
     
     plot_tpf_data(269.9291250, -28.4108333, 31, 91, "eb234840_pixel_curves.png")
+
