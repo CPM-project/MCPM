@@ -36,6 +36,7 @@ if __name__ == "__main__":
 
     plot_tpf_data(271.001083, -28.155111, 52, 91, "ob160795_pixel_curves.png")
     plot_tpf_data(269.5648750, -27.9635833, 31, 92, "ob160940_pixel_curves.png")
+
     default = rcParams['font.size']
     rcParams['font.size'] = 18
     plot_tpf_data(
@@ -43,6 +44,7 @@ if __name__ == "__main__":
         adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
         xlabel="HJD'", ylabel='counts')
     rcParams['font.size'] = default
+
     plot_tpf_data(271.354292, -28.005583, 52, 92, "ob160980_pixel_curves.png")
     
     plot_tpf_data(269.9291250, -28.4108333, 31, 91, "eb234840_pixel_curves.png")
