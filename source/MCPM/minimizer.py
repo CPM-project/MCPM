@@ -238,13 +238,9 @@ class Minimizer(object):
             residuals = source.residuals_prf()[source.residuals_mask]
             # OLD:
             #residuals = source.residuals[source.residuals_mask]
-            #(out, mask) = source.prf_photometry()
-            #mask *= self._sat_masks[i_s]
-            #diff = out[mask] - self._sat_models[i_s][mask]
             sigma = source.all_pixels_flux_err[source.residuals_mask]
             sigma *= self.sigma_scale
             chi2_sat.append(np.sum((residuals/sigma)**2))
-            #chi2_sat.append(np.sum((diff/sigma)**2))
         # Correct the line below.
         #chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
         # We also tried:

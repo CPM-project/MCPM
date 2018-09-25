@@ -167,19 +167,9 @@ class MinimizerVariableStar(object):
             # OLD version:
             #residuals = source.residuals[source.residuals_mask]
             residuals = source.residuals_prf()[source.residuals_mask]
-            #(out, mask_) = source.prf_photometry()
-            #(out, mask) = source.residuals_prf()
-            #print(np.sum(mask), np.sum(self._sat_masks[i_s]), np.sum(source.residuals_mask))
-            #print(np.all(mask==self._sat_masks[i_s]), np.all(mask==source.residuals_mask))
-            #mask *= self._sat_masks[i_s]
-            #mask *= source.residuals_mask
-            #diff = out[mask] - self._sat_models[i_s][mask]
-            #diff = out[mask]
             sigma = source.all_pixels_flux_err[source.residuals_mask]
-            #sigma = source.all_pixels_flux_err[mask]
             sigma *= self.sigma_scale
             self.chi2.append(np.sum((residuals/sigma)**2))
-            #self.chi2.append(np.sum((diff/sigma)**2))
         if self._flux_constraint is not None:
             self.chi2.append(self._chi2_for_flux_constraint(self, satellite_flux))
         chi2 = sum(self.chi2)
