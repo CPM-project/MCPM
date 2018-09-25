@@ -406,6 +406,7 @@ class CpmFitSource(object):
         self._pixel_residuals_mask = None
         self._residuals = None
         self._residuals_mask = None
+        self._model = np.copy(model)
        
         if model_mask is None:
             model_mask = np.ones_like(model, dtype=bool)
@@ -556,10 +557,25 @@ class CpmFitSource(object):
         #rms = np.sqrt(np.mean(np.square(difference[model_mask * phot_mask])))
         #return rms
 
+    def residuals_prf(self):
+        """XXX"""
+        mask = self.residuals_mask
+
+        prf_flux = np.zeros(np.sum(mask), dtype=float)
+        prf_square = np.zeros(np.sum(mask), dtype=float)
+        for i in range(self.n_pixels):
+            prf = self.prf_values[:,i][mask]
+            prf_flux += prf * self._cpm_pixel[i].cpm_residuals[mask]
+            prf_square += prf**2
+        out = np.zeros_like(mask, dtype=float)
+        out[mask] = prf_flux / prf_square - self._model[mask]
+
+        return out
+
     def prf_photometry(self):
         """
         Performs profile photometry using pixel value with subtracted 
-        fitted_flux from CPM. Currently does not include uncertainties 
+        fitted_flux from CPM. Currently, does not include uncertainties 
         in calculations
         
         Returns flux vector and mask
