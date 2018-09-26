@@ -558,7 +558,10 @@ class CpmFitSource(object):
         #return rms
 
     def residuals_prf(self):
-        """XXX"""
+        """
+        residuals calculated with second application of PRF
+        (first was to find the model flux for given pixel).
+        """
         mask = self.residuals_mask
 
         prf_flux = np.zeros(np.sum(mask), dtype=float)
