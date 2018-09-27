@@ -6,6 +6,7 @@ from matplotlib import gridspec
 import matplotlib.lines as mlines
 
 from MulensModel.utils import Utils, MAG_ZEROPOINT
+from MulensModel import Trajectory
 
 
 K2_MAG_ZEROPOINT = 25.
@@ -467,6 +468,8 @@ class Minimizer(object):
         return time of maximum magnification, its value, and corresponding 
         flux for the satellite dataset; takes into account the epochs when 
         satellite data exist
+
+        NOTE: This function is not yet fully tested.
         """
         if self.n_sat > 1:
             raise ValueError("satellite_maximum() doesn't allow " +
@@ -474,6 +477,12 @@ class Minimizer(object):
         index = np.argmax(self._sat_magnifications[0])
         magnification = self._sat_magnifications[0][index]
         u_0 = (2*magnification*(magnification**2-1.)**-.5 - 2.)**.5
+        trajectory = Trajectory(
+            self._sat_times[-1], parameters=self.event.model.parameters,
+            parallax=self.event.model._parallax, coords=self.event.coords,
+            satellite_skycoord=self.event.datasets[-1].satellite_skycoord)
+        if trajectory.y[index] < 0.:
+            u_0 = -u_0
         return (self._sat_times[0][index], magnification, u_0)
 
     def plot_sat_magnitudes(self, **kwargs):
@@ -493,7 +502,55 @@ class Minimizer(object):
                 **kwargs)
         self.event.model.data_ref = data_ref
 
-    def standard_plot(self, t_start, t_stop, ylim, title=None):
+    def standard_plot(self, t_start, t_stop, ylim, title=None,
+                      label_list=None, color_list=None):
+        """Make plot of the event and residuals. """
+        if (label_list is None) != (color_list is None):
+            raise ValueError('wrong input in standard_plot')
+        grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.12)
+        plt.figure()
+        plt.subplot(grid_spec[0])
+        if title is not None:
+            plt.title(title)
+        alphas = [0.35] * self.n_datasets
+        for i in range(self.n_sat):
+            alphas[-(i+1)] = 1.
+
+        self.event.plot_model(
+            color='black', subtract_2450000=True,
+            t_start=t_start+2450000., t_stop=t_stop+2450000., label="ground-based model")
+        self.plot_sat_magnitudes(color='orange', lw=2, label="K2 model") #alpha=0.75,
+
+        if color_list is None:
+            color_list_ = ['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat
+        else:
+            color_list_ = color_list
+        zorder_list = np.arange(self.n_datasets, 0, -1)
+        zorder_list[1] = self.n_datasets + 1
+
+        self.event.plot_data(#alpha_list=alphas,
+            zorder_list=zorder_list, mfc='none', lw=1.5, mew=1.5,
+            marker='o', markersize=6, subtract_2450000=True,
+            color_list=color_list_, label_list=label_list)
+        plt.ylim(ylim[0], ylim[1])
+        plt.xlim(t_start, t_stop)
+
+        if color_list is not None and label_list is not None:
+            plt.legend(loc='best')
+        else:  # Prepare legend "manually":
+            black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
+                          markersize=5, label='ground-based', alpha=alphas[0])
+            red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
+                          markersize=5, label='K2C9 data')
+            blue_line = mlines.Line2D([], [], color='orange', lw=2, #alpha=0.75,
+                          markersize=5, label='K2C9 model')
+            plt.legend(handles=[red_line, blue_line, black_line], loc='best')
+
+        plt.subplot(grid_spec[1])
+        self.event.plot_residuals(subtract_2450000=True, mfc='none', lw=1.5, mew=1.5,)
+        plt.xlim(t_start, t_stop)
+
+    def very_standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """
         grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.1)
         plt.figure()
