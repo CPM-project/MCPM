@@ -149,16 +149,17 @@ for zip_single in zipped:
     if plot_file is not None:
         minimizer.set_satellite_data(values)
         if 91 in MCPM_options['campaigns'] and 92 in MCPM_options['campaigns']:
-            (t_beg, t_end) = (7501., 7573.5)
+            (t_beg, t_end) = (7500.3, 7573.5)
         elif 91 in MCPM_options['campaigns']:
-            (t_beg, t_end) = (7501., 7528.5)
+            (t_beg, t_end) = (7500.3, 7528.0)
         elif 92 in MCPM_options['campaigns']:
             (t_beg, t_end) = (7530., 7573.5)
         else:
             (t_beg, t_end) = (7425., 7670.)
-        minimizer.standard_plot(t_beg, t_end, [18.8, 15.95], title=name)
+        minimizer.very_standard_plot(t_beg, t_end, [18.8, 15.95], title=name)
         #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
         #plt.ylim(0.5, -0.5)
+        #plt.subplots_adjust(left=0.12, bottom= 0.09, right=0.995, top=0.995)
         if len(plot_file) == 0:
             plt.show()
         else:
@@ -171,5 +172,6 @@ for zip_single in zipped:
             print(i, chi2_data,
                 event.fit.flux_of_sources(data)[0],
                 event.fit.blending_flux(data))
+    print(minimizer.satellite_maximum())
     print()
 
