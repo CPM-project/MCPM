@@ -518,7 +518,7 @@ class Minimizer(object):
 
         self.event.plot_model(
             color='black', subtract_2450000=True,
-            t_start=t_start+2450000., t_stop=t_stop+2450000., label="ground-based model")
+            t_start=t_start+2450000., t_stop=t_stop+2450000., label="ground-based model", lw=3)
         self.plot_sat_magnitudes(color='orange', lw=2, label="K2 model") #alpha=0.75,
 
         if color_list is None:
