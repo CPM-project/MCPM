@@ -674,6 +674,7 @@ class CpmFitSource(object):
                 #half_size=max(dx, dy), **kwargs)
         self.multiple_tpf.plot_pixel_curves(
                 pixels=self._pixels, flux=self.pixel_flux, **kwargs)
+        #print(np.min([np.min(x[x>0.]) for x in self.pixel_flux_err]), np.max(self.pixel_flux_err))
                 
     def subtract_flux_from_star(self, star_ra, star_dec, flux):
         """

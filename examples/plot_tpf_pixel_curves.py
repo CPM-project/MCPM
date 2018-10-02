@@ -34,15 +34,20 @@ if __name__ == "__main__":
     plot_tpf_data(270.6323333, -27.5296111, 49, 92, "ob160241_c92_pixel_curves.png",
         half_size=3, stars_subtract=stars_0241)
 
-    plot_tpf_data(271.001083, -28.155111, 52, 91, "ob160795_pixel_curves.png")
     plot_tpf_data(269.5648750, -27.9635833, 31, 92, "ob160940_pixel_curves.png")
 
     default = rcParams['font.size']
     rcParams['font.size'] = 18
+
     plot_tpf_data(
         271.2375417, -28.6278056, 52, 92, "ob160975_pixel_curves.png",
         adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
         xlabel="HJD'", ylabel='counts')
+    plot_tpf_data(
+        271.001083, -28.155111, 52, 91, "ob160795_pixel_curves.png",
+        adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
+        xlabel="HJD'", ylabel='counts')
+
     rcParams['font.size'] = default
 
     plot_tpf_data(271.354292, -28.005583, 52, 92, "ob160980_pixel_curves.png")
