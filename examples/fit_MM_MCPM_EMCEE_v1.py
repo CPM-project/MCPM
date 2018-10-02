@@ -36,6 +36,9 @@ out = read_config.read_EMCEE_options(config)
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
 
+# other constraints:
+other_constraints = read_config.read_other_constraints(config)
+
 # End of settings.
 ###################################################################
 n_params = len(parameters_to_fit)
@@ -71,15 +74,22 @@ for campaign in MCPM_options['campaigns']:
 parameters = {key: value for (key, value) in zip(parameters_to_fit, starting_mean)}
 parameters.update(parameters_fixed)
 parameters_ = {**parameters}
-parameters_.pop('f_s_sat', None)
-model = MM.Model(parameters_)
+for p in ['f_s_sat', 'q_f', 'log_q_f']:
+    parameters_.pop(p, None)
+model = MM.Model(parameters_, coords=skycoord)
 if methods is not None:
     model.set_magnification_methods(methods)
 
 for cpm_source in cpm_sources:
-    sat_model = utils.pspl_model(parameters['t_0'], parameters['u_0'], 
-            parameters['t_E'], parameters['f_s_sat'], cpm_source.pixel_time)
-    cpm_source.run_cpm(sat_model)
+    if model.n_sources == 2:
+        if 'log_q_f' in parameters:
+            q_f = 10**parameters['log_q_f']
+        else:
+            q_f = parameters['q_f']
+        model.set_source_flux_ratio(q_f)
+    times = cpm_source.pixel_time + 2450000.
+    times[np.isnan(times)] = np.mean(times[~np.isnan(times)])
+    cpm_source.run_cpm(parameters['f_s_sat'] * model.magnification(times))
     
     utils.apply_limit_time(cpm_source, MCPM_options)
 
@@ -129,6 +139,11 @@ if 'color_constraint' in MCPM_options:
             #ref_zero_point_1=MAG_ZEROPOINT, ref_zero_point_2=MAG_ZEROPOINT):    
     else:
         raise ValueError('wrong size of "color_constraint" option')
+key = 'min_blending_flux'
+if key in other_constraints:
+    index = files.index(other_constraints[key][0])
+    other_constraints['min_blending_flux'] = [datasets[index], other_constraints[key][1]]
+minimizer.other_constraints = other_constraints
 
 if 'mask_model_epochs' in MCPM_options:
     for i in range(minimizer.n_sat):

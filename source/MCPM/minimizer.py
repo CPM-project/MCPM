@@ -72,6 +72,8 @@ class Minimizer(object):
         self._coeffs_cache = None
         self.n_flush = None
 
+        self.other_constraints = dict()
+
         self.sigma_scale = 1.
 
     def close_file_all_models(self):
@@ -417,7 +419,26 @@ class Minimizer(object):
                 index = self.parameters_to_fit.index(parameter)
                 if theta[index] > value:
                     return outside
-        
+
+        for (key, value) in self.other_constraints.items():
+            if key == 't_0':
+                if value == 't_0_1 < t_0_2':
+                    if self.event.model.parameters.t_0_1 >= self.event.model.parameters.t_0_2:
+                        return outside
+                elif value == 't_0_1 > t_0_2':
+                    if self.event.model.parameters.t_0_2 >= self.event.model.parameters.t_0_1:
+                        return outside
+                else:
+                    raise ValueError('urecognized value: {:}'.format(value))
+            elif key == 'min_blending_flux':
+                (data, limit) = value
+                index = self.event.datasets.index(data)
+                self.event.get_chi2_for_dataset(index)
+                if self.event.fit.blending_flux(data) <= limit:
+                    return outside
+            else:
+                raise KeyError('unkown constraint: {:}'.format(key))
+
         return inside
 
     def ln_like(self, theta):
@@ -503,7 +524,7 @@ class Minimizer(object):
         self.event.model.data_ref = data_ref
 
     def standard_plot(self, t_start, t_stop, ylim, title=None,
-                      label_list=None, color_list=None):
+                      label_list=None, color_list=None, line_width=1.5):
         """Make plot of the event and residuals. """
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
@@ -529,7 +550,7 @@ class Minimizer(object):
         zorder_list[1] = self.n_datasets + 1
 
         self.event.plot_data(#alpha_list=alphas,
-            zorder_list=zorder_list, mfc='none', lw=1.5, mew=1.5,
+            zorder_list=zorder_list, mfc='none', lw=line_width, mew=line_width,
             marker='o', markersize=6, subtract_2450000=True,
             color_list=color_list_, label_list=label_list)
         plt.ylim(ylim[0], ylim[1])
@@ -547,7 +568,7 @@ class Minimizer(object):
             plt.legend(handles=[red_line, blue_line, black_line], loc='best')
 
         plt.subplot(grid_spec[1])
-        self.event.plot_residuals(subtract_2450000=True, mfc='none', lw=1.5, mew=1.5,)
+        self.event.plot_residuals(subtract_2450000=True, mfc='none', lw=line_width, mew=line_width)
         plt.xlim(t_start, t_stop)
 
     def very_standard_plot(self, t_start, t_stop, ylim, title=None):
