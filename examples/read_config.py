@@ -302,6 +302,40 @@ def read_MCPM_options(config):
 
     return mcpm_options
 
+def read_other_constraints(config):
+    """
+    parses more complicated constrains
+
+    Parameters:
+        config - configparser.ConfigParser instance
+
+    Returns:
+       options - dict - specifies constraints
+    """
+    section = 'other_constraints'
+    options = dict()
+
+    if section not in config.sections():
+        return options
+
+    for var in config[section]:
+        if var == 't_0':
+            value = config.get(section, var)
+            if value == '1 < 2':
+                options['t_0'] = 't_0_1 < t_0_2'
+            elif value == '1 > 2':
+                options['t_0'] = 't_0_1 > t_0_2'
+            else:
+                raise ValueError('unknown value: ' + value)
+        elif var == 'min_blending_flux':
+            value = config.get(section, var).split()
+            if len(value) != 2:
+                raise ValueError('wrong keyword length: {:}'.format(value))
+            options[var] = [value[0], float(value[1])]
+        else:
+            raise KeyError('unregognized keyword: ' + var)
+    return options
+
 def read_models(config):
     """
     parses a set of models
