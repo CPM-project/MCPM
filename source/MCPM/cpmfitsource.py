@@ -666,14 +666,18 @@ class CpmFitSource(object):
         Use matplotlib to plot raw data for a set of pixels. 
         For options look at MultipleTpf.plot_pixel_curves().
         """
-        # OLD VERSION:
-        #dx = np.max(np.abs(self._pixels[:,0]-int(self.mean_x+.5)))
-        #dy = np.max(np.abs(self._pixels[:,1]-int(self.mean_y+.5)))
-        #self.multiple_tpf.plot_pixel_curves(
-                #mean_x=self.mean_x, mean_y=self.mean_y,
-                #half_size=max(dx, dy), **kwargs)
+        # The code below removes 12 epochs in C91 and 0 in C92.
+        flags = self.multiple_tpf.get_quality_flags_for_pixels(self._pixels)
+        flags_mask = (flags[0] != 40992)
+        for flags_ in flags:
+            flags_mask *= (flags_ != 40992)
+        pixel_flux = []
+        for flux in self.pixel_flux:
+            pixel_flux.append(flux[flags_mask])
+
         self.multiple_tpf.plot_pixel_curves(
-                pixels=self._pixels, flux=self.pixel_flux, **kwargs)
+                pixels=self._pixels, flux=pixel_flux,
+                time_mask=flags_mask, **kwargs)
         #print(np.min([np.min(x[x>0.]) for x in self.pixel_flux_err]), np.max(self.pixel_flux_err))
                 
     def subtract_flux_from_star(self, star_ra, star_dec, flux):

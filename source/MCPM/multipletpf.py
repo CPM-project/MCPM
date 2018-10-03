@@ -348,7 +348,20 @@ class MultipleTpf(object):
         """find which tpf file given (ra,dec) belong to"""
         (mean_x, mean_y) = self.tpf_grid.apply_grid_single(ra, dec)
         return self.tpf_rectangles.get_epic_id_for_pixel(mean_x, mean_y)
-        
+
+    def get_quality_flags_for_pixels(self, pixels):
+        """
+        For every pixel extracts quality_flags from TPF and returns a list.
+        Most probably all elements of the list are the same.
+        """
+        out = []
+        for (x, y) in pixels:
+            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
+            # This could be faster - most probably current pixel is in
+            # the same TPF as the previous one.
+            out.append(self.tpf_for_epic_id(epic).quality_flags)
+        return out
+
     def get_time_flux_mask_for_pixels(self, pixels):
         """for every pixel in the list extract the time, flux, and epoch masks 
         from appropriate TPF files; pixels is a list of input pixels"""
@@ -357,8 +370,8 @@ class MultipleTpf(object):
         flux_err = []
         mask = []
         for (x, y) in pixels:
-            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y) 
-            # This could be faster - most probably current pixel is in 
+            epic = self.tpf_rectangles.get_epic_id_for_pixel(x, y)
+            # This could be faster - most probably current pixel is in
             # the same TPF as the previous one.
             tpf = self.tpf_for_epic_id(epic)
             time.append(tpf.jd_short)
@@ -369,7 +382,7 @@ class MultipleTpf(object):
 
     def plot_pixel_curves(self, mean_x=None, mean_y=None, half_size=2, 
             pixels=None, flux=None,
-            figsize=(15, 10.3), dpi=300, point_size=2, **kwargs):
+            figsize=(15, 10.3), dpi=300, point_size=2, time_mask=None, **kwargs):
         """Plot raw light curves for pixels in a square. 
         Default settings produce large but readable file. 
         The **kwargs are passed to utils.plot_matrix_subplots()."""
@@ -383,6 +396,8 @@ class MultipleTpf(object):
                     pixels[0,0], pixels[0,1])
             tpf = self.tpf_for_epic_id(epic)
             time = tpf.jd_short
+            if time_mask is not None:
+                time = time[time_mask]
         # Data not given directly, it mean position specified:
         elif mean_x is not None and mean_y is not None and half_size is not None: 
             if flux is not None or pixels is not None:
@@ -397,6 +412,8 @@ class MultipleTpf(object):
                 fluxes.append(tpf.get_flux_for_pixel(row=y, column=x))
             flux_matrix = utils.construct_matrix_from_list(pixels, fluxes)
             time = tpf.jd_short
+            if time_mask is not None:
+                time = time[time_mask]
         else:
             raise ValueError('error #3 in plot_pixel_curves()')
         
