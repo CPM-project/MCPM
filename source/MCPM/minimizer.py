@@ -422,11 +422,13 @@ class Minimizer(object):
 
         for (key, value) in self.other_constraints.items():
             if key == 't_0':
+                t_0_1 = theta[self.parameters_to_fit.index('t_0_1')]
+                t_0_2 = theta[self.parameters_to_fit.index('t_0_2')]
                 if value == 't_0_1 < t_0_2':
-                    if self.event.model.parameters.t_0_1 >= self.event.model.parameters.t_0_2:
+                    if t_0_1 >= t_0_2:
                         return outside
                 elif value == 't_0_1 > t_0_2':
-                    if self.event.model.parameters.t_0_2 >= self.event.model.parameters.t_0_1:
+                    if t_0_2 >= t_0_1:
                         return outside
                 else:
                     raise ValueError('urecognized value: {:}'.format(value))
@@ -524,7 +526,8 @@ class Minimizer(object):
         self.event.model.data_ref = data_ref
 
     def standard_plot(self, t_start, t_stop, ylim, title=None,
-                      label_list=None, color_list=None, line_width=1.5):
+                      label_list=None, color_list=None, line_width=1.5,
+                      legend_order=None):
         """Make plot of the event and residuals. """
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
@@ -556,7 +559,12 @@ class Minimizer(object):
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
 
-        if color_list is not None and label_list is not None:
+        if legend_order is not None:
+            (handles, labels) = plt.gca().get_legend_handles_labels()
+            handles_ = [handles[idx] for idx in legend_order]
+            labels_ = [labels[idx] for idx in legend_order]
+            plt.legend(handles_, labels_)
+        elif color_list is not None and label_list is not None:
             plt.legend(loc='best')
         else:  # Prepare legend "manually":
             black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
