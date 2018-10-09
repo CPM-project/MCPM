@@ -42,11 +42,11 @@ if __name__ == "__main__":
     plot_tpf_data(
         271.2375417, -28.6278056, 52, 92, "ob160975_pixel_curves.png",
         adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
-        xlabel="HJD'", ylabel='counts')
+        xlabel="BJD-2450000", ylabel='counts')
     plot_tpf_data(
         271.001083, -28.155111, 52, 91, "ob160795_pixel_curves.png",
         adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
-        xlabel="HJD'", ylabel='counts')
+        xlabel="BJD-2450000", ylabel='counts')
 
     rcParams['font.size'] = default
 

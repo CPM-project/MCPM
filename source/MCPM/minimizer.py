@@ -559,6 +559,11 @@ class Minimizer(object):
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
 
+        # ax2 = plt.gca().twiny()
+        # ax2.set_ylabel('K2 counts', color='red')
+        # ax2.set_yticks([16., 15., 14.])
+        # ax2.set_yticklabels(["100", "200", "300"])
+
         if legend_order is not None:
             (handles, labels) = plt.gca().get_legend_handles_labels()
             handles_ = [handles[idx] for idx in legend_order]

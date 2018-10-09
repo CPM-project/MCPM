@@ -192,6 +192,8 @@ def read_EMCEE_options(config):
         for var in config[section]:
             if var == 'file_acceptance_fractions':
                 emcee_settings[var] = config.get(section, var)
+                if os.path.isfile(emcee_settings[var])
+                    raise FileExistsError(emcee_settings[var])
             else:
                 emcee_settings[var] = config.getint(section, var)
     if emcee_settings['n_steps'] < emcee_settings['n_burn']:
