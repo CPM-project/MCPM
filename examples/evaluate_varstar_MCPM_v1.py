@@ -101,7 +101,9 @@ for zip_single in zipped:
     if txt_file_prf_phot is not None:
         (y, y_mask) = cpm_source.prf_photometry()
         x = cpm_source.pixel_time[y_mask]
-        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask]]).T)
+        y_err = cpm_source.all_pixels_flux_err[y_mask]
+        y_err *= MCPM_options['sat_sigma_scale']
+        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask], y_err]).T)
             #minimizer.set_satellite_data(values)
             #y = minimizer.event.datasets[-1].flux#[y_mask]    
     if txt_file is not None:
@@ -110,7 +112,9 @@ for zip_single in zipped:
         y = cpm_source.residuals[y_mask]
         y += utils.scale_model(values[0], values[2], values[1], x+2450000., 
                 model_time, model_value)
-        np.savetxt(txt_file, np.array([x, y]).T)
+        y_err = cpm_source.all_pixels_flux_err[y_mask]
+        y_err *= MCPM_options['sat_sigma_scale']
+        np.savetxt(txt_file, np.array([x, y, y_err]).T)
     if txt_model is not None:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]
