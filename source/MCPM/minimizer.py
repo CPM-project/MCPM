@@ -527,11 +527,14 @@ class Minimizer(object):
 
     def standard_plot(self, t_start, t_stop, ylim, title=None,
                       label_list=None, color_list=None, line_width=1.5,
-                      legend_order=None):
+                      legend_order=None, separate_residuals=False):
         """Make plot of the event and residuals. """
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
-        grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.12)
+        if not separate_residuals:
+            grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.12)
+        else:
+            grid_spec = gridspec.GridSpec(3, 1, height_ratios=[5, 1, 1], hspace=0.13)
         plt.figure()
         plt.subplot(grid_spec[0])
         if title is not None:
@@ -542,7 +545,7 @@ class Minimizer(object):
 
         self.event.plot_model(
             color='black', subtract_2450000=True,
-            t_start=t_start+2450000., t_stop=t_stop+2450000., label="ground-based model", lw=3)
+            t_start=t_start+2450000., t_stop=t_stop+2450000., label="ground-based model", lw=4)
         self.plot_sat_magnitudes(color='orange', lw=2, label="K2 model") #alpha=0.75,
 
         if color_list is None:
@@ -565,10 +568,21 @@ class Minimizer(object):
         # ax2.set_yticklabels(["100", "200", "300"])
 
         if legend_order is not None:
-            (handles, labels) = plt.gca().get_legend_handles_labels()
-            handles_ = [handles[idx] for idx in legend_order]
-            labels_ = [labels[idx] for idx in legend_order]
-            plt.legend(handles_, labels_)
+            if isinstance(legend_order, tuple):
+                (handles, labels) = plt.gca().get_legend_handles_labels()
+                for (i, l_o) in enumerate(legend_order):
+                    handles_ = [handles[idx] for idx in l_o]
+                    labels_ = [labels[idx] for idx in l_o]
+                    if i == 0:
+                        first_legend = plt.legend(handles_, labels_, loc='upper left')
+                        plt.gca().add_artist(first_legend)
+                    else:
+                        plt.legend(handles_, labels_, loc='upper right')
+            else:
+                (handles, labels) = plt.gca().get_legend_handles_labels()
+                handles_ = [handles[idx] for idx in legend_order]
+                labels_ = [labels[idx] for idx in legend_order]
+                plt.legend(handles_, labels_)
         elif color_list is not None and label_list is not None:
             plt.legend(loc='best')
         else:  # Prepare legend "manually":
@@ -581,8 +595,27 @@ class Minimizer(object):
             plt.legend(handles=[red_line, blue_line, black_line], loc='best')
 
         plt.subplot(grid_spec[1])
-        self.event.plot_residuals(subtract_2450000=True, mfc='none', lw=line_width, mew=line_width)
-        plt.xlim(t_start, t_stop)
+        kwargs_ = dict(mfc='none', lw=line_width, mew=line_width)
+        if not separate_residuals:
+            self.event.plot_residuals(subtract_2450000=True, **kwargs_)
+            plt.xlim(t_start, t_stop)
+        else:
+            plt.plot([0., 3000000.], [0., 0.], color='black')
+            self.event.datasets[-1].plot(
+                phot_fmt='mag', show_errorbars=True, subtract_2450000=True,
+                model=self.event.model, plot_residuals=True, **kwargs_)
+            plt.ylim(0.29, -0.29) # XXX
+            plt.ylabel('K2 residuals')
+            plt.xlim(t_start, t_stop)
+
+            plt.subplot(grid_spec[2])
+            plt.plot([0., 3000000.], [0., 0.], color='black')
+            for data in self.event.datasets[:-1]:
+                data.plot(
+                    phot_fmt='mag', show_errorbars=True, subtract_2450000=True,
+                    model=self.event.model, plot_residuals=True, **kwargs_)
+            plt.ylabel('Residuals')
+            plt.xlim(t_start, t_stop)
 
     def very_standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """
