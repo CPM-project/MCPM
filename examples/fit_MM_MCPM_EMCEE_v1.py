@@ -145,6 +145,12 @@ if key in other_constraints:
     other_constraints['min_blending_flux'] = [datasets[index], other_constraints[key][1]]
 minimizer.other_constraints = other_constraints
 
+key = 'no_blending_files'
+if key in MCPM_options:
+    indexes = [files.index(f) for f in MCPM_options['no_blending_files']]
+    for ind in indexes:
+        minimizer.fit_blending[ind] = False
+
 if 'mask_model_epochs' in MCPM_options:
     for i in range(minimizer.n_sat):
         minimizer.model_masks[i] = utils.mask_nearest_epochs(

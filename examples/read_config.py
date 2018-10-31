@@ -302,6 +302,9 @@ def read_MCPM_options(config):
             if not os.path.isfile(file_name):
                 raise ValueError('file {:} does not exist'.format(file_name))
 
+    if 'no_blending_files' in config[section]:
+        mcpm_options['no_blending_files'] = config.get(section, 'no_blending_files').split()
+
     return mcpm_options
 
 def read_other_constraints(config):
