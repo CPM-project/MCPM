@@ -190,7 +190,7 @@ def read_EMCEE_options(config):
     section = 'EMCEE_settings'
     if section in config.sections():
         for var in config[section]:
-            if var == 'file_acceptance_fractions':
+            if var in ['file_acceptance_fractions', 'file_acceptance_fractions']:
                 emcee_settings[var] = config.get(section, var)
                 if os.path.isfile(emcee_settings[var])
                     raise FileExistsError(emcee_settings[var])

@@ -202,6 +202,9 @@ blob_results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*np.percentile(bl
 flux_name = ['S', 'B']
 for (i, r) in zip(range(n_fluxes), blob_results):
     print('flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'.format(flux_name[i%2], i//2+1, *r))
+if 'file_posterior' in emcee_settings:
+    all_samples = np.concatenate((samples, blob_samples), axis=1)
+    np.save(emcee_settings['file_posterior'], all_samples)
 print('Best model:')
 minimizer.print_min_chi2()
 
