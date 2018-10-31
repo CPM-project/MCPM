@@ -54,3 +54,17 @@ if __name__ == "__main__":
     
     plot_tpf_data(269.9291250, -28.4108333, 31, 91, "eb234840_pixel_curves.png")
 
+# Isolated stars:
+# blg224.1 217850
+# 217850 18:02:55.72 -27:52:28.9 1748.12 3011.50 14.511  0.944 13.567   6   0 0.011 1029   3 0.012
+# blg224.1 222357
+# 222357 18:02:58.64 -27:51:57.5 1867.60 3160.89 14.236  0.711 13.524   6   0 0.011 1031   1 0.010
+# Kp magnitudes predicted using Wei's R_I=1, A_I=1 ("random" part of his plot)
+# 14.327 & 14.130
+# Hence fluxes:
+# 18585.4 22278.8
+    plot_tpf_data(270.7321739, -27.8746756, 52, 91, "isolated_1_pixel_curves_91.png")
+    plot_tpf_data(270.7321739, -27.8746756, 52, 92, "isolated_1_pixel_curves_92.png")
+#    plot_tpf_data(270.7443333, -27.8659933, 49, 91, "isolated_2_pixel_curves_91.png")
+#    plot_tpf_data(270.7443333, -27.8659933, 49, 92, "isolated_2_pixel_curves_92.png")
+
