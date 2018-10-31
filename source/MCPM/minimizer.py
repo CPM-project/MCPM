@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import matplotlib.lines as mlines
+import warnings
 
 from MulensModel.utils import Utils, MAG_ZEROPOINT
 from MulensModel import Trajectory
@@ -57,6 +58,7 @@ class Minimizer(object):
         self._n_calls = 0
         self._color_constraint = None
         self.model_masks = [None] * self.n_sat
+        self.fit_blending = [True] * self.n_datasets
 
         self._file_all_models_name = None
         self._file_all_models = None
@@ -200,7 +202,25 @@ class Minimizer(object):
             sigma_color (float) - sigma of color        
         """
         self._color_constraint = [ref_dataset, ref_zero_point, color, sigma_color]
-        
+
+    def _get_source_flux(self, index):
+        """
+        Return source flux for dataset index.
+        It uses self.fit_blending properly.
+        index - int
+        """
+        if self.fit_blending[index]:
+            return self.event.get_ref_fluxes(index)[0][0]
+
+        if self.event.model.n_lenses > 1:
+            warnings.warn('The code is not optimized for binary lens and ' +
+                          'no blending flux. It can be very slow...')
+        fit_before = self.event.fit
+        self.event.get_chi2_for_dataset(index, fit_blending=False)
+        f_s = self.event.fit.flux_of_sources(self.event.datasets[index])[0]
+        self.event.fit = fit_before
+        return f_s
+
     def _chi2_for_color_constraint(self, satellite_flux):
         """calculate chi2 for flux constraint"""
         before_ref = self.event.data_ref
@@ -210,8 +230,8 @@ class Minimizer(object):
             (ref_dataset, ref_dataset_1, ref_dataset_2) = self._color_constraint[:3]
             (ref_zero_point, ref_zero_point_1, ref_zero_point_2) = self._color_constraint[3:6]
             (polynomial, sigma_color) = self._color_constraint[6:]
-            flux_1 = self.event.get_ref_fluxes(ref_dataset_1)[0][0]
-            flux_2 = self.event.get_ref_fluxes(ref_dataset_2)[0][0]
+            flux_1 = self._get_source_flux(ref_dataset_1)
+            flux_2 = self._get_source_flux(ref_dataset_2)
             mag_1 = ref_zero_point_1 - 2.5 * np.log10(flux_1)
             mag_2 = ref_zero_point_2 - 2.5 * np.log10(flux_2)
             c = mag_1 - mag_2
@@ -223,7 +243,7 @@ class Minimizer(object):
         else:
             raise ValueError('wrong size of internal variable')
         
-        flux_ref = self.event.get_ref_fluxes(ref_dataset)[0][0]
+        flux_ref = self._get_source_flux(ref_dataset)
         self.event.get_ref_fluxes(before_ref)
         
         mag_ref = ref_zero_point - 2.5 * np.log10(flux_ref)
@@ -253,9 +273,7 @@ class Minimizer(object):
             #rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
             #rms /= np.mean(self.event.datasets[n+i].err_flux)
             #chi2_sat += np.sum(self._sat_masks[i]) * rms**2        
-        # fit_blending=False :
-        #self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=False) for i in range(n)]
-        self.chi2 = [self.event.get_chi2_for_dataset(i) for i in range(n)]
+        self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:
             self.chi2.append(self._chi2_for_color_constraint(self._sat_source_flux))
@@ -267,8 +285,13 @@ class Minimizer(object):
         if self.save_fluxes:
             self.event.get_chi2_per_point()
             self.fluxes = 2 * n * [0.]
-            self.fluxes[::2] = [self.event.fit.flux_of_sources(self.event.datasets[i])[0] for i in range(n)]
-            self.fluxes[1::2] = [self.event.fit.blending_flux(self.event.datasets[i]) for i in range(n)]
+            for i in range(n):
+                if self.fit_blending[i]:
+                    self.fluxes[2*i] = self.event.fit.flux_of_sources(self.event.datasets[i])[0]
+                    self.fluxes[2*i+1] = self.event.fit.blending_flux(self.event.datasets[i])
+                else:
+                    self.fluxes[2*i] = self._get_source_flux(i)
+                    self.fluxes[2*i+1] = 0.
         if self._file_all_models is not None:
             text = " ".join([repr(chi2)] + [repr(ll) for ll in theta])
             if self.save_fluxes:
@@ -435,6 +458,9 @@ class Minimizer(object):
             elif key == 'min_blending_flux':
                 (data, limit) = value
                 index = self.event.datasets.index(data)
+                if not self.fit_blending[index]:
+                    raise NotImplementedError(
+                        'min_blending_flux and no blending flux make no sense')
                 self.event.get_chi2_for_dataset(index)
                 if self.event.fit.blending_flux(data) <= limit:
                     return outside
