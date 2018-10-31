@@ -116,6 +116,12 @@ if 'color_constraint' in MCPM_options:
             files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]), 
             *MCPM_options[cc][3:])        
 
+key = 'no_blending_files'
+if key in MCPM_options:
+    indexes = [files.index(f) for f in MCPM_options['no_blending_files']]
+    for ind in indexes:
+        minimizer.fit_blending[ind] = False
+
 if 'mask_model_epochs' in MCPM_options:
     minimizer.model_masks[0] = utils.mask_nearest_epochs(
         cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
@@ -168,7 +174,7 @@ for zip_single in zipped:
         plt.close()
     if len(datasets) > 1:
         for (i, data) in enumerate(datasets):
-            chi2_data = event.get_chi2_for_dataset(i)
+            chi2_data = event.get_chi2_for_dataset(i, fit_blending=minimizer.fit_blending)
             print(i, chi2_data,
                 event.fit.flux_of_sources(data)[0],
                 event.fit.blending_flux(data))
