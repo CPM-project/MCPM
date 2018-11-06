@@ -178,6 +178,7 @@ for zip_single in zipped:
             print(i, chi2_data,
                 event.fit.flux_of_sources(data)[0],
                 event.fit.blending_flux(data))
-    print(minimizer.satellite_maximum())
+    if len(cpm_sources) > 0:
+        print(minimizer.satellite_maximum())
     print()
 

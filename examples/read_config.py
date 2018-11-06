@@ -9,6 +9,7 @@ from astropy import units as u
 #  read_MultiNest_options()
 #  read_EMCEE_options()
 #  read_MCPM_options()
+#  read_other_constraints()
 #  read_models()
 
 def read_general_options(config):
@@ -190,7 +191,7 @@ def read_EMCEE_options(config):
     section = 'EMCEE_settings'
     if section in config.sections():
         for var in config[section]:
-            if var in ['file_acceptance_fractions', 'file_acceptance_fractions']:
+            if var in ['file_acceptance_fractions', 'file_posterior']:
                 emcee_settings[var] = config.get(section, var)
                 if os.path.isfile(emcee_settings[var]):
                     raise FileExistsError(emcee_settings[var])
@@ -216,6 +217,10 @@ def read_MCPM_options(config):
         mcpm_options - dict - gives all the options
     """
     section = 'MCPM'
+
+    if section not in config.sections():
+        return dict(campaigns=[])
+
     mcpm_options = {'half_size': 2, 'l2_per_pixel': None, 'l2': None}
 
     mcpm_options['ephemeris_file'] = config.get(section, 'ephemeris_file')
