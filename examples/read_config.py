@@ -70,9 +70,14 @@ def read_general_options(config):
         files = [x[1][0] for x in info]
         files_formats = [x[1][1] for x in info]
         files_kwargs = [{}] * len(files)
+        plot_properties_keys = ['label', 'color', 'show_errorbars', 'show_bad',
+                                'marker', 'fmt', 'markersize', 'ms', 's']
         for i in range(len(files)):
             if len(info[i][1]) == 4:
-                files_kwargs[i] = {info[i][1][2]: info[i][1][3]}
+                if info[i][1][2] in plot_properties_keys:
+                    files_kwargs[i] = {'plot_properties': {info[i][1][2]: info[i][1][3]} }
+                else:
+                    files_kwargs[i] = {info[i][1][2]: info[i][1][3]}
         formats = set(files_formats)-set(["mag", "flux"])
         if len(formats) > 0:
             raise ValueError('wrong file formats: {:}'.format(formats))
