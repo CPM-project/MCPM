@@ -69,11 +69,19 @@ model_begin = parameter_values[0]
 parameters = {key: value for (key, value) in zip(parameters_to_fit, model_begin)}
 parameters.update(parameters_fixed)
 parameters_ = {**parameters}
-parameters_.pop('f_s_sat', None)
+for p in ['f_s_sat', 'q_f', 'log_q_f']:
+    parameters_.pop(p, None)
 model = MM.Model(parameters_)
 if methods is not None:
     model.set_magnification_methods(methods)
+
 for cpm_source in cpm_sources:
+    if model.n_sources == 2:
+        if 'log_q_f' in parameters:
+            q_f = 10**parameters['log_q_f']
+        else:
+            q_f = parameters['q_f']
+        model.set_source_flux_ratio(q_f)
     sat_model = utils.pspl_model(parameters['t_0'], parameters['u_0'], 
             parameters['t_E'], parameters['f_s_sat'], cpm_source.pixel_time)
     cpm_source.run_cpm(sat_model)
@@ -132,8 +140,7 @@ zipped = zip(parameter_values, model_ids, plot_files, txt_files,
 for zip_single in zipped:
     (values, name, plot_file) = zip_single[:3]
     (txt_file, txt_file_prf_phot, txt_model) = zip_single[3:]
-    for (key, value) in zip(parameters_to_fit, values):
-        setattr(model.parameters, key, value)
+    minimizer.set_parameters(values)
     print(name, minimizer.chi2_fun(values))
     minimizer.set_satellite_data(values)
     

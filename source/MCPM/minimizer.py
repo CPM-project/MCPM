@@ -120,6 +120,10 @@ class Minimizer(object):
                 self._sat_source_flux = theta[i]
             elif param == 'f_b_sat':
                 self._sat_blending_flux = theta[i]
+            elif param == 'q_f':
+                self.event.model.set_source_flux_ratio(theta[i])
+            elif param == 'log_q_f':
+                self.event.model.set_source_flux_ratio(10**theta[i])
             else:
                 setattr(self.event.model.parameters, param, theta[i])
 
@@ -575,7 +579,10 @@ class Minimizer(object):
         self.plot_sat_magnitudes(color='orange', lw=2, label="K2 model") #alpha=0.75,
 
         if color_list is None:
-            color_list_ = ['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat
+            if self.n_sat == 0:
+                color_list_ = None
+            else:
+                color_list_ = ['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat
         else:
             color_list_ = color_list
         zorder_list = np.arange(self.n_datasets, 0, -1)
@@ -612,13 +619,16 @@ class Minimizer(object):
         elif color_list is not None and label_list is not None:
             plt.legend(loc='best')
         else:  # Prepare legend "manually":
-            black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
+            if self.n_sat == 0:
+                plt.legend(loc='best')
+            else:
+                black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
                           markersize=5, label='ground-based', alpha=alphas[0])
-            red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
+                red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
                           markersize=5, label='K2C9 data')
-            blue_line = mlines.Line2D([], [], color='orange', lw=2, #alpha=0.75,
+                blue_line = mlines.Line2D([], [], color='orange', lw=2, #alpha=0.75,
                           markersize=5, label='K2C9 model')
-            plt.legend(handles=[red_line, blue_line, black_line], loc='best')
+                plt.legend(handles=[red_line, blue_line, black_line], loc='best')
 
         plt.subplot(grid_spec[1])
         kwargs_ = dict(mfc='none', lw=line_width, mew=line_width)
@@ -659,21 +669,29 @@ class Minimizer(object):
             t_start=t_start+2450000., t_stop=t_stop+2450000.)
         self.plot_sat_magnitudes(color='blue', lw=3.5, alpha=0.75)
         
+        if self.n_sat == 0:
+            colors = None
+        else:
+            colors = ['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat
+
         self.event.plot_data(alpha_list=alphas, 
             zorder_list=np.arange(self.n_datasets, 0, -1), 
             marker='o', markersize=5, subtract_2450000=True,
-            color_list=['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat)
+            color_list=colors)
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
         
         # Prepare legend "manually":
-        black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
+        if self.n_sat == 0:
+            plt.legend()
+        else:
+            black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
                           markersize=5, label='ground-based', alpha=alphas[0])
-        red_line = mlines.Line2D([], [], color='red', marker='o', lw=0, 
+            red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
                           markersize=5, label='K2C9 data')
-        blue_line = mlines.Line2D([], [], color='blue', lw=3.5, alpha=0.75,
+            blue_line = mlines.Line2D([], [], color='blue', lw=3.5, alpha=0.75,
                           markersize=5, label='K2C9 model')
-        plt.legend(handles=[red_line, blue_line, black_line], loc='best')
+            plt.legend(handles=[red_line, blue_line, black_line], loc='best')
         
         plt.subplot(grid_spec[1])
         self.event.plot_residuals(subtract_2450000=True)
