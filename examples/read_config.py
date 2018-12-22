@@ -1,4 +1,5 @@
 import os
+import warnings
 import configparser
 from astropy.coordinates import SkyCoord
 from astropy import units as u
@@ -313,6 +314,7 @@ def read_MCPM_options(config):
                 raise ValueError('file {:} does not exist'.format(file_name))
 
     if 'no_blending_files' in config[section]:
+        warnings.warn("Option no_blending_files may not work currently - check Minimizer.chi2_fun()")
         mcpm_options['no_blending_files'] = config.get(section, 'no_blending_files').split()
 
     return mcpm_options

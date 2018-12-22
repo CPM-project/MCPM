@@ -122,15 +122,20 @@ class Minimizer(object):
                 self._sat_blending_flux = theta[i]
             elif param == 'q_f':
                 self.event.model.set_source_flux_ratio(theta[i])
+            elif param[:4] == 'q_f_':
+                self.event.model.set_source_flux_ratio_for_band(
+                    param[4:], theta[i])
             elif param == 'log_q_f':
                 self.event.model.set_source_flux_ratio(10**theta[i])
+            elif param[:8] == 'log_q_f_':
+                self.event.model.set_source_flux_ratio_for_band(
+                    param[8:], 10**theta[i])
             else:
                 setattr(self.event.model.parameters, param, theta[i])
 
     def _run_cpm(self, theta):
         """set the satellite light curve and run CPM"""
         self.set_parameters(theta)
-        #self._sat_source_flux = theta[-1]
         n_0 = self.n_datasets - self.n_sat
 
         if self._sat_masks is None:
@@ -277,7 +282,11 @@ class Minimizer(object):
             #rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
             #rms /= np.mean(self.event.datasets[n+i].err_flux)
             #chi2_sat += np.sum(self._sat_masks[i]) * rms**2        
-        self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
+
+        #self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
+        temp_chi2 = self.event.get_chi2_per_point() # this ignores self.fit_blending
+
+        self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
         self.chi2 += chi2_sat
         if self._color_constraint is not None:
             self.chi2.append(self._chi2_for_color_constraint(self._sat_source_flux))

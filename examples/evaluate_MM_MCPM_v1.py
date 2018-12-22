@@ -69,22 +69,30 @@ model_begin = parameter_values[0]
 parameters = {key: value for (key, value) in zip(parameters_to_fit, model_begin)}
 parameters.update(parameters_fixed)
 parameters_ = {**parameters}
-for p in ['f_s_sat', 'q_f', 'log_q_f']:
-    parameters_.pop(p, None)
+for param in list(parameters_.keys()).copy():
+    if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
+        parameters_.pop(param)
 model = MM.Model(parameters_)
 if methods is not None:
     model.set_magnification_methods(methods)
 
 for cpm_source in cpm_sources:
-    if model.n_sources == 2:
-        if 'log_q_f' in parameters:
-            q_f = 10**parameters['log_q_f']
+    times = cpm_source.pixel_time + 2450000.
+    times[np.isnan(times)] = np.mean(times[~np.isnan(times)])
+    if model.n_sources == 1:
+        model_magnification = model.magnification(times)
+    else:
+        if ('log_q_f' in parameters) or ('q_f' in parameters):
+            if 'log_q_f' in parameters:
+                q_f = 10**parameters['log_q_f']
+            else:
+                q_f = parameters['q_f']
+            model.set_source_flux_ratio(q_f)
+            model_magnification = model.magnification(times)
         else:
-            q_f = parameters['q_f']
-        model.set_source_flux_ratio(q_f)
-    sat_model = utils.pspl_model(parameters['t_0'], parameters['u_0'], 
-            parameters['t_E'], parameters['f_s_sat'], cpm_source.pixel_time)
-    cpm_source.run_cpm(sat_model)
+            model_magnification = model.magnification(
+                times, separate=True)[0] # This is very simple solution.
+    cpm_source.run_cpm(parameters['f_s_sat'] * model_magnification)
 
     utils.apply_limit_time(cpm_source, MCPM_options)
 
