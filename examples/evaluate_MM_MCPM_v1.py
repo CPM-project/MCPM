@@ -105,7 +105,8 @@ for cpm_source in cpm_sources:
     if 'sat_sigma_scale' in MCPM_options:
         sat_sigma *= MCPM_options['sat_sigma_scale']
     data = MM.MulensData([sat_time, 0.*sat_time, sat_sigma],
-            phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'])
+            phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'],
+            bandpass="K2")
     datasets.append(data)
     
 # initiate event    
