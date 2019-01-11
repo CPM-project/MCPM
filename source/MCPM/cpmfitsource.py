@@ -287,7 +287,7 @@ class CpmFitSource(object):
         calculate sum of PRF values for every pixel and select n_select 
         ones with the highest sum
         """
-        if n_select >= len(self._pixels):
+        if n_select > len(self._pixels):
             raise ValueError('selection of too many pixels requested')
         prf_sum = np.sum(self.prf_values[self.prf_values_mask], axis=0)
         sorted_indexes = np.argsort(prf_sum)[::-1][:n_select]
@@ -310,8 +310,8 @@ class CpmFitSource(object):
         reference_time = out[0][0][out[3][0]]
         for i in range(1, self.n_pixels):
             masked_time = out[0][i][out[3][i]]
-            if (reference_time != masked_time).any():
-                msg = "we assumed time vectors should be the same\n{:}\n{:}"
+            if (np.abs(reference_time-masked_time) > 1.e-5).any():
+                msg = "the assumed time vectors should be the same\n{:}\n{:}"
                 raise ValueError(msg.format(out[0][0], out[0][i]))
         self._pixel_time = out[0][0]
         self._pixel_flux = out[1]
@@ -586,7 +586,7 @@ class CpmFitSource(object):
         mask = self.prf_values_mask
         for cpm_pixel in self._cpm_pixel:
             mask *= cpm_pixel.fitted_flux_mask
-        
+
         prf_flux = np.zeros(np.sum(mask), dtype=float)
         prf_square = np.zeros(np.sum(mask), dtype=float)
         for i in range(self.n_pixels):
@@ -597,6 +597,41 @@ class CpmFitSource(object):
         out[mask] = prf_flux / prf_square
         
         return (out, mask)
+
+    #def prf_photometry_no_CPM(self):
+        #"""
+        #XXX
+
+        #Returns flux vector and mask
+        #"""
+        #mask = self.prf_values_mask
+        ##for cpm_pixel in self._cpm_pixel:
+        ##    mask *= cpm_pixel.fitted_flux_mask
+
+        #prf_flux = np.zeros(np.sum(mask), dtype=float)
+        #prf_square = np.zeros(np.sum(mask), dtype=float)
+        #prf_sum = np.zeros(np.sum(mask), dtype=float)
+        #flux_sum = np.zeros(np.sum(mask), dtype=float)
+        #for i in range(self.n_pixels):
+        ##for i in [1]:
+            #prf = self.prf_values[:,i][mask]
+            #prf_flux += prf * self.pixel_flux[i][mask]
+            #prf_square += prf**2
+            #prf_sum += prf
+            #flux_sum += self.pixel_flux[i][mask]
+        #out = np.zeros_like(mask, dtype=float)
+
+        #out[mask] = prf_flux / prf_square
+        ##out[mask] = (self.n_pixels * prf_sum * flux_sum - prf_flux) / (self.n_pixels * prf_sum**2 - prf_square)
+
+        #if False:
+            #b = flux_sum - out[mask] * prf
+            #print()
+            #print(b)
+            #print(np.mean(b), np.std(b))
+            #print()
+
+        #return (out, mask)
 
     def _save_coeffs_to_fits(self, fits_name, coeffs):
         """save coeffs to a fits file"""
