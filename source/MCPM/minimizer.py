@@ -24,7 +24,7 @@ K2_MAG_ZEROPOINT = 25.
 class Minimizer(object): 
     """
     An object to link an Event to the functions necessary to minimize chi2.
-    
+
     Arguments :
         event: *MulensModel.Event*
             ...

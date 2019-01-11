@@ -77,7 +77,7 @@ parameters_ = {**parameters}
 for param in list(parameters_.keys()).copy():
     if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
         parameters_.pop(param)
-model = MM.Model(parameters_, coords=skycoord)
+model = MM.Model(parameters_, coords=coords)
 if methods is not None:
     model.set_magnification_methods(methods)
 
