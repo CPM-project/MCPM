@@ -601,27 +601,31 @@ class CpmFitSource(object):
     #def prf_photometry_no_CPM(self):
         #"""
         #XXX
+        #You probably want to call subtract_flux_constant() before.
 
         #Returns flux vector and mask
         #"""
         #mask = self.prf_values_mask
-        ##for cpm_pixel in self._cpm_pixel:
-        ##    mask *= cpm_pixel.fitted_flux_mask
+        #for m in self.pixel_mask:
+            #mask *= m
 
         #prf_flux = np.zeros(np.sum(mask), dtype=float)
         #prf_square = np.zeros(np.sum(mask), dtype=float)
         #prf_sum = np.zeros(np.sum(mask), dtype=float)
         #flux_sum = np.zeros(np.sum(mask), dtype=float)
+        #sum_1 = np.zeros(np.sum(mask), dtype=float)
         #for i in range(self.n_pixels):
-        ##for i in [1]:
             #prf = self.prf_values[:,i][mask]
             #prf_flux += prf * self.pixel_flux[i][mask]
             #prf_square += prf**2
             #prf_sum += prf
             #flux_sum += self.pixel_flux[i][mask]
+            #sum_1 += prf**2 / self.pixel_flux_err[i][mask]
         #out = np.zeros_like(mask, dtype=float)
 
         #out[mask] = prf_flux / prf_square
+        #print()
+        #print("ERR: ", np.sqrt(sum_1))
         ##out[mask] = (self.n_pixels * prf_sum * flux_sum - prf_flux) / (self.n_pixels * prf_sum**2 - prf_square)
 
         #if False:
@@ -698,8 +702,9 @@ class CpmFitSource(object):
 
     def plot_pixel_curves(self, **kwargs):
         """
-        Use matplotlib to plot raw data for a set of pixels. 
+        Use matplotlib to plot raw data for a set of pixels.
         For options look at MultipleTpf.plot_pixel_curves().
+        **kwags can contain 'y_lim' keyword, which is passed to Axis.set_ylim().
         """
         # The code below removes 12 epochs in C91 and 0 in C92.
         flags = self.multiple_tpf.get_quality_flags_for_pixels(self._pixels)
@@ -723,6 +728,13 @@ class CpmFitSource(object):
                     ra=star_ra, dec=star_dec, pixels=self._pixels)
         for i in range(self.n_pixels):
             self.pixel_flux[i] -= flux * prf_values[:,i]
+
+    def subtract_flux_constant(self, flux):
+        """
+        From all target pixels subtract the same value of flux.
+        """
+        for i in range(self.n_pixels):
+            self.pixel_flux[i] -= flux
 
     def run_cpm_and_plot_model(self, model, model_mask=None, 
             plot_residuals=False, f_s=None):
