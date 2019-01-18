@@ -603,7 +603,12 @@ class CpmFitSource(object):
         #XXX
         #You probably want to call subtract_flux_constant() before.
 
-        #Returns flux vector and mask
+        #Returns:
+            #flux: *np.ndarray*
+                #XXX
+
+            #mask: *np.ndarray*
+                #XXX
         #"""
         #mask = self.prf_values_mask
         #for m in self.pixel_mask:
@@ -611,29 +616,13 @@ class CpmFitSource(object):
 
         #prf_flux = np.zeros(np.sum(mask), dtype=float)
         #prf_square = np.zeros(np.sum(mask), dtype=float)
-        #prf_sum = np.zeros(np.sum(mask), dtype=float)
-        #flux_sum = np.zeros(np.sum(mask), dtype=float)
-        #sum_1 = np.zeros(np.sum(mask), dtype=float)
         #for i in range(self.n_pixels):
             #prf = self.prf_values[:,i][mask]
             #prf_flux += prf * self.pixel_flux[i][mask]
             #prf_square += prf**2
-            #prf_sum += prf
-            #flux_sum += self.pixel_flux[i][mask]
-            #sum_1 += prf**2 / self.pixel_flux_err[i][mask]
         #out = np.zeros_like(mask, dtype=float)
 
         #out[mask] = prf_flux / prf_square
-        #print()
-        #print("ERR: ", np.sqrt(sum_1))
-        ##out[mask] = (self.n_pixels * prf_sum * flux_sum - prf_flux) / (self.n_pixels * prf_sum**2 - prf_square)
-
-        #if False:
-            #b = flux_sum - out[mask] * prf
-            #print()
-            #print(b)
-            #print(np.mean(b), np.std(b))
-            #print()
 
         #return (out, mask)
 
@@ -718,11 +707,22 @@ class CpmFitSource(object):
         self.multiple_tpf.plot_pixel_curves(
                 pixels=self._pixels, flux=pixel_flux,
                 time_mask=flags_mask, **kwargs)
-        #print(np.min([np.min(x[x>0.]) for x in self.pixel_flux_err]), np.max(self.pixel_flux_err))
-                
+
     def subtract_flux_from_star(self, star_ra, star_dec, flux):
         """
         Subtract the signal expected from star at given coords from all pixels.
+        Nothing is returned, it just updates internal variables.
+
+        Parameters :
+            star_ra: *float*
+                RA - decimal degrees
+
+            star_dec: *float*
+                Dec - decimal degrees
+
+            flux: *float* or *np.ndarray*
+                Fluxes to be subtracted. If *np.ndarray*, then its size is
+                the same as total number of epochs.
         """
         (prf_values, mask) = self.prf_for_campaign.apply_grids_and_prf(
                     ra=star_ra, dec=star_dec, pixels=self._pixels)
@@ -762,13 +762,13 @@ class CpmFitSource(object):
             y_label = 'magnification'
             model /= f_s
             residuals /= f_s
-            
+
         plt.ylabel(y_label)
         plt.plot(self.pixel_time[model_mask], model[model_mask], 'k-', lw=lw)
         plt.plot(self.pixel_time[mask], residuals[mask] + model[mask], 'b.')
-        plt.plot(self.pixel_time[mask_2], residuals[mask_2] + model[mask_2], 
+        plt.plot(self.pixel_time[mask_2], residuals[mask_2] + model[mask_2],
                 'bo')
-        
+
         if plot_residuals:
             if self._train_mask is None:
                 mask_2 = None
