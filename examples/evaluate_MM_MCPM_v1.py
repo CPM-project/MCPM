@@ -73,8 +73,8 @@ for param in list(parameters_.keys()).copy():
     if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
         parameters_.pop(param)
 model = MM.Model(parameters_, coords=coords)
-if methods is not None:
-    model.set_magnification_methods(methods)
+for (m_key, m_value) in methods.items():
+    model.set_magnification_methods(m_value, m_key)
 
 for cpm_source in cpm_sources:
     times = cpm_source.pixel_time + 2450000.
@@ -110,7 +110,7 @@ for cpm_source in cpm_sources:
     datasets.append(data)
     
 # initiate event    
-event = MM.Event(datasets=datasets, model=model, coords=skycoord)
+event = MM.Event(datasets=datasets, model=model)
 params = parameters_to_fit[:]
 minimizer = Minimizer(event, params, cpm_sources)
 if 'coeffs_fits_in' in MCPM_options:

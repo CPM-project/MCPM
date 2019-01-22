@@ -41,19 +41,16 @@ def read_general_options(config):
         out_skycoord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
     except:
         out_skycoord = None
-    methods = None
-    if config.has_option(section, 'methods'):
-        methods = config.get(section, 'methods').split()
-        for i in range(0, len(methods), 2):
-            try:
-                methods[i] = float(methods[i])
-            except ValueError:
-                print("Parsing methods failed - expected float, got ", 
-                    methods[i])
-                raise
     file_all_models = None
     if config.has_option(section, 'file_all_models'):
         file_all_models = config.get(section, 'file_all_models')
+
+    # Methods:
+    keys = {'methods': None, 'methods_1': 1, 'methods_2': 2}
+    methods = {}
+    for (key, v) in keys.items():
+        if config.has_option(section, key):
+            methods[v] = _parse_methods(config.get(section, key).split())
 
     # data files:
     section = 'file_names'
@@ -93,6 +90,19 @@ def read_general_options(config):
     out = (out_skycoord, methods, file_all_models, files, files_formats, 
             files_kwargs, parameters_fixed)
     return out
+
+def _parse_methods(methods):
+    """
+    change odd elements of the list to floats
+    """
+    for i in range(0, len(methods), 2):
+        try:
+            methods[i] = float(methods[i])
+        except ValueError:
+            print("Parsing methods failed - expected float, got ", 
+                methods[i])
+            raise
+    return methods
 
 def read_MultiNest_options(config, config_file, dir_out="chains"):
     """
