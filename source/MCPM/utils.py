@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 # - fit_two_poly_2d()
 # - plot_matrix_subplots()
 # - construct_matrix_from_list()
+# - generate_random_points()
 # - module_output_for_channel
 
 def pspl_model(t_0, u_0, t_E, f_s, times):
@@ -149,11 +150,13 @@ def pixel_list_center(center_x, center_y, half_size):
                     (int_y-half_size):(int_y+half_size+1)].reshape(2, -1).T
 
 def load_matrix_xy(file_name, data_type='float'):
-    """reads file with matrix in format like:
+    """
+    reads file with matrix in format like:
     0 0 123.454
     0 1 432.424
     ...
-    into numpy array"""
+    into numpy array
+    """
     parser = {'TRUE': True, 'FALSE': False}
     table_as_list = []
     with open(file_name) as infile:
@@ -185,7 +188,8 @@ def load_matrix_xy(file_name, data_type='float'):
     return np.array(table_as_list)
     
 def save_matrix_xy(matrix, file_name, data_type='float'):
-    """saves numpy array (matrix) in format like:
+    """
+    saves numpy array (matrix) in format like:
     0 0 123.454
     0 1 432.424
     ...
@@ -334,8 +338,10 @@ def construct_matrix_from_list(pixel_list, time_series_list):
     return matrix
 
 def get_l2_l2_per_pixel(n_pixel, l2=None, l2_per_pixel=None):
-    """function used in different places that parses the l2 and l2_per_pixel
-    parameters - exactly one of them has to be set"""
+    """
+    function used in different places that parses the l2 and l2_per_pixel
+    parameters - exactly one of them has to be set
+    """
     if (l2 is None) == (l2_per_pixel is None):
         raise ValueError('you must set either l2 or l2_per_pixel')
 
@@ -353,6 +359,33 @@ def get_l2_l2_per_pixel(n_pixel, l2=None, l2_per_pixel=None):
             else:
                 raise TypeError('l2 must be of float type')
     return (l2, l2 / float(n_pixel))
+
+def generate_random_points(settings, parameters, n):
+    """
+    Take a *dict* called settings that specifies PDF for each parameter
+    from *parameters* and simulate *n* *np.ndarray* objects that each
+    have random value of the parameter.
+
+    Arguments :
+        settings: *dict*
+        parameters: *list* of *str*
+        n: *int*
+
+    Returns:
+        values: *list* of *np.ndarray*
+    """
+    values = []
+    for param in parameters:
+        setting = settings[param]
+        if len(setting) == 2:
+            values.append(setting[0] + setting[1] * np.random.randn(n))
+        elif len(setting) == 3 and setting[2] == 'uniform':
+            values.append(np.random.uniform(setting[0], setting[1], n))
+        else:
+            raise ValueError('could not parse: {:}'.format(setting))
+    out = [np.array([values[j][i] for j in range(len(parameters))])
+            for i in range(n)]
+    return out
 
 # For K2 channel number give corresponding module and output numbers.
 module_output_for_channel = {

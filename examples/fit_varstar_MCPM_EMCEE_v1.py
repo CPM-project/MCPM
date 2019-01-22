@@ -28,8 +28,8 @@ out = read_config.read_general_options(config)
 
 # Read EMCEE options:
 out = read_config.read_EMCEE_options(config)
-(starting_mean, starting_sigma, parameters_to_fit) = out[:3]
-(min_values, max_values, emcee_settings) = out[3:]
+(starting_settings, parameters_to_fit) = out[:2]
+(min_values, max_values, emcee_settings) = out[2:]
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -94,8 +94,8 @@ print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
     emcee_settings['n_walkers'], emcee_settings['n_steps'], 
     emcee_settings['n_burn']))
 minimizer.set_prior_boundaries(min_values, max_values)
-starting = [starting_mean + starting_sigma * np.random.randn(n_params)
-            for i in range(emcee_settings['n_walkers'])]
+starting = utils.generate_random_points(
+    starting_settings, parameters_to_fit, emcee_settings['n_walkers'])
 for start_ in starting:
     if minimizer.ln_prior(start_) <= -float('inf'):
         raise ValueError('starting point is not in prior')

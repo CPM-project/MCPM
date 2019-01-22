@@ -168,8 +168,7 @@ def read_EMCEE_options(config):
         config - configparser.ConfigParser instance
         
     Returns:
-        starting_mean - list - mean starting values of parameters
-        starting_sigma - list - sigma for starting values of parameters
+        starting - dict - specifies PDFs for starting values of parameters
         parameters_to_fit - list - corresponding names of parameters
         min_values - dict - prior minimum values
         max_values - dict - prior maximum values
@@ -177,14 +176,14 @@ def read_EMCEE_options(config):
     """
     # mean and sigma for start
     section = 'EMCEE_starting_mean_sigma'
-    info = [[var, config.get(section, var).split()] for var in config[section]]
-    for info_ in info:
-        if len(info_[1]) != 2:
-            raise ValueError('Wrong input in cfg file:\n{:}'.format(config.get(
-                    section, info_[0])))
-    starting_mean = [float(x[1][0]) for x in info]
-    starting_sigma = [float(x[1][1]) for x in info]
-    parameters_to_fit = [x[0] for x in info]
+    parameters_to_fit = [var for var in config[section]]
+    starting = {}
+    for param in parameters_to_fit:
+        words = config.get(section, param).split()
+        if len(words) < 2:
+            msg = 'Wrong input in cfg file:\n{:}'
+            raise ValueError(msg.format(config.get(section, param)))
+        starting[param] = [float(words[0]), float(words[1])] + words[2:]
 
     # prior min an max values
     min_values = {}
@@ -218,7 +217,7 @@ def read_EMCEE_options(config):
             "n_burn = {:}").format(emcee_settings['n_steps'], 
             emcee_settings['n_burn']))
 
-    out = (starting_mean, starting_sigma, parameters_to_fit, min_values, 
+    out = (starting, parameters_to_fit, min_values,
             max_values, emcee_settings)
     return out
 
