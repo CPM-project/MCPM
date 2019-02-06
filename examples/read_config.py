@@ -183,6 +183,8 @@ def read_EMCEE_options(config):
         if len(words) < 2:
             msg = 'Wrong input in cfg file:\n{:}'
             raise ValueError(msg.format(config.get(section, param)))
+        if len(words) == 2:
+            words.append('gauss')
         starting[param] = [float(words[0]), float(words[1])] + words[2:]
 
     # prior min an max values

@@ -368,19 +368,30 @@ def generate_random_points(settings, parameters, n):
 
     Arguments :
         settings: *dict*
+            For each key (which is an element of *parameters*) provide
+            a list of settings.  These are currently 2 *floats* and *str*,
+            which can be 'gauss', 'uniform', or 'log-uniform'.
+
         parameters: *list* of *str*
+
         n: *int*
 
     Returns:
         values: *list* of *np.ndarray*
+            The length of this list is *n* and each element has size of
+            *len(paramters)*.
     """
     values = []
     for param in parameters:
         setting = settings[param]
-        if len(setting) == 2:
+        if len(setting) == 3 and setting[2].lower() == 'gauss':
             values.append(setting[0] + setting[1] * np.random.randn(n))
-        elif len(setting) == 3 and setting[2] == 'uniform':
+        elif len(setting) == 3 and setting[2].lower() == 'uniform':
             values.append(np.random.uniform(setting[0], setting[1], n))
+        elif len(setting) == 3 and setting[2].lower() == 'log-uniform':
+            beg = np.log(setting[0])
+            end = np.log(setting[1])
+            values.append(np.exp(np.random.uniform(beg, end, n)))
         else:
             raise ValueError('could not parse: {:}'.format(setting))
     out = [np.array([values[j][i] for j in range(len(parameters))])
