@@ -598,33 +598,38 @@ class CpmFitSource(object):
         
         return (out, mask)
 
-    #def prf_photometry_no_CPM(self):
-        #"""
-        #XXX
-        #You probably want to call subtract_flux_constant() before.
+    def prf_photometry_no_CPM(self):
+        """
+        PRF photometry of the target that does not use CPM approach.
+        It only performs single-parameter fit for each epoch:
+        flux = SUM f_i * PRF_i / SUM PRF_i^2, where f_i is flux in given
+        pixel i and PRF_i is PRF pixel for this pixel.
 
-        #Returns:
-            #flux: *np.ndarray*
-                #XXX
+        You probably want to call subtract_flux_constant() before.
 
-            #mask: *np.ndarray*
-                #XXX
-        #"""
-        #mask = self.prf_values_mask
-        #for m in self.pixel_mask:
-            #mask *= m
+        Returns:
+            flux: *np.ndarray*
+                Calculated fluxes of the target star.
 
-        #prf_flux = np.zeros(np.sum(mask), dtype=float)
-        #prf_square = np.zeros(np.sum(mask), dtype=float)
-        #for i in range(self.n_pixels):
-            #prf = self.prf_values[:,i][mask]
-            #prf_flux += prf * self.pixel_flux[i][mask]
-            #prf_square += prf**2
-        #out = np.zeros_like(mask, dtype=float)
+            mask: *np.ndarray*
+                Mask to be applied to *flux* to remove epochs that
+                lacked some data.
+        """
+        mask = self.prf_values_mask
+        for m in self.pixel_mask:
+            mask *= m
 
-        #out[mask] = prf_flux / prf_square
+        prf_flux = np.zeros(np.sum(mask), dtype=float)
+        prf_square = np.zeros(np.sum(mask), dtype=float)
+        for i in range(self.n_pixels):
+            prf = self.prf_values[:,i][mask]
+            prf_flux += prf * self.pixel_flux[i][mask]
+            prf_square += prf**2
 
-        #return (out, mask)
+        out = np.zeros_like(mask, dtype=float)
+        out[mask] = prf_flux / prf_square
+
+        return (out, mask)
 
     def _save_coeffs_to_fits(self, fits_name, coeffs):
         """save coeffs to a fits file"""
