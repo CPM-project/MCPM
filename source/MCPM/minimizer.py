@@ -284,10 +284,14 @@ class Minimizer(object):
             #chi2_sat += np.sum(self._sat_masks[i]) * rms**2        
 
         #self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
-        temp_chi2 = self.event.get_chi2_per_point() # this ignores self.fit_blending
+        #try:
+        if True:
+            temp_chi2 = self.event.get_chi2_per_point() # this ignores self.fit_blending
 
-        self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
-        self.chi2 += chi2_sat
+            self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
+            self.chi2 += chi2_sat
+        #except:
+        #    self.chi2 = [1.e6]
         if self._color_constraint is not None:
             self.chi2.append(self._chi2_for_color_constraint(self._sat_source_flux))
         chi2 = sum(self.chi2)
@@ -296,15 +300,18 @@ class Minimizer(object):
             self._min_chi2_theta = theta
         self._n_calls += 1
         if self.save_fluxes:
-            self.event.get_chi2_per_point()
             self.fluxes = 2 * n * [0.]
-            for i in range(n):
-                if self.fit_blending[i]:
-                    self.fluxes[2*i] = self.event.fit.flux_of_sources(self.event.datasets[i])[0]
-                    self.fluxes[2*i+1] = self.event.fit.blending_flux(self.event.datasets[i])
-                else:
-                    self.fluxes[2*i] = self._get_source_flux(i)
-                    self.fluxes[2*i+1] = 0.
+            #try:
+            if True:
+                self.event.get_chi2_per_point()
+                for i in range(n):
+                    if self.fit_blending[i]:
+                        self.fluxes[2*i] = self.event.fit.flux_of_sources(self.event.datasets[i])[0]
+                        self.fluxes[2*i+1] = self.event.fit.blending_flux(self.event.datasets[i])
+                    else:
+                        self.fluxes[2*i] = self._get_source_flux(i)
+            #except:
+            #    pass
         if self._file_all_models is not None:
             text = " ".join([repr(chi2)] + [repr(ll) for ll in theta])
             if self.save_fluxes:
@@ -566,7 +573,8 @@ class Minimizer(object):
 
     def standard_plot(self, t_start, t_stop, ylim, title=None,
                       label_list=None, color_list=None, line_width=1.5,
-                      legend_order=None, separate_residuals=False):
+                      legend_order=None, separate_residuals=False,
+                      model_line_width=4., legend_kwargs=None):
         """Make plot of the event and residuals. """
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
@@ -578,13 +586,14 @@ class Minimizer(object):
         plt.subplot(grid_spec[0])
         if title is not None:
             plt.title(title)
-        alphas = [0.35] * self.n_datasets
+        alphas = [0.5] * self.n_datasets
         for i in range(self.n_sat):
             alphas[-(i+1)] = 1.
 
         self.event.plot_model(
             color='black', subtract_2450000=True,
-            t_start=t_start+2450000., t_stop=t_stop+2450000., label="ground-based model", lw=4)
+            t_start=t_start+2450000., t_stop=t_stop+2450000.,
+            label="ground-based model", lw=model_line_width)
         self.plot_sat_magnitudes(color='orange', lw=2, label="K2 model") #alpha=0.75,
 
         if color_list is None:
@@ -609,6 +618,8 @@ class Minimizer(object):
         # ax2.set_yticks([16., 15., 14.])
         # ax2.set_yticklabels(["100", "200", "300"])
 
+        if legend_kwargs is None:
+            legend_kwargs = dict()
         if legend_order is not None:
             if isinstance(legend_order, tuple):
                 (handles, labels) = plt.gca().get_legend_handles_labels()
@@ -619,17 +630,17 @@ class Minimizer(object):
                         first_legend = plt.legend(handles_, labels_, loc='upper left')
                         plt.gca().add_artist(first_legend)
                     else:
-                        plt.legend(handles_, labels_, loc='upper right')
+                        plt.legend(handles_, labels_, loc='upper right', **legend_kwargs)
             else:
                 (handles, labels) = plt.gca().get_legend_handles_labels()
                 handles_ = [handles[idx] for idx in legend_order]
                 labels_ = [labels[idx] for idx in legend_order]
-                plt.legend(handles_, labels_)
+                plt.legend(handles_, labels_, **legend_kwargs)
         elif color_list is not None and label_list is not None:
-            plt.legend(loc='best')
+            plt.legend(loc='best', **legend_kwargs)
         else:  # Prepare legend "manually":
             if self.n_sat == 0:
-                plt.legend(loc='best')
+                plt.legend(loc='best', **legend_kwargs)
             else:
                 black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
                           markersize=5, label='ground-based', alpha=alphas[0])
@@ -637,7 +648,7 @@ class Minimizer(object):
                           markersize=5, label='K2C9 data')
                 blue_line = mlines.Line2D([], [], color='orange', lw=2, #alpha=0.75,
                           markersize=5, label='K2C9 model')
-                plt.legend(handles=[red_line, blue_line, black_line], loc='best')
+                plt.legend(handles=[red_line, blue_line, black_line], loc='best', **legend_kwargs)
 
         plt.subplot(grid_spec[1])
         kwargs_ = dict(mfc='none', lw=line_width, mew=line_width)
@@ -672,12 +683,12 @@ class Minimizer(object):
         alphas = [0.35] * self.n_datasets
         for i in range(self.n_sat):
             alphas[-(i+1)] = 1.
-            
+
         self.event.plot_model(
             color='black', subtract_2450000=True, 
             t_start=t_start+2450000., t_stop=t_stop+2450000.)
         self.plot_sat_magnitudes(color='blue', lw=3.5, alpha=0.75)
-        
+
         if self.n_sat == 0:
             colors = None
         else:
