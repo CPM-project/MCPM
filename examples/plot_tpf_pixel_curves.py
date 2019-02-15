@@ -6,7 +6,7 @@ from MCPM.cpmfitsource import CpmFitSource
 
 
 def plot_tpf_data(ra, dec, channel, campaign, file_out, half_size=2,
-                  stars_subtract=[], adjust=None, xlabel=None, ylabel=None):
+                  stars_subtract=[], adjust=None, xlabel=None, ylabel=None, **kwargs):
     """
     Plot TPF data for given settings.
     """
@@ -14,7 +14,7 @@ def plot_tpf_data(ra, dec, channel, campaign, file_out, half_size=2,
     cpm_source.set_pixels_square(half_size)
     for (ra, dec, flux) in stars_subtract:
         cpm_source.subtract_flux_from_star(ra, dec, flux)
-    cpm_source.plot_pixel_curves()
+    cpm_source.plot_pixel_curves(**kwargs)
     if adjust is not None:
         plt.subplots_adjust(**adjust)
     if xlabel is not None:
@@ -26,7 +26,6 @@ def plot_tpf_data(ra, dec, channel, campaign, file_out, half_size=2,
     plt.close()
 
 if __name__ == "__main__":
-    
     #stars_0241 = [[270.63370, -27.52653, 30.e3]]
     stars_0241 = [[270.63370, -27.52653, 16996.5]]
     plot_tpf_data(270.6323333, -27.5296111, 49, 91, "ob160241_c91_pixel_curves.png",
