@@ -147,15 +147,52 @@ class Minimizer(object):
         for i in range(self.n_sat):
             # Here we prepare the satellite lightcurves:
             self._sat_magnifications[i] = self.event.model.magnification(
-                    time=self._sat_times[i],
-                    satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
-            self._sat_models[i][self._sat_masks[i]] = (self._sat_blending_flux +
-                    # f_s*(A-1) version:
-                    (self._sat_magnifications[i] - 1.) * self._sat_source_flux)
-                    # f_s*A version:
-                    #self._sat_magnifications[i] * self._sat_source_flux)
-            self.cpm_sources[i].run_cpm(self._sat_models[i], 
-                    model_mask=self.model_masks[i])
+                time=self._sat_times[i],
+                satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
+            model = self._magnification_to_sat_flux(self._sat_magnifications[i])
+            self._sat_models[i][self._sat_masks[i]] = model
+            self.cpm_sources[i].run_cpm(
+                self._sat_models[i], model_mask=self.model_masks[i])
+
+    def _sat_flux_to_magnification(self, sat_flux):
+        """
+        translates satellite flux to magnification
+        """
+        if self._sat_blending_flux != 0.:
+            warnings.warn(
+                "self._sat_blending_flux is not 0. - not sure if this works")
+
+        magnification = (
+            (sat_flux - self._sat_blending_flux) / self._sat_source_flux + 1.)
+        return magnification
+
+    def _magnification_to_sat_flux(self, magnification):
+        """
+        translates magnification to satellite flux
+        """
+        if self._sat_blending_flux != 0.:
+            warnings.warn(
+                "self._sat_blending_flux is not 0. - not sure if this works")
+
+        flux = (magnification - 1.) * self._sat_source_flux
+        flux += self._sat_blending_flux
+        return flux
+
+    def _magnitude_to_sat_flux(self, magnitude):
+        """
+        translates magnitude in reference frame (OGLE I-band in most cases)
+        to satellite flux scale
+        """
+        if self._sat_blending_flux != 0.:
+            warnings.warn(
+                "self._sat_blending_flux is not 0. - not sure if this works")
+
+        # HERE
+        flux = Utils.get_flux_from_mag(magnitude)
+        (fs, fb) = self.event.model.get_ref_fluxes()
+        magnification = (flux - fb) / fs[0]
+        flux_sat = self._magnification_to_sat_flux(magnification)
+        return flux_sat
 
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
@@ -562,13 +599,10 @@ class Minimizer(object):
 
         for i in range(self.n_sat):
             times = self._sat_times[i] - 2450000.
-            #(fs_sat, fb_sat) = self.event.model.get_ref_fluxes(n+i)
-            #mags = self._sat_magnifications[i]
-            #flux = (mags * self._sat_source_flux - fb_sat) * (fs[0] / fs_sat[0]) + fb
             flux = self._sat_magnifications[i] * fs[0] + fb
             plt.plot(times, Utils.get_mag_from_flux(flux), 
-                zorder=np.inf, # We want the satellite models to be at the very top. 
-                **kwargs)
+                zorder=np.inf, # We want the satellite models
+                **kwargs)      # to be at the very top.
         self.event.model.data_ref = data_ref
 
     def standard_plot(self, t_start, t_stop, ylim, title=None,
@@ -594,15 +628,17 @@ class Minimizer(object):
             color='black', subtract_2450000=True,
             t_start=t_start+2450000., t_stop=t_stop+2450000.,
             label="ground-based model", lw=model_line_width)
-        self.plot_sat_magnitudes(color='orange', lw=2, label="K2 model") #alpha=0.75,
+        self.plot_sat_magnitudes(color='orange', lw=2,
+                                 label="K2 model") #alpha=0.75,
 
-        if color_list is None:
+        if color_list is not None:
+            color_list_ = color_list
+        else:
             if self.n_sat == 0:
                 color_list_ = None
             else:
-                color_list_ = ['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat
-        else:
-            color_list_ = color_list
+                color_list_ = ['black'] * (self.n_datasets-self.n_sat)
+                color_list_ += ['red']*self.n_sat
         zorder_list = np.arange(self.n_datasets, 0, -1)
         zorder_list[1] = self.n_datasets + 1
 
@@ -612,11 +648,6 @@ class Minimizer(object):
             color_list=color_list_, label_list=label_list)
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
-
-        # ax2 = plt.gca().twiny()
-        # ax2.set_ylabel('K2 counts', color='red')
-        # ax2.set_yticks([16., 15., 14.])
-        # ax2.set_yticklabels(["100", "200", "300"])
 
         if legend_kwargs is None:
             legend_kwargs = dict()
@@ -646,9 +677,29 @@ class Minimizer(object):
                           markersize=5, label='ground-based', alpha=alphas[0])
                 red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
                           markersize=5, label='K2C9 data')
-                blue_line = mlines.Line2D([], [], color='orange', lw=2, #alpha=0.75,
-                          markersize=5, label='K2C9 model')
-                plt.legend(handles=[red_line, blue_line, black_line], loc='best', **legend_kwargs)
+                blue_line = mlines.Line2D(
+                    [], [], color='orange', lw=2, markersize=5,
+                    label='K2C9 model') #alpha=0.75,
+                plt.legend(handles=[red_line, blue_line, black_line],
+                           loc='best', **legend_kwargs)
+
+        ylim = plt.ylim()
+        if False:
+            print(*ylim)
+            print(self._magnitude_to_sat_flux(np.array(ylim)))
+        if False:
+            fluxes = [0, 100, 200, 300, 400, 500, 600, 1000, 1500] # HERE
+            (fs, fb) = self.event.model.get_ref_fluxes()
+            mags_fluxes = Utils.get_mag_from_flux(
+                fb + fs[0] * self._sat_flux_to_magnification(np.array(fluxes)))
+            y_color = 'red' # (1., 0.3235, 0.)
+            ax2 = plt.gca().twinx()
+            ax2.set_ylabel(
+                r'K2 differential counts [e$^-$s$^{-1}$]').set_color(y_color)
+            ax2.spines['right'].set_color(y_color)
+            ax2.set_ylim(ylim[0], ylim[1])
+            ax2.tick_params(axis='y', colors=y_color)
+            plt.yticks(mags_fluxes.tolist(), fluxes, color=y_color)
 
         plt.subplot(grid_spec[1])
         kwargs_ = dict(mfc='none', lw=line_width, mew=line_width)
