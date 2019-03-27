@@ -187,7 +187,6 @@ class Minimizer(object):
             warnings.warn(
                 "self._sat_blending_flux is not 0. - not sure if this works")
 
-        # HERE
         flux = Utils.get_flux_from_mag(magnitude)
         (fs, fb) = self.event.model.get_ref_fluxes()
         magnification = (flux - fb) / fs[0]
@@ -608,8 +607,17 @@ class Minimizer(object):
     def standard_plot(self, t_start, t_stop, ylim, title=None,
                       label_list=None, color_list=None, line_width=1.5,
                       legend_order=None, separate_residuals=False,
-                      model_line_width=4., legend_kwargs=None):
-        """Make plot of the event and residuals. """
+                      model_line_width=4., legend_kwargs=None,
+                      fluxes_y_axis=None):
+        """
+        Make plot of the event and residuals.
+
+        Parameters :
+            XXX
+
+            fluxes_y_axis: *list* or *np.ndarray* of *floats*
+                K2 fluxes which will be marked on right side of Y axis.
+        """
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
         if not separate_residuals:
@@ -687,23 +695,25 @@ class Minimizer(object):
 
         ylim = plt.ylim()
         print("Y-axis limits:")
-        print("mag: {:.3f} {:.3f}".format(*ylim))
-        print("K2 flux: {:.2f} {:.2f}".format(
+        print("   mag:      {:.3f} {:.3f}".format(*ylim))
+        print("   K2 flux:  {:.2f} {:.2f}".format(
             *self._magnitude_to_sat_flux(np.array(ylim)).tolist()))
 
-        if False:
-            fluxes = [0, 100, 200, 300, 400, 500, 600, 1000, 1500] # HERE - option
+        # HERE - finish
+        fluxes_y_axis = [0, 100, 200, 300, 400, 500, 600, 1000, 1500]
+        if fluxes_y_axis is not None:
+            y_color = 'red'
+            y_label = r'K2 differential counts [e$^-$s$^{-1}$]'
+
             (fs, fb) = self.event.model.get_ref_fluxes()
-            mags_fluxes = Utils.get_mag_from_flux(
-                fb + fs[0] * self._sat_flux_to_magnification(np.array(fluxes)))
-            y_color = 'red' # (1., 0.3235, 0.)
+            mags = self._sat_flux_to_magnification(np.array(fluxes_y_axis))
+            mags_fluxes = Utils.get_mag_from_flux(fb + fs[0] * mags)
             ax2 = plt.gca().twinx()
-            ax2.set_ylabel(
-                r'K2 differential counts [e$^-$s$^{-1}$]').set_color(y_color)
+            ax2.set_ylabel(y_label).set_color(y_color)
             ax2.spines['right'].set_color(y_color)
             ax2.set_ylim(ylim[0], ylim[1])
             ax2.tick_params(axis='y', colors=y_color)
-            plt.yticks(mags_fluxes.tolist(), fluxes, color=y_color)
+            plt.yticks(mags_fluxes.tolist(), fluxes_y_axis, color=y_color)
 
         plt.subplot(grid_spec[1])
         kwargs_ = dict(mfc='none', lw=line_width, mew=line_width)
