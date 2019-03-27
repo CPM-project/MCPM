@@ -648,7 +648,9 @@ class Minimizer(object):
             color_list=color_list_, label_list=label_list)
         plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
+        plt.gca().tick_params(top=True, direction='in')
 
+# HERE - move this to a separate function.
         if legend_kwargs is None:
             legend_kwargs = dict()
         if legend_order is not None:
@@ -684,11 +686,13 @@ class Minimizer(object):
                            loc='best', **legend_kwargs)
 
         ylim = plt.ylim()
+        print("Y-axis limits:")
+        print("mag: {:.3f} {:.3f}".format(*ylim))
+        print("K2 flux: {:.2f} {:.2f}".format(
+            *self._magnitude_to_sat_flux(np.array(ylim)).tolist()))
+
         if False:
-            print(*ylim)
-            print(self._magnitude_to_sat_flux(np.array(ylim)))
-        if False:
-            fluxes = [0, 100, 200, 300, 400, 500, 600, 1000, 1500] # HERE
+            fluxes = [0, 100, 200, 300, 400, 500, 600, 1000, 1500] # HERE - option
             (fs, fb) = self.event.model.get_ref_fluxes()
             mags_fluxes = Utils.get_mag_from_flux(
                 fb + fs[0] * self._sat_flux_to_magnification(np.array(fluxes)))
@@ -706,6 +710,7 @@ class Minimizer(object):
         if not separate_residuals:
             self.event.plot_residuals(subtract_2450000=True, **kwargs_)
             plt.xlim(t_start, t_stop)
+            plt.gca().tick_params(top=True, direction='in')
         else:
             plt.plot([0., 3000000.], [0., 0.], color='black')
             self.event.datasets[-1].plot(
@@ -714,6 +719,7 @@ class Minimizer(object):
             plt.ylim(0.29, -0.29) # XXX
             plt.ylabel('K2 residuals')
             plt.xlim(t_start, t_stop)
+            plt.gca().tick_params(top=True, direction='in')
 
             plt.subplot(grid_spec[2])
             plt.plot([0., 3000000.], [0., 0.], color='black')
@@ -723,6 +729,7 @@ class Minimizer(object):
                     model=self.event.model, plot_residuals=True, **kwargs_)
             plt.ylabel('Residuals')
             plt.xlim(t_start, t_stop)
+            plt.gca().tick_params(top=True, direction='in')
 
     def very_standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """
@@ -767,3 +774,4 @@ class Minimizer(object):
         plt.subplot(grid_spec[1])
         self.event.plot_residuals(subtract_2450000=True)
         plt.xlim(t_start, t_stop)
+
