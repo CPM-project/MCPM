@@ -604,6 +604,44 @@ class Minimizer(object):
                 **kwargs)      # to be at the very top.
         self.event.model.data_ref = data_ref
 
+    def _legend_standard_plot(self, legend_order, legend_kwargs, color_list,
+                              label_list, alphas):
+        """
+        plots legend for standard plots
+        """
+        if legend_order is not None:
+            (handles, labels) = plt.gca().get_legend_handles_labels()
+            if isinstance(legend_order, tuple):
+                for (i, l_o) in enumerate(legend_order):
+                    handles_ = [handles[idx] for idx in l_o]
+                    labels_ = [labels[idx] for idx in l_o]
+                    if i == 0:
+                        first_legend = plt.legend(handles_, labels_,
+                                                  loc='upper left')
+                        plt.gca().add_artist(first_legend)
+                    else:
+                        plt.legend(handles_, labels_, loc='upper right',
+                                   **legend_kwargs)
+            else:
+                handles_ = [handles[idx] for idx in legend_order]
+                labels_ = [labels[idx] for idx in legend_order]
+                plt.legend(handles_, labels_, **legend_kwargs)
+        elif color_list is not None and label_list is not None:
+            plt.legend(loc='best', **legend_kwargs)
+        else:  # Prepare legend "manually":
+            if self.n_sat == 0:
+                plt.legend(loc='best', **legend_kwargs)
+            else:
+                black_line = mlines.Line2D([], [], color='black', marker='o',
+                    lw=0, markersize=5, label='ground-based', alpha=alphas[0])
+                red_line = mlines.Line2D([], [], color='red', marker='o',
+                    lw=0, markersize=5, label='K2C9 data')
+                blue_line = mlines.Line2D(
+                    [], [], color='orange', lw=2, markersize=5,
+                    label='K2C9 model') #alpha=0.75,
+                handles_ = [red_line, blue_line, black_line]
+                plt.legend(handles=handles_, loc='best', **legend_kwargs)
+
     def standard_plot(self, t_start, t_stop, ylim, title=None,
                       label_list=None, color_list=None, line_width=1.5,
                       legend_order=None, separate_residuals=False,
@@ -658,40 +696,10 @@ class Minimizer(object):
         plt.xlim(t_start, t_stop)
         plt.gca().tick_params(top=True, direction='in')
 
-# HERE - move this to a separate function.
         if legend_kwargs is None:
             legend_kwargs = dict()
-        if legend_order is not None:
-            if isinstance(legend_order, tuple):
-                (handles, labels) = plt.gca().get_legend_handles_labels()
-                for (i, l_o) in enumerate(legend_order):
-                    handles_ = [handles[idx] for idx in l_o]
-                    labels_ = [labels[idx] for idx in l_o]
-                    if i == 0:
-                        first_legend = plt.legend(handles_, labels_, loc='upper left')
-                        plt.gca().add_artist(first_legend)
-                    else:
-                        plt.legend(handles_, labels_, loc='upper right', **legend_kwargs)
-            else:
-                (handles, labels) = plt.gca().get_legend_handles_labels()
-                handles_ = [handles[idx] for idx in legend_order]
-                labels_ = [labels[idx] for idx in legend_order]
-                plt.legend(handles_, labels_, **legend_kwargs)
-        elif color_list is not None and label_list is not None:
-            plt.legend(loc='best', **legend_kwargs)
-        else:  # Prepare legend "manually":
-            if self.n_sat == 0:
-                plt.legend(loc='best', **legend_kwargs)
-            else:
-                black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
-                          markersize=5, label='ground-based', alpha=alphas[0])
-                red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
-                          markersize=5, label='K2C9 data')
-                blue_line = mlines.Line2D(
-                    [], [], color='orange', lw=2, markersize=5,
-                    label='K2C9 model') #alpha=0.75,
-                plt.legend(handles=[red_line, blue_line, black_line],
-                           loc='best', **legend_kwargs)
+        self._legend_standard_plot(legend_order, legend_kwargs, color_list,
+                                   label_list, alphas)
 
         ylim = plt.ylim()
         print("Y-axis limits:")
@@ -700,7 +708,7 @@ class Minimizer(object):
             *self._magnitude_to_sat_flux(np.array(ylim)).tolist()))
 
         # HERE - finish
-        fluxes_y_axis = [0, 100, 200, 300, 400, 500, 600, 1000, 1500]
+        #fluxes_y_axis = [0, 100, 200, 300, 400, 500, 600, 1000, 1500]
         if fluxes_y_axis is not None:
             y_color = 'red'
             y_label = r'K2 differential counts [e$^-$s$^{-1}$]'
