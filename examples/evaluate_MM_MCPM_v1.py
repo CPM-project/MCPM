@@ -32,6 +32,7 @@ out = read_config.read_general_options(config)
 out = read_config.read_models(config)
 (parameter_values, model_ids, plot_files) = out[:3]
 (txt_files, txt_files_prf_phot, txt_models, parameters_to_fit) = out[3:]
+plot_settings = read_config.read_plot_settings(config)
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -178,13 +179,19 @@ for zip_single in zipped:
             (t_beg, t_end) = (7530., 7573.5)
         else:
             (t_beg, t_end) = (7425., 7670.)
-        minimizer.very_standard_plot(t_beg, t_end, [18.8, 15.95], title=name)
-        #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
-        #plt.ylim(0.5, -0.5)
-        plt.xlabel("BJD-2450000")
+        ylim = plot_settings.pop('ylim', None)
+        ylim_residuals = plot_settings.pop('ylim_residuals', None)
         adjust = dict(left=0.09, bottom= 0.08, top=0.995)
-        adjust['right'] = 0.895 # with K2 flux scale
-#        adjust['right'] = 0.995 # without K2 flux scale
+        if len(plot_settings) == 0:
+            minimizer.very_standard_plot(t_beg, t_end, ylim, title=name)
+            adjust['right'] = 0.995
+        else:
+            minimizer.standard_plot(t_beg, t_end, ylim, title=name,
+                                    **plot_settings)
+            adjust['right'] = 0.895
+        if ylim_residuals is not None:
+            plt.ylim(*ylim_residuals)
+        plt.xlabel("BJD-2450000")
         plt.subplots_adjust(**adjust)
         if len(plot_file) == 0:
             plt.show()

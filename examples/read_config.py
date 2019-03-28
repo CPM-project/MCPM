@@ -12,6 +12,7 @@ from astropy import units as u
 #  read_MCPM_options()
 #  read_other_constraints()
 #  read_models()
+#  read_plot_settings()
 
 def read_general_options(config):
     """
@@ -426,4 +427,46 @@ def read_models(config):
 
     return (parameter_values, model_ids, plot_files, txt_files, 
             txt_files_prf_phot, txt_models, parameters_to_fit)
+
+def read_plot_settings(config):
+    """
+    Read settings that govern plotting. Most importantly, we read y axis
+    limits here.
+
+    The keys read are: "ylim", "ylim_residuals", "color_list", "label_list",
+    "legend_order", "alpha_list", "line_width".
+
+    Parameters:
+        config - configparser.ConfigParser instance
+
+    Returns:
+        plot_settings: *dict*
+            Settings read.
+    """
+    plot_settings = dict()
+
+    section = 'plot_settings'
+    if section not in config.sections():
+        return plot_settings
+
+    keys_comma_split = ["label_list"]
+    keys_str = ["color_list"] + keys_comma_split
+    keys_float = ["alpha_list", "ylim", "ylim_residuals"]
+    keys_int = ["legend_order", "fluxes_y_axis"]
+    keys = keys_str + keys_float + keys_int
+    for key in keys:
+        if key in config[section]:
+            split = None
+            if key in keys_comma_split:
+                split = ", "
+            plot_settings[key] = config.get(section, key).split(split)
+            if key in keys_float:
+                plot_settings[key] = [float(val) for val in plot_settings[key]]
+            elif key in keys_int:
+                plot_settings[key] = [int(val) for val in plot_settings[key]]
+
+    if 'line_width' in config[section]:
+        plot_settings['line_width'] = config.getfloat(section, 'line_width')
+
+    return plot_settings
 
