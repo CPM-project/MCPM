@@ -181,14 +181,14 @@ for zip_single in zipped:
             (t_beg, t_end) = (7425., 7670.)
         ylim = plot_settings.pop('ylim', None)
         ylim_residuals = plot_settings.pop('ylim_residuals', None)
-        adjust = dict(left=0.09, bottom= 0.08, top=0.995)
+        adjust = dict(left=0.09, right=0.995, bottom=0.08, top=0.995)
         if len(plot_settings) == 0:
             minimizer.very_standard_plot(t_beg, t_end, ylim, title=name)
-            adjust['right'] = 0.995
         else:
             minimizer.standard_plot(t_beg, t_end, ylim, title=name,
                                     **plot_settings)
-            adjust['right'] = 0.895
+            if 'fluxes_y_axis' in plot_settings:
+                adjust['right'] = 0.895
         if ylim_residuals is not None:
             plt.ylim(*ylim_residuals)
         plt.xlabel("BJD-2450000")
