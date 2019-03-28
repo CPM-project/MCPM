@@ -692,7 +692,8 @@ class Minimizer(object):
             zorder_list=zorder_list, mfc='none', lw=line_width, mew=line_width,
             marker='o', markersize=6, subtract_2450000=True,
             color_list=color_list_, label_list=label_list)
-        plt.ylim(ylim[0], ylim[1])
+        if ylim is not None:
+            plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
         plt.gca().tick_params(top=True, direction='in')
 
@@ -701,7 +702,6 @@ class Minimizer(object):
         self._legend_standard_plot(legend_order, legend_kwargs, color_list,
                                    label_list, alphas)
 
-        ylim = plt.ylim()
         print("Y-axis limits:")
         print("   mag:      {:.3f} {:.3f}".format(*ylim))
         print("   K2 flux:  {:.2f} {:.2f}".format(
@@ -774,7 +774,8 @@ class Minimizer(object):
             zorder_list=np.arange(self.n_datasets, 0, -1), 
             marker='o', markersize=5, subtract_2450000=True,
             color_list=colors)
-        plt.ylim(ylim[0], ylim[1])
+        if ylim is not None:
+            plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
         
         # Prepare legend "manually":
