@@ -181,11 +181,15 @@ for zip_single in zipped:
         minimizer.very_standard_plot(t_beg, t_end, [18.8, 15.95], title=name)
         #minimizer.standard_plot(7530., 7573., [17.4, 15.65], title=name)
         #plt.ylim(0.5, -0.5)
-        #plt.subplots_adjust(left=0.12, bottom= 0.09, right=0.995, top=0.995)
+        plt.xlabel("BJD-2450000")
+        adjust = dict(left=0.09, bottom= 0.08, top=0.995)
+        adjust['right'] = 0.895 # with K2 flux scale
+#        adjust['right'] = 0.995 # without K2 flux scale
+        plt.subplots_adjust(**adjust)
         if len(plot_file) == 0:
             plt.show()
         else:
-            plt.savefig(plot_file)
+            plt.savefig(plot_file, dpi=400)
             print("{:} file saved".format(plot_file))
         plt.close()
     if len(datasets) > 1:

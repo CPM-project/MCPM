@@ -591,7 +591,9 @@ class Minimizer(object):
         return (self._sat_times[0][index], magnification, u_0)
 
     def plot_sat_magnitudes(self, **kwargs):
-        """Plot satellite model in reference magnitude system"""
+        """
+        Plot satellite model in reference magnitude system
+        """
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
         n = self.n_datasets - self.n_sat
@@ -653,6 +655,10 @@ class Minimizer(object):
         Parameters :
             XXX
 
+            ylim: [*float*, *float*]
+                A list o two values that are used to set y axis limits
+                (in mag).
+
             fluxes_y_axis: *list* or *np.ndarray* of *floats*
                 K2 fluxes which will be marked on right side of Y axis.
         """
@@ -707,8 +713,6 @@ class Minimizer(object):
         print("   K2 flux:  {:.2f} {:.2f}".format(
             *self._magnitude_to_sat_flux(np.array(ylim)).tolist()))
 
-        # HERE - finish
-        #fluxes_y_axis = [0, 100, 200, 300, 400, 500, 600, 1000, 1500]
         if fluxes_y_axis is not None:
             y_color = 'red'
             y_label = r'K2 differential counts [e$^-$s$^{-1}$]'
@@ -728,7 +732,6 @@ class Minimizer(object):
         if not separate_residuals:
             self.event.plot_residuals(subtract_2450000=True, **kwargs_)
             plt.xlim(t_start, t_stop)
-            plt.gca().tick_params(top=True, direction='in')
         else:
             plt.plot([0., 3000000.], [0., 0.], color='black')
             self.event.datasets[-1].plot(
@@ -747,7 +750,7 @@ class Minimizer(object):
                     model=self.event.model, plot_residuals=True, **kwargs_)
             plt.ylabel('Residuals')
             plt.xlim(t_start, t_stop)
-            plt.gca().tick_params(top=True, direction='in')
+        plt.gca().tick_params(top=True, direction='in')
 
     def very_standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """
