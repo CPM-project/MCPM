@@ -741,6 +741,7 @@ class Minimizer(object):
             plt.ylabel('K2 residuals')
             plt.xlim(t_start, t_stop)
             plt.gca().tick_params(top=True, direction='in')
+            plt.gca().tick_params(right=True, direction='in')
 
             plt.subplot(grid_spec[2])
             plt.plot([0., 3000000.], [0., 0.], color='black')
@@ -751,6 +752,7 @@ class Minimizer(object):
             plt.ylabel('Residuals')
             plt.xlim(t_start, t_stop)
         plt.gca().tick_params(top=True, direction='in')
+        plt.gca().tick_params(right=True, direction='in')
 
     def very_standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """

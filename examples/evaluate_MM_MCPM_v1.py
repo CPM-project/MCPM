@@ -5,6 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 import configparser
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 import MulensModel as MM
 
@@ -191,6 +192,9 @@ for zip_single in zipped:
                 adjust['right'] = 0.895
         if ylim_residuals is not None:
             plt.ylim(*ylim_residuals)
+            if ylim_residuals[0] > 0.1 and -ylim_residuals[1] > 0.1:
+                fmt = ticker.FormatStrFormatter('%0.1f')
+                plt.gca().yaxis.set_major_formatter(fmt)
         plt.xlabel("BJD-2450000")
         plt.subplots_adjust(**adjust)
         if len(plot_file) == 0:
