@@ -42,8 +42,9 @@ other_constraints = read_config.read_other_constraints(config)
 # End of settings.
 ###################################################################
 n_params = len(parameters_to_fit)
+config_file_root = os.path.splitext(config_file)[0]
 if file_all_models is None:
-    file_all_models = os.path.splitext(config_file)[0] + ".models"
+    file_all_models = config_file_root + ".models"
 
 # read datasets
 datasets = []
@@ -144,16 +145,12 @@ if 'color_constraint' in MCPM_options:
         minimizer.add_full_color_constraint(ref_dataset,
             files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]), 
             *MCPM_options[cc][3:])
-    #def add_full_color_constraint(self,
-            #ref_dataset_0, ref_dataset_1, ref_dataset_2, 
-            #polynomial, sigma, ref_zero_point_0=MAG_ZEROPOINT, 
-            #ref_zero_point_1=MAG_ZEROPOINT, ref_zero_point_2=MAG_ZEROPOINT):    
     else:
         raise ValueError('wrong size of "color_constraint" option')
 key = 'min_blending_flux'
 if key in other_constraints:
     index = files.index(other_constraints[key][0])
-    other_constraints['min_blending_flux'] = [datasets[index], other_constraints[key][1]]
+    other_constraints[key] = [datasets[index], other_constraints[key][1]]
 minimizer.other_constraints = other_constraints
 
 key = 'no_blending_files'
@@ -187,6 +184,8 @@ for results in sampler.sample(starting, iterations=emcee_settings['n_steps']):
 # cleanup and close minimizer:
 out_name = emcee_settings.get('file_acceptance_fractions', None)
 if out_name is not None:
+    if len(out_name) == 0:
+        out_name = config_file_root + ".accept"
     with open(out_name, 'w') as file_out:
         file_out.write('\n'.join([str(af) for af in acceptance_fractions]))
 samples = sampler.chain[:, emcee_settings['n_burn']:, :].reshape((-1, n_params))
@@ -207,11 +206,14 @@ results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
         zip(*np.percentile(samples, [16, 50, 84], axis=0)))
 for (param, r) in zip(parameters_to_fit, results):
     print('{:7s} : {:.4f} {:.4f} {:.4f}'.format(param, *r))
-blob_results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*np.percentile(blob_samples, [16, 50, 84], axis=0)))
+percentiles = np.percentile(blob_samples, [16, 50, 84], axis=0)
+blob_results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*percentiles))
 flux_name = ['S', 'B']
 for (i, r) in zip(range(n_fluxes), blob_results):
     print('flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'.format(flux_name[i%2], i//2+1, *r))
 if 'file_posterior' in emcee_settings:
+    if len(emcee_settings['file_posterior']) == 0:
+        emcee_settings['file_posterior'] = config_file_root + ".posterior"
     all_samples = np.concatenate((samples, blob_samples), axis=1)
     np.save(emcee_settings['file_posterior'], all_samples)
 print('Best model:')
