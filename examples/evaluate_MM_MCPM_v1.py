@@ -75,6 +75,8 @@ for param in list(parameters_.keys()).copy():
     if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
         parameters_.pop(param)
 model = MM.Model(parameters_, coords=coords)
+#for band in {d.bandpass for d in datasets}:
+#    model.set_limb_coeff_gamma(band, 0.)
 for (m_key, m_value) in methods.items():
     model.set_magnification_methods(m_value, m_key)
 
@@ -110,8 +112,8 @@ for cpm_source in cpm_sources:
             phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'],
             bandpass="K2", coords=coords)
     datasets.append(data)
-    
-# initiate event    
+
+# initiate event
 event = MM.Event(datasets=datasets, model=model)
 params = parameters_to_fit[:]
 minimizer = Minimizer(event, params, cpm_sources)
@@ -164,7 +166,9 @@ for zip_single in zipped:
         x = cpm_source.pixel_time[y_mask]
         y = minimizer.event.datasets[-1].flux
         #y = minimizer._sat_models[0][y_mask]
-        np.savetxt(txt_file, np.array([x, y]).T)        
+        y_err = cpm_source.all_pixels_flux_err[y_mask]
+        y_err *= MCPM_options['sat_sigma_scale']
+        np.savetxt(txt_file, np.array([x, y, y_err]).T)
     if txt_model is not None:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]
@@ -205,8 +209,10 @@ for zip_single in zipped:
         plt.close()
     if len(datasets) > 1:
         for (i, data) in enumerate(datasets):
-            chi2_data = event.get_chi2_for_dataset(i, fit_blending=minimizer.fit_blending)
-            print(i, chi2_data,
+            chi2_data = event.get_chi2_for_dataset(
+                i, fit_blending=minimizer.fit_blending)
+            print(
+                i, chi2_data,
                 event.fit.flux_of_sources(data)[0],
                 event.fit.blending_flux(data))
     if len(cpm_sources) > 0:
