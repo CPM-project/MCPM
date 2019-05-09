@@ -5,8 +5,11 @@ import warnings
 import numpy as np
 if sys.version_info[0] > 2:
     from urllib.request import URLopener
+    from urllib.error import HTTPError, URLError
+    exceptions = (HTTPError, URLError)
 else:
     from urllib import URLopener
+    exceptions = (IOError)
 
 from astropy.io import fits as pyfits
 
@@ -101,13 +104,17 @@ class TpfData(object):
         epic_id = int(self.epic_id)
         d1 = epic_id - epic_id % 100000
         d2 = epic_id % 100000 - epic_id % 1000
-        url_template = 'http://archive.stsci.edu/missions/k2/target_pixel_files/c{0:d}/{1:d}/{2:05d}/{3}'
+        url_template = 'https://archive.stsci.edu/missions/k2/target_pixel_files/c{0:d}/{1:d}/{2:05d}/{3}'
         url_to_load = url_template.format(self.campaign, d1, d2, self.file_name)
         
         fmt = "Downloading {:} ..... "
         print(fmt.format(self.file_name), end='', file=sys.stderr, flush=True)
         url_retriever = URLopener()
-        url_retriever.retrieve(url_to_load, self._path)
+        try:
+            url_retriever.retrieve(url_to_load, self._path)
+        except exceptions:
+            print("\n\nFailed to download file {:}\n\n".format(url_to_load))
+            raise
         print(" done", file=sys.stderr, flush=True)
     
     @property
