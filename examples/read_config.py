@@ -6,6 +6,7 @@ from astropy import units as u
 
 
 # Contains:
+#  check_sections_in_config()
 #  read_general_options()
 #  read_MultiNest_options()
 #  read_EMCEE_options()
@@ -13,6 +14,26 @@ from astropy import units as u
 #  read_other_constraints()
 #  read_models()
 #  read_plot_settings()
+
+def check_sections_in_config(config):
+    """
+    Check names of the sections - if there is one that is not parsed by this
+    file, then warning is raised.
+
+    Parameters:
+        config - configparser.ConfigParser instance
+    """
+    allowed = [
+        'event', 'file_names', 'parameters_fixed', 'MultiNest_ranges',
+        'MultiNest', 'EMCEE_starting_mean_sigma', 'EMCEE_min_values',
+        'EMCEE_max_values', 'EMCEE_settings', 'MCPM', 'other_constraints',
+        'models_1_line', 'plot_files', 'txt_files', 'txt_files_prf_phot',
+        'txt_models', 'plot_settings']
+    difference = set(config.sections()) - set(allowed)
+    if len(difference) > 0:
+        txt = ("\nThere are unexpected sections in config file (they will " +
+               "be ignored):\n\n{:}\n".format(difference))
+        warnings.warn(txt, UserWarning)
 
 def read_general_options(config):
     """

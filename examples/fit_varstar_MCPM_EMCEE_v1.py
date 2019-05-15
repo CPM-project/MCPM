@@ -20,6 +20,7 @@ config_file = sys.argv[1]
 config = configparser.ConfigParser()
 config.optionxform = str
 config.read(config_file)
+read_config.check_sections_in_config(config)
 
 # Read general options:
 out = read_config.read_general_options(config)
