@@ -177,7 +177,9 @@ for zip_single in zipped:
         np.savetxt(txt_model, np.array([x, y]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
-        if 91 in MCPM_options['campaigns'] and 92 in MCPM_options['campaigns']:
+        if 'xlim' in plot_settings:
+            (t_beg, t_end) = plot_settings.pop('xlim')
+        elif 91 in MCPM_options['campaigns'] and 92 in MCPM_options['campaigns']:
             (t_beg, t_end) = (7500.3, 7573.5)
         elif 91 in MCPM_options['campaigns']:
             (t_beg, t_end) = (7500.3, 7528.0)

@@ -95,7 +95,8 @@ def read_general_options(config):
         for i in range(len(files)):
             if len(info[i][1]) == 4:
                 if info[i][1][2] in plot_properties_keys:
-                    files_kwargs[i] = {'plot_properties': {info[i][1][2]: info[i][1][3]} }
+                    files_kwargs[i] = {
+                        'plot_properties': {info[i][1][2]: info[i][1][3]} }
                 else:
                     files_kwargs[i] = {info[i][1][2]: info[i][1][3]}
         formats = set(files_formats)-set(["mag", "flux"])
@@ -175,8 +176,8 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
             elif var in ["outputfiles_basename"]:
                 value = config.get(section, var)
             else:
-                raise ValueError(('unrecognized MultiNest parameter: {:}\n' + 
-                    '(note that some parameters are not included in ' + 
+                raise ValueError(('unrecognized MultiNest parameter: {:}\n' +
+                    '(note that some parameters are not included in ' +
                     'the parser yet)').format(var))
             MN_args[var] = value
 
@@ -276,7 +277,8 @@ def read_MCPM_options(config):
             + "with new code. This version uses 'sat_sigma_scale', not "
             + "'sat_sigma'")
     if 'sat_sigma_scale' in config[section]:
-        mcpm_options['sat_sigma_scale'] = config.getfloat(section, 'sat_sigma_scale')
+        mcpm_options['sat_sigma_scale'] = config.getfloat(
+            section, 'sat_sigma_scale')
 
     if 'l2_per_pixel' in config[section] and 'l2' in config[section]:
         raise ValueError('l2 and l2_per_pixel cannot both be set')
@@ -347,8 +349,11 @@ def read_MCPM_options(config):
                 raise ValueError('file {:} does not exist'.format(file_name))
 
     if 'no_blending_files' in config[section]:
-        warnings.warn("Option no_blending_files may not work currently - check Minimizer.chi2_fun()")
-        mcpm_options['no_blending_files'] = config.get(section, 'no_blending_files').split()
+        warnings.warn(
+            "Option no_blending_files may not work currently - check " +
+            "Minimizer.chi2_fun()")
+        mcpm_options['no_blending_files'] = config.get(
+            section, 'no_blending_files').split()
 
     return mcpm_options
 
@@ -398,7 +403,7 @@ def read_models(config):
         model_ids - list - names of models
         plot_files - list - names of files where to make plots or None
         txt_files - list - names of files where data will be saved
-        txt_files_prf_phot - list - names of files where PRF-like photometry 
+        txt_files_prf_phot - list - names of files where PRF-like photometry
                                     will be saved
         txt_models - list - names of files where model flxues will be saved
         parameters_to_fit - list - corresponding names of parameters
@@ -454,8 +459,8 @@ def read_plot_settings(config):
     Read settings that govern plotting. Most importantly, we read y axis
     limits here.
 
-    The keys read are: "ylim", "ylim_residuals", "color_list", "label_list",
-    "legend_order", "alpha_list", "line_width".
+    The keys read are: "xlim", "ylim", "ylim_residuals", "color_list",
+    "label_list", "legend_order", "alpha_list", "line_width".
 
     Parameters:
         config - configparser.ConfigParser instance
@@ -472,7 +477,7 @@ def read_plot_settings(config):
 
     keys_comma_split = ["label_list"]
     keys_str = ["color_list"] + keys_comma_split
-    keys_float = ["alpha_list", "ylim", "ylim_residuals"]
+    keys_float = ["alpha_list", "xlim", "ylim", "ylim_residuals"]
     keys_int = ["legend_order", "fluxes_y_axis"]
     keys = keys_str + keys_float + keys_int
     for key in keys:
