@@ -38,10 +38,10 @@ def check_sections_in_config(config):
 def read_general_options(config):
     """
     parses general information about the event
-    
+
     Parameters:
         config - configparser.ConfigParser instance
-    
+
     Returns:
         out_skycoord - SkyCoord or None - event coordinates
         methods - list or None - floats and str that specify which method
@@ -54,7 +54,7 @@ def read_general_options(config):
     """
     if not isinstance(config, configparser.ConfigParser):
         raise TypeError('read_general_options() option of wrong type')
-    
+
     # General event properties:
     section = 'event'
     try:
@@ -110,7 +110,7 @@ def read_general_options(config):
         for var in config[section]:
             parameters_fixed[var] = config.getfloat(section, var)
 
-    out = (out_skycoord, methods, file_all_models, files, files_formats, 
+    out = (out_skycoord, methods, file_all_models, files, files_formats,
             files_kwargs, parameters_fixed)
     return out
 
@@ -122,7 +122,7 @@ def _parse_methods(methods):
         try:
             methods[i] = float(methods[i])
         except ValueError:
-            print("Parsing methods failed - expected float, got ", 
+            print("Parsing methods failed - expected float, got ",
                 methods[i])
             raise
     return methods
@@ -130,13 +130,13 @@ def _parse_methods(methods):
 def read_MultiNest_options(config, config_file, dir_out="chains"):
     """
     parses MultiNest options
-    
+
     Parameters:
         config - configparser.ConfigParser instance
         config_file - str - name of the the cfg file used to for default
             file name root
         dir_out - str - default value of output directory
-        
+
     Returns:
         ranges_min - list - minimal values of parameters
         ranges_max - list - maximal values of parameters
@@ -153,20 +153,20 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
     ranges_min = [float(x[1][0]) for x in info]
     ranges_max = [float(x[1][1]) for x in info]
     parameters_to_fit = [x[0] for x in info]
-    
+
     # MultiNest settings:
     section = 'MultiNest'
     dir_out = "chains"
     split_ = os.path.splitext(config_file)
     MN_args = {
         'n_dims': len(parameters_to_fit),
-        'importance_nested_sampling': False, 
+        'importance_nested_sampling': False,
         'multimodal': True,
         'n_live_points': 500,
-        'outputfiles_basename': os.path.join(dir_out, split_[0] + "_"), 
+        'outputfiles_basename': os.path.join(dir_out, split_[0] + "_"),
         'resume': False}
     if section in config.sections():
-        int_variables = ["n_params", "n_clustering_params", "n_live_points", 
+        int_variables = ["n_params", "n_clustering_params", "n_live_points",
                         "seed", "max_iter"]
         for var in config[section]:
             if var in int_variables:
@@ -186,10 +186,10 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
 def read_EMCEE_options(config):
     """
     parses EMCEE options
-    
+
     Parameters:
         config - configparser.ConfigParser instance
-        
+
     Returns:
         starting - dict - specifies PDFs for starting values of parameters
         parameters_to_fit - list - corresponding names of parameters
@@ -239,7 +239,7 @@ def read_EMCEE_options(config):
                 emcee_settings[var] = config.getint(section, var)
     if emcee_settings['n_steps'] < emcee_settings['n_burn']:
         raise ValueError(("This doesn't make sense:\nn_steps = {:}\n" +
-            "n_burn = {:}").format(emcee_settings['n_steps'], 
+            "n_burn = {:}").format(emcee_settings['n_steps'],
             emcee_settings['n_burn']))
 
     out = (starting, parameters_to_fit, min_values,
@@ -293,13 +293,13 @@ def read_MCPM_options(config):
             + "with new code. Try train_mask_begin or train_mask_end instead "
             + "of train_mask_time_limit")
     if 'train_mask_begin' in config[section]:
-        mcpm_options['train_mask_begin'] = config.getfloat(section, 
-            'train_mask_begin')
+        mcpm_options['train_mask_begin'] = config.getfloat(
+            section, 'train_mask_begin')
     if 'train_mask_end' in config[section]:
-        mcpm_options['train_mask_end'] = config.getfloat(section, 
-            'train_mask_end')
+        mcpm_options['train_mask_end'] = config.getfloat(
+            section, 'train_mask_end')
     if 'mask_model_epochs' in config[section]:
-        mcpm_options['mask_model_epochs'] = [float(txt) 
+        mcpm_options['mask_model_epochs'] = [float(txt)
                 for txt in config.get(section, 'mask_model_epochs').split()]
 
     predictor = {}
@@ -312,7 +312,7 @@ def read_MCPM_options(config):
     if key in config[section]:
         predictor[key] = config.get(section, key)
     mcpm_options['predictor_matrix'] = predictor
-    
+
     if 'color_constraint' in config[section]:
         tt = config.get(section, 'color_constraint').split()
         if len(tt) in [3, 4]:
@@ -331,11 +331,13 @@ def read_MCPM_options(config):
                              'MCPM section of config')
 
     if 'coeffs_fits_out' in config[section] and 'coeffs_fits_in' in config[section]:
-        raise ValueError('coeffs_fits_out and coeffs_fits_in cannot both be set')
+        raise ValueError(
+            'coeffs_fits_out and coeffs_fits_in cannot both be set')
     if 'coeffs_fits_out' in config[section]:
         mcpm_options['coeffs_fits_out'] = config.get(section, 'coeffs_fits_out').split()
         if len(mcpm_options['coeffs_fits_out']) != len(mcpm_options['campaigns']):
-            raise ValueError('incompatible length of coeffs_fits_out and campaigns')
+            raise ValueError(
+                'incompatible length of coeffs_fits_out and campaigns')
         for file_name in mcpm_options['coeffs_fits_out']:
             if os.path.isfile(file_name):
                 raise ValueError('file {:} already exists'.format(file_name))
@@ -343,7 +345,8 @@ def read_MCPM_options(config):
     if 'coeffs_fits_in' in config[section]:
         mcpm_options['coeffs_fits_in'] = config.get(section, 'coeffs_fits_in').split()
         if len(mcpm_options['coeffs_fits_in']) != len(mcpm_options['campaigns']):
-            raise ValueError('incompatible length of coeffs_fits_in and campaigns')
+            raise ValueError(
+                'incompatible length of coeffs_fits_in and campaigns')
         for file_name in mcpm_options['coeffs_fits_in']:
             if not os.path.isfile(file_name):
                 raise ValueError('file {:} does not exist'.format(file_name))
@@ -405,7 +408,7 @@ def read_models(config):
         txt_files - list - names of files where data will be saved
         txt_files_prf_phot - list - names of files where PRF-like photometry
                                     will be saved
-        txt_models - list - names of files where model flxues will be saved
+        txt_models - list - names of files where model fluxes will be saved
         parameters_to_fit - list - corresponding names of parameters
     """
     parameter_values = []
@@ -451,7 +454,7 @@ def read_models(config):
         for var in config[section]:
             txt_models[model_ids.index(var)] = config.get(section, var)
 
-    return (parameter_values, model_ids, plot_files, txt_files, 
+    return (parameter_values, model_ids, plot_files, txt_files,
             txt_files_prf_phot, txt_models, parameters_to_fit)
 
 def read_plot_settings(config):
