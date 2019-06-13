@@ -21,7 +21,7 @@ config.optionxform = str
 config.read(config_file)
 read_config.check_sections_in_config(config)
 
-MCPM_options = read_config.read_MCPM_options(config)
+MCPM_options = read_config.read_MCPM_options(config, check_fits_files=False)
 
 out = read_config.read_EMCEE_options(config)
 parameters_to_fit = out[1]
