@@ -146,9 +146,13 @@ class Minimizer(object):
 
         for i in range(self.n_sat):
             # Here we prepare the satellite lightcurves:
+            kwargs = {
+                'time': self._sat_times[i],
+                'satellite_skycoord': self.event.datasets[n_0+i].satellite_skycoord}
+            if self.event.model.n_sources == 2:
+                kwargs['flux_ratio_constraint'] = 'K2'
             self._sat_magnifications[i] = self.event.model.magnification(
-                time=self._sat_times[i],
-                satellite_skycoord=self.event.datasets[n_0+i].satellite_skycoord)
+                **kwargs)
             model = self._magnification_to_sat_flux(self._sat_magnifications[i])
             self._sat_models[i][self._sat_masks[i]] = model
             self.cpm_sources[i].run_cpm(
@@ -582,12 +586,16 @@ class Minimizer(object):
         index = np.argmax(self._sat_magnifications[0])
         magnification = self._sat_magnifications[0][index]
         u_0 = (2*magnification*(magnification**2-1.)**-.5 - 2.)**.5
-        trajectory = Trajectory(
-            self._sat_times[-1], parameters=self.event.model.parameters,
-            parallax=self.event.model._parallax, coords=self.event.coords,
-            satellite_skycoord=self.event.datasets[-1].satellite_skycoord)
-        if trajectory.y[index] < 0.:
-            u_0 = -u_0
+        if self.event.model.n_sources == 1:
+            trajectory = Trajectory(
+                self._sat_times[-1], parameters=self.event.model.parameters,
+                parallax=self.event.model._parallax, coords=self.event.coords,
+                satellite_skycoord=self.event.datasets[-1].satellite_skycoord)
+            if trajectory.y[index] < 0.:
+                u_0 = -u_0
+        else:
+            warnings.warn("binary source model - code is not yet ready " +
+                          "to provide signed u_0 for K2")
         return (self._sat_times[0][index], magnification, u_0)
 
     def plot_sat_magnitudes(self, **kwargs):
@@ -765,9 +773,13 @@ class Minimizer(object):
         for i in range(self.n_sat):
             alphas[-(i+1)] = 1.
 
+        constraint = None
+        if self.event.model.n_sources > 1:
+            constraint = 'I' # XXX
         self.event.plot_model(
             color='black', subtract_2450000=True, 
-            t_start=t_start+2450000., t_stop=t_stop+2450000.)
+            t_start=t_start+2450000., t_stop=t_stop+2450000.,
+            flux_ratio_constraint=constraint)
         self.plot_sat_magnitudes(color='blue', lw=3.5, alpha=0.75)
 
         if self.n_sat == 0:
