@@ -21,7 +21,8 @@ K2_MAG_ZEROPOINT = 25.
 #  - plot functions here and in cpmfitsource.py
 #  - also CpmFitPixel.target_masked needs _err equivalent
 
-class Minimizer(object): 
+
+class Minimizer(object):
     """
     An object to link an Event to the functions necessary to minimize chi2.
 
@@ -29,24 +30,24 @@ class Minimizer(object):
         event: *MulensModel.Event*
             ...
             It is assumed that the last datasets are the satellite ones.
-            
+
         parameters_to_fit: *list* of *str*
-            Parameters that will be fitted. Except 
-            the *MulensModel.ModelParameters* parameters one can use satellite 
+            Parameters that will be fitted. Except
+            the *MulensModel.ModelParameters* parameters one can use satellite
             source fluxes: 'f_s_sat' and  'f_b_sat'.
-            
+
         cpm_sources: *CpmFitSource* or *list* of them
-    
-    To force periodic flush of file with all models set n_flush to 
+
+    To force periodic flush of file with all models set n_flush to
     100 or 1000 etc.
-    
+
     """
     def __init__(self, event, parameters_to_fit, cpm_sources):
         self.event = event
         self.n_datasets = len(self.event.datasets)
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
-        #self.n_parameters += 1
+        # self.n_parameters += 1
         if not isinstance(cpm_sources, list):
             cpm_sources = [cpm_sources]
         self.cpm_sources = cpm_sources
@@ -99,7 +100,7 @@ class Minimizer(object):
     def reset_min_chi2(self):
         """reset minimum chi2 and corresponding parameters"""
         self._min_chi2 = None
-        self._min_chi2_theta = None        
+        self._min_chi2_theta = None
 
     def print_min_chi2(self):
         """Print minimum chi2 and corresponding values"""
@@ -109,7 +110,7 @@ class Minimizer(object):
 
     def set_parameters(self, theta):
         """
-        for given event set attributes from parameters_to_fit (list of str) 
+        for given event set attributes from parameters_to_fit (list of str)
         to values from theta list
         """
         if len(self.parameters_to_fit) != len(theta):
@@ -139,9 +140,12 @@ class Minimizer(object):
         n_0 = self.n_datasets - self.n_sat
 
         if self._sat_masks is None:
-            self._sat_masks = [cpm_source.residuals_mask for cpm_source in self.cpm_sources]
-            self._sat_times = [self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000. for i in range(self.n_sat)]
-            self._sat_models = [np.zeros(len(cpm_source.pixel_time)) for cpm_source in self.cpm_sources]
+            self._sat_masks = [
+                cpm_source.residuals_mask for cpm_source in self.cpm_sources]
+            self._sat_times = [
+                self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000. for i in range(self.n_sat)]
+            self._sat_models = [
+                np.zeros(len(cpm_source.pixel_time)) for cpm_source in self.cpm_sources]
             self._sat_magnifications = [None] * self.n_sat
 
         for i in range(self.n_sat):
@@ -153,7 +157,8 @@ class Minimizer(object):
                 kwargs['flux_ratio_constraint'] = 'K2'
             self._sat_magnifications[i] = self.event.model.magnification(
                 **kwargs)
-            model = self._magnification_to_sat_flux(self._sat_magnifications[i])
+            model = self._magnification_to_sat_flux(
+                self._sat_magnifications[i])
             self._sat_models[i][self._sat_masks[i]] = model
             self.cpm_sources[i].run_cpm(
                 self._sat_models[i], model_mask=self.model_masks[i])
@@ -207,50 +212,54 @@ class Minimizer(object):
             sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
             flux = self._sat_models[i][self._sat_masks[i]] + sat_residuals
             # NEW - IF ACCEPTED!!! :
-            #sat_residuals = self.cpm_sources[i].residuals[self.cpm_sources[i].residuals_mask]
-            #flux = self._sat_models[i][self.cpm_sources[i].residuals_mask] + sat_residuals
+            # sat_residuals = self.cpm_sources[i].residuals[self.cpm_sources[i].residuals_mask]
+            # flux = self._sat_models[i][self.cpm_sources[i].residuals_mask]
+            # flux += sat_residuals
             self.event.datasets[ii].flux = flux
-            mag_and_err = Utils.get_mag_and_err_from_flux(flux,
+            mag_and_err = Utils.get_mag_and_err_from_flux(
+                flux,
                 self.event.datasets[ii].err_flux, zeropoint=K2_MAG_ZEROPOINT)
             self.event.datasets[ii]._mag = mag_and_err[0]
             self.event.datasets[ii]._err_mag = mag_and_err[1]
 
-    def add_full_color_constraint(self,
-            ref_dataset_0, ref_dataset_1, ref_dataset_2, 
-            polynomial_2, sigma, ref_zero_point_0=MAG_ZEROPOINT, 
+    def add_full_color_constraint(
+            self,
+            ref_dataset_0, ref_dataset_1, ref_dataset_2,
+            polynomial_2, sigma, ref_zero_point_0=MAG_ZEROPOINT,
             ref_zero_point_1=MAG_ZEROPOINT, ref_zero_point_2=MAG_ZEROPOINT):
         """
-        Specify parameters that are used to constrain the source flux in 
+        Specify parameters that are used to constrain the source flux in
         satellite band:
                 Kp-m0 = polynomial_value(m1-m2)
-        In common case (e.g., Zhu+17 method: Kp-I = f(V-I)) m0 can be equal to 
+        In common case (e.g., Zhu+17 method: Kp-I = f(V-I)) m0 can be equal to
         m1 or m2.
             ref_dataset_0 (int) - dataset to calculate satellite color
             ref_dataset_1 (int) - first dataset for ground-based color
             ref_dataset_2 (int) - second dataset for ground-based color
-            polynomial (np.array of floats) - color polynomial coefficients: 
-                    a0, a1, a2, that will be translated to 
+            polynomial (np.array of floats) - color polynomial coefficients:
+                    a0, a1, a2, that will be translated to
                     a0 + a1*(m1-m2) + a2*(m1-m2)**2
             sigma (float) - scatter or color for the constraint
             ref_zero_point_0 (float) - defines magnitude scale for 0-th dataset
             ref_zero_point_1 (float) - defines magnitude scale for 1-st dataset
             ref_zero_point_2 (float) - defines magnitude scale for 2-nd dataset
         """
-        self._color_constraint = [ref_dataset_0, ref_dataset_1, ref_dataset_2, 
-            ref_zero_point_0, ref_zero_point_1, ref_zero_point_2, polynomial_2, 
-            sigma]
+        self._color_constraint = [ref_dataset_0, ref_dataset_1, ref_dataset_2,
+                                  ref_zero_point_0, ref_zero_point_1,
+                                  ref_zero_point_2, polynomial_2, sigma]
 
     def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
         """
-        Specify parameters that are used to constrain the source flux in 
-        satellite band: 
+        Specify parameters that are used to constrain the source flux in
+        satellite band:
             ref_dataset (int) - reference dataset
             ref_zero_point (float) - magnitude zeropoint of reference dataset
                                     probably MulensModel.utils.MAG_ZEROPOINT
             color (float) - (satellite-ref_dataset) color (NOTE ORDER)
-            sigma_color (float) - sigma of color        
+            sigma_color (float) - sigma of color
         """
-        self._color_constraint = [ref_dataset, ref_zero_point, color, sigma_color]
+        self._color_constraint = [
+            ref_dataset, ref_zero_point, color, sigma_color]
 
     def _get_source_flux(self, index):
         """
@@ -274,10 +283,11 @@ class Minimizer(object):
         """calculate chi2 for flux constraint"""
         before_ref = self.event.data_ref
         if len(self._color_constraint) == 4:
-            (ref_dataset, ref_zero_point, color, sigma_color) = self._color_constraint 
+            (ref_dataset, ref_zero_point, color, sigma_color) = self._color_constraint
         elif len(self._color_constraint) == 8:
-            (ref_dataset, ref_dataset_1, ref_dataset_2) = self._color_constraint[:3]
-            (ref_zero_point, ref_zero_point_1, ref_zero_point_2) = self._color_constraint[3:6]
+            (ref_dataset, ref_dataset_1) = self._color_constraint[:2]
+            (ref_dataset_2, ref_zero_point) = self._color_constraint[2:4]
+            (ref_zero_point_1, ref_zero_point_2) = self._color_constraint[4:6]
             (polynomial, sigma_color) = self._color_constraint[6:]
             flux_1 = self._get_source_flux(ref_dataset_1)
             flux_2 = self._get_source_flux(ref_dataset_2)
@@ -291,10 +301,10 @@ class Minimizer(object):
                 x *= c
         else:
             raise ValueError('wrong size of internal variable')
-        
+
         flux_ref = self._get_source_flux(ref_dataset)
         self.event.get_ref_fluxes(before_ref)
-        
+
         mag_ref = ref_zero_point - 2.5 * np.log10(flux_ref)
         mag_sat = K2_MAG_ZEROPOINT - 2.5 * np.log10(satellite_flux)
         color_value = mag_sat - mag_ref
@@ -309,31 +319,33 @@ class Minimizer(object):
         for source in self.cpm_sources:
             residuals = source.residuals_prf()[source.residuals_mask]
             # OLD:
-            #residuals = source.residuals[source.residuals_mask]
+            # residuals = source.residuals[source.residuals_mask]
             sigma = source.all_pixels_flux_err[source.residuals_mask]
             sigma *= self.sigma_scale
             chi2_sat.append(np.sum((residuals/sigma)**2))
         # Correct the line below.
-        #chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
+        # chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
         # We also tried:
-        #chi2_sat = 0.
-        #for i in range(self.n_sat):
-            #ii = n + i
-            #rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
-            #rms /= np.mean(self.event.datasets[n+i].err_flux)
-            #chi2_sat += np.sum(self._sat_masks[i]) * rms**2        
+        # chi2_sat = 0.
+        # for i in range(self.n_sat):
+            # ii = n + i
+            # rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
+            # rms /= np.mean(self.event.datasets[n+i].err_flux)
+            # chi2_sat += np.sum(self._sat_masks[i]) * rms**2
 
-        #self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
-        #try:
+        # self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
+        # try:
         if True:
-            temp_chi2 = self.event.get_chi2_per_point() # this ignores self.fit_blending
+            temp_chi2 = self.event.get_chi2_per_point()  # XXX - this ignores
+            # self.fit_blending
 
             self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
             self.chi2 += chi2_sat
-        #except:
+        # except:
         #    self.chi2 = [1.e6]
         if self._color_constraint is not None:
-            self.chi2.append(self._chi2_for_color_constraint(self._sat_source_flux))
+            self.chi2.append(
+                self._chi2_for_color_constraint(self._sat_source_flux))
         chi2 = sum(self.chi2)
         if self._min_chi2 is None or chi2 < self._min_chi2:
             self._min_chi2 = chi2
@@ -341,25 +353,27 @@ class Minimizer(object):
         self._n_calls += 1
         if self.save_fluxes:
             self.fluxes = 2 * n * [0.]
-            #try:
+            # try:
             if True:
                 self.event.get_chi2_per_point()
                 for i in range(n):
+                    d = self.event.datasets[i]
                     if self.fit_blending[i]:
-                        self.fluxes[2*i] = self.event.fit.flux_of_sources(self.event.datasets[i])[0]
-                        self.fluxes[2*i+1] = self.event.fit.blending_flux(self.event.datasets[i])
+                        self.fluxes[2*i] = self.event.fit.flux_of_sources(d)[0]
+                        self.fluxes[2*i+1] = self.event.fit.blending_flux(d)
                     else:
                         self.fluxes[2*i] = self._get_source_flux(i)
-            #except:
+            # except:
             #    pass
         if self._file_all_models is not None:
             text = " ".join([repr(chi2)] + [repr(ll) for ll in theta])
             if self.save_fluxes:
-                text += " " + " ".join(["{:.5f}".format(f) for f in self.fluxes])
+                text += " " + " ".join(
+                    ["{:.5f}".format(f) for f in self.fluxes])
             self._file_all_models.write(text + '\n')
             if self.n_flush is not None and self._n_calls % self.n_flush == 0:
                 self._file_all_models.flush()
-                os.fsync(self._file_all_models.fileno()) 
+                os.fsync(self._file_all_models.fileno())
         if self._coeffs_cache is not None:
             coeffs = []
             for i in range(self.n_sat):
@@ -367,7 +381,7 @@ class Minimizer(object):
                 c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
             self._coeffs_cache[tuple(theta.tolist())] = coeffs
-        
+
         return chi2
 
     def set_chi2_0(self, chi2_0=None):
@@ -375,12 +389,12 @@ class Minimizer(object):
         if chi2_0 is None:
             chi2_0 = np.sum([np.sum(d.good) for d in self.event.datasets])
         self._chi2_0 = chi2_0
-    
+
     def set_pixel_coeffs_from_samples(self, samples):
         """
-        Provide a matrix samples[n_models, n_params] and for each 
+        Provide a matrix samples[n_models, n_params] and for each
         model there get the cached coeffs (caching MUST be turned ON)
-        and set pixel coeffs to the mean of these cached coeffs. 
+        and set pixel coeffs to the mean of these cached coeffs.
         You may want to run stop_coeffs_cache() afterward.
         """
         weights = dict()
@@ -397,13 +411,14 @@ class Minimizer(object):
     def set_pixel_coeffs_from_dicts(self, coeffs, weights=None):
         """
         Take coeffs, average them, and set pixel coeffs to the averages.
-       
+
         Arguments :
             coeffs: *dict*
-                Dictionary of pixel coeffs. Each value specifies a list 
-                (length same as number of satellite datasets) of coeffs for all 
-                pixels i.e., coeffs[key][i][j] is for j-th pixel in i-th cpm_source. 
-                The keys can be whatever, but most probably you want 
+                Dictionary of pixel coeffs. Each value specifies a list
+                (length same as number of satellite datasets) of coeffs for all
+                pixels i.e., coeffs[key][i][j] is for
+                j-th pixel in i-th cpm_source.
+                The keys can be whatever, but most probably you want
                 tuple(list(model_parameters)) to be the keys.
             weights: *dict*, optional
                 Dictionary of weights - uses the same keys as coeffs.
@@ -413,54 +428,59 @@ class Minimizer(object):
             weights_ = None
         else:
             weights_ = [weights[key] for key in keys]
-       
+
         for i in range(self.n_sat):
             for j in range(self.cpm_sources[i].n_pixels):
                 data = [coeffs[key][i][j] for key in keys]
                 average = np.average(np.array(data), 0, weights=weights_)
-                self.cpm_sources[i].set_pixel_coeffs(j, average.reshape((-1, 1)))
+                self.cpm_sources[i].set_pixel_coeffs(
+                    j, average.reshape((-1, 1)))
 
     def set_pixel_coeffs_from_models(self, models, weights=None):
         """run a set of models, remember the coeffs for every pixel,
         then average them (using weights) and remember
-        
-        NOTE: this version may be not very stable numerically. Try using 
+
+        NOTE: this version may be not very stable numerically. Try using
         e.g., set_pixel_coeffs_from_dicts()
         """
         if self.n_sat > 1:
-            raise ValueError("set_pixel_coeffs_from_models() doesn't allow " +
+            raise ValueError(
+                "set_pixel_coeffs_from_models() doesn't allow " +
                 "multiple cpm_sources")
         n_models = len(models)
         shape = (n_models, self.cpm_source.predictor_matrix.shape[1])
         coeffs = [np.zeros(shape) for i in range(self.cpm_source.n_pixels)]
-        
+
         for i in range(n_models):
             self._run_cpm(models[i])
             for j in range(self.cpm_source.n_pixels):
-                coeffs[j][i] = self.cpm_source.pixel_coeffs(j).reshape(shape[1])
-                
+                coeffs[j][i] = self.cpm_source.pixel_coeffs(j).reshape(
+                    shape[1])
+
         for j in range(self.cpm_source.n_pixels):
             average = np.average(coeffs[j], 0, weights=weights)
             self.cpm_source.set_pixel_coeffs(j, average.reshape((-1, 1)))
-    
+
     def start_coeffs_cache(self):
         """
-        Start internally remembering coeffs; also resets cache if caching was 
+        Start internally remembering coeffs; also resets cache if caching was
         working.
         """
         self._coeffs_cache = dict()
 
     def get_cached_coeffs(self, theta):
         """
-        Get pixel coeffs for model defined by theta; note that 
+        Get pixel coeffs for model defined by theta; note that
         theta = tuple(list(model_parameters))
         """
         if self._coeffs_cache is None:
-            raise ValueError("You want to get cached values and you haven't " + 
+            raise ValueError(
+                "You want to get cached values and you haven't " +
                 "turned on caching (see start_coeffs_cache())? Strange...")
         if not isinstance(theta, tuple):
-            raise TypeError('wrong type of get_cached_coeffs() input: \n' +
-                    'got {:}, expected tuple'.format(type(theta)))
+            raise TypeError(
+                'wrong type of get_cached_coeffs() input: \n' +
+                'got {:}, expected tuple'.format(type(theta)))
         return self._coeffs_cache[theta]
 
     def stop_coeffs_cache(self):
@@ -477,20 +497,20 @@ class Minimizer(object):
         for (file_, cpm_source) in zip(files, self.cpm_sources):
             cpm_source.read_coeffs_from_fits(file_)
 
-    def set_prior_boundaries(self, parameters_min_values, 
-            parameters_max_values):
+    def set_prior_boundaries(
+            self, parameters_min_values, parameters_max_values):
         """
-        remembers 2 dictionaries that set minimum and maximum values of 
+        remembers 2 dictionaries that set minimum and maximum values of
         parameters
         """
         self._prior_min_values = parameters_min_values
         self._prior_max_values = parameters_max_values
-        
+
     def ln_prior(self, theta):
         """return 0 in most cases, or -np.inf if beyond ranges provided"""
         inside = 0.
         outside = -np.inf
-        
+
         if self._prior_min_values is not None:
             for (parameter, value) in self._prior_min_values.items():
                 index = self.parameters_to_fit.index(parameter)
@@ -545,7 +565,7 @@ class Minimizer(object):
                 return (-np.inf, self.fluxes)
             else:
                 return -np.inf
-        
+
         ln_like = self.ln_like(theta)
         if np.isnan(ln_like):
             if self.save_fluxes:
@@ -558,12 +578,14 @@ class Minimizer(object):
             return (ln_probability, self.fluxes)
         else:
             return ln_probability
-        
+
     def set_MN_cube(self, min_values, max_values):
-        """remembers how to transform unit cube to physical parameters for MN"""
-        self._MN_cube = [(min_values[i], (max_values[i]-min_values[i])) 
+        """
+        remembers how to transform unit cube to physical parameters for MN
+        """
+        self._MN_cube = [(min_values[i], (max_values[i]-min_values[i]))
                             for i in range(self.n_parameters)]
-        
+
     def transform_MN_cube(self, cube):
         """transform unit cube to physical parameters"""
         out = []
@@ -574,14 +596,15 @@ class Minimizer(object):
 
     def satellite_maximum(self):
         """
-        return time of maximum magnification, its value, and corresponding 
-        flux for the satellite dataset; takes into account the epochs when 
+        return time of maximum magnification, its value, and corresponding
+        flux for the satellite dataset; takes into account the epochs when
         satellite data exist
 
         NOTE: This function is not yet fully tested.
         """
         if self.n_sat > 1:
-            raise ValueError("satellite_maximum() doesn't allow " +
+            raise ValueError(
+                "satellite_maximum() doesn't allow " +
                 "multiple cpm_sources")
         index = np.argmax(self._sat_magnifications[0])
         magnification = self._sat_magnifications[0][index]
@@ -609,9 +632,10 @@ class Minimizer(object):
         for i in range(self.n_sat):
             times = self._sat_times[i] - 2450000.
             flux = self._sat_magnifications[i] * fs[0] + fb
-            plt.plot(times, Utils.get_mag_from_flux(flux), 
-                zorder=np.inf, # We want the satellite models
-                **kwargs)      # to be at the very top.
+            plt.plot(
+                times, Utils.get_mag_from_flux(flux),
+                zorder=np.inf,  # We want the satellite models
+                **kwargs)       # to be at the very top.
         self.event.model.data_ref = data_ref
 
     def _legend_standard_plot(self, legend_order, legend_kwargs, color_list,
@@ -642,13 +666,15 @@ class Minimizer(object):
             if self.n_sat == 0:
                 plt.legend(loc='best', **legend_kwargs)
             else:
-                black_line = mlines.Line2D([], [], color='black', marker='o',
+                black_line = mlines.Line2D(
+                    [], [], color='black', marker='o',
                     lw=0, markersize=5, label='ground-based', alpha=alphas[0])
-                red_line = mlines.Line2D([], [], color='red', marker='o',
+                red_line = mlines.Line2D(
+                    [], [], color='red', marker='o',
                     lw=0, markersize=5, label='K2C9 data')
                 blue_line = mlines.Line2D(
                     [], [], color='orange', lw=2, markersize=5,
-                    label='K2C9 model') #alpha=0.75,
+                    label='K2C9 model')  # alpha=0.75,
                 handles_ = [red_line, blue_line, black_line]
                 plt.legend(handles=handles_, loc='best', **legend_kwargs)
 
@@ -673,9 +699,11 @@ class Minimizer(object):
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
         if not separate_residuals:
-            grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.12)
+            grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1],
+                                          hspace=0.12)
         else:
-            grid_spec = gridspec.GridSpec(3, 1, height_ratios=[5, 1, 1], hspace=0.13)
+            grid_spec = gridspec.GridSpec(3, 1, height_ratios=[5, 1, 1],
+                                          hspace=0.13)
         plt.figure()
         plt.subplot(grid_spec[0])
         if title is not None:
@@ -689,7 +717,7 @@ class Minimizer(object):
             t_start=t_start+2450000., t_stop=t_stop+2450000.,
             label="ground-based model", lw=model_line_width)
         self.plot_sat_magnitudes(color='orange', lw=2,
-                                 label="K2 model") #alpha=0.75,
+                                 label="K2 model")  # alpha=0.75,
 
         if color_list is not None:
             color_list_ = color_list
@@ -702,7 +730,7 @@ class Minimizer(object):
         zorder_list = np.arange(self.n_datasets, 0, -1)
         zorder_list[1] = self.n_datasets + 1
 
-        self.event.plot_data(#alpha_list=alphas,
+        self.event.plot_data(  # alpha_list=alphas,
             zorder_list=zorder_list, mfc='none', lw=line_width, mew=line_width,
             marker='o', markersize=6, subtract_2450000=True,
             color_list=color_list_, label_list=label_list)
@@ -745,7 +773,7 @@ class Minimizer(object):
             self.event.datasets[-1].plot(
                 phot_fmt='mag', show_errorbars=True, subtract_2450000=True,
                 model=self.event.model, plot_residuals=True, **kwargs_)
-            plt.ylim(0.29, -0.29) # XXX
+            plt.ylim(0.29, -0.29)  # XXX
             plt.ylabel('K2 residuals')
             plt.xlim(t_start, t_stop)
             plt.gca().tick_params(top=True, direction='in')
@@ -775,9 +803,9 @@ class Minimizer(object):
 
         constraint = None
         if self.event.model.n_sources > 1:
-            constraint = 'I' # XXX
+            constraint = 'I'  # XXX
         self.event.plot_model(
-            color='black', subtract_2450000=True, 
+            color='black', subtract_2450000=True,
             t_start=t_start+2450000., t_stop=t_stop+2450000.,
             flux_ratio_constraint=constraint)
         self.plot_sat_magnitudes(color='blue', lw=3.5, alpha=0.75)
@@ -785,28 +813,33 @@ class Minimizer(object):
         if self.n_sat == 0:
             colors = None
         else:
-            colors = ['black'] * (self.n_datasets-self.n_sat) + ['red']*self.n_sat
+            colors = ['black'] * (self.n_datasets - self.n_sat)
+            colors += ['red'] * self.n_sat
 
-        self.event.plot_data(alpha_list=alphas, 
-            zorder_list=np.arange(self.n_datasets, 0, -1), 
+        self.event.plot_data(
+            alpha_list=alphas,
+            zorder_list=np.arange(self.n_datasets, 0, -1),
             marker='o', markersize=5, subtract_2450000=True,
             color_list=colors)
         if ylim is not None:
             plt.ylim(ylim[0], ylim[1])
         plt.xlim(t_start, t_stop)
-        
+
         # Prepare legend "manually":
         if self.n_sat == 0:
             plt.legend()
         else:
-            black_line = mlines.Line2D([], [], color='black', marker='o', lw=0,
-                          markersize=5, label='ground-based', alpha=alphas[0])
-            red_line = mlines.Line2D([], [], color='red', marker='o', lw=0,
-                          markersize=5, label='K2C9 data')
-            blue_line = mlines.Line2D([], [], color='blue', lw=3.5, alpha=0.75,
-                          markersize=5, label='K2C9 model')
+            black_line = mlines.Line2D(
+                [], [], color='black', marker='o', lw=0,
+                markersize=5, label='ground-based', alpha=alphas[0])
+            red_line = mlines.Line2D(
+                [], [], color='red', marker='o', lw=0,
+                markersize=5, label='K2C9 data')
+            blue_line = mlines.Line2D(
+                [], [], color='blue', lw=3.5, alpha=0.75,
+                markersize=5, label='K2C9 model')
             plt.legend(handles=[red_line, blue_line, black_line], loc='best')
-        
+
         plt.subplot(grid_spec[1])
         self.event.plot_residuals(subtract_2450000=True)
         plt.xlim(t_start, t_stop)
