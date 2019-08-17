@@ -47,6 +47,11 @@ if __name__ == "__main__":
         271.001083, -28.155111, 52, 91, "ob160795_pixel_curves.png",
         adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
         xlabel="BJD-2450000", ylabel='counts')
+    plot_tpf_data(
+        269.886542, -28.407417, 31, 91, "ob160813_pixel_curves.png",
+        adjust={"left": 0.07, "bottom":0.06, "right":.995, "top":.995},
+        xlabel="BJD-2450000", ylabel='counts')
+
 
     plot_tpf_data(
         271.354292, -28.005583, 52, 92, "ob160980_pixel_curves.png",

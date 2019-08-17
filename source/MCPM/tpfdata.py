@@ -23,6 +23,9 @@ class TpfData(object):
     
     Note that there are no (x,y) coordinates! Instead there are (row, column) 
     or (column, row) and, yes, I wish one convention was used consistently.
+
+    The .jd_short property is time taken from TPF file, i.e., BJD TDB and
+    corresponds to the center of the exposure.
     """
 
     directory = path.join(MCPM.MODULE_PATH, 'data', 'K2C9', 'tpf') 
@@ -63,7 +66,7 @@ class TpfData(object):
         self.n_pixels = self.n_rows * self.n_columns
         
         data = hdu_list[1].data
-        self.jd_short = data["time"] + 4833. # is it HJD, BJD, JD?
+        self.jd_short = data["time"] + 4833. # it is BJD
         self.quality_flags = data["quality"].astype(dtype=int)  
         flux = data["flux"]
         pixel_mask = np.isfinite(flux) & (flux != 0)

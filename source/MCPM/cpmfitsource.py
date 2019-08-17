@@ -323,7 +323,12 @@ class CpmFitSource(object):
 
     @property
     def pixel_time(self):
-        """time vectors for all pixels"""
+        """
+        *np.array*
+
+        Time vectors for all pixels.
+        These are in BJD TDB and correspond to the middle of the exposure.
+        """
         if self._pixel_time is None:
             self._get_time_flux_mask_for_pixels()
         return self._pixel_time
