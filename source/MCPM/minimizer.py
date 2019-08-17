@@ -619,7 +619,7 @@ class Minimizer(object):
         else:
             warnings.warn("binary source model - code is not yet ready " +
                           "to provide signed u_0 for K2")
-        return (self._sat_times[0][index], magnification, u_0)
+        return (self._sat_times[0][index], u_0, magnification)
 
     def plot_sat_magnitudes(self, **kwargs):
         """
@@ -797,7 +797,7 @@ class Minimizer(object):
         plt.subplot(grid_spec[0])
         if title is not None:
             plt.title(title)
-        alphas = [0.35] * self.n_datasets
+        alphas = [0.95] * self.n_datasets
         for i in range(self.n_sat):
             alphas[-(i+1)] = 1.
 
@@ -827,7 +827,7 @@ class Minimizer(object):
 
         # Prepare legend "manually":
         if self.n_sat == 0:
-            plt.legend()
+            plt.legend(fontsize='small')
         else:
             black_line = mlines.Line2D(
                 [], [], color='black', marker='o', lw=0,
