@@ -143,16 +143,19 @@ class Minimizer(object):
             self._sat_masks = [
                 cpm_source.residuals_mask for cpm_source in self.cpm_sources]
             self._sat_times = [
-                self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000. for i in range(self.n_sat)]
+                self.cpm_sources[i].pixel_time[self._sat_masks[i]] + 2450000.
+                for i in range(self.n_sat)]
             self._sat_models = [
-                np.zeros(len(cpm_source.pixel_time)) for cpm_source in self.cpm_sources]
+                np.zeros(len(cpm_source.pixel_time))
+                for cpm_source in self.cpm_sources]
             self._sat_magnifications = [None] * self.n_sat
 
+        data = self.event.datasets
         for i in range(self.n_sat):
             # Here we prepare the satellite lightcurves:
             kwargs = {
                 'time': self._sat_times[i],
-                'satellite_skycoord': self.event.datasets[n_0+i].satellite_skycoord}
+                'satellite_skycoord': data[n_0+i].satellite_skycoord}
             if self.event.model.n_sources == 2:
                 kwargs['flux_ratio_constraint'] = 'K2'
             self._sat_magnifications[i] = self.event.model.magnification(
@@ -212,7 +215,8 @@ class Minimizer(object):
             sat_residuals = self.cpm_sources[i].residuals[self._sat_masks[i]]
             flux = self._sat_models[i][self._sat_masks[i]] + sat_residuals
             # NEW - IF ACCEPTED!!! :
-            # sat_residuals = self.cpm_sources[i].residuals[self.cpm_sources[i].residuals_mask]
+            # sat_residuals = self.cpm_sources[i].residuals[
+            #     self.cpm_sources[i].residuals_mask]
             # flux = self._sat_models[i][self.cpm_sources[i].residuals_mask]
             # flux += sat_residuals
             self.event.datasets[ii].flux = flux
@@ -248,7 +252,8 @@ class Minimizer(object):
                                   ref_zero_point_0, ref_zero_point_1,
                                   ref_zero_point_2, polynomial_2, sigma]
 
-    def add_color_constraint(self, ref_dataset, ref_zero_point, color, sigma_color):
+    def add_color_constraint(self, ref_dataset, ref_zero_point,
+                             color, sigma_color):
         """
         Specify parameters that are used to constrain the source flux in
         satellite band:
@@ -283,7 +288,8 @@ class Minimizer(object):
         """calculate chi2 for flux constraint"""
         before_ref = self.event.data_ref
         if len(self._color_constraint) == 4:
-            (ref_dataset, ref_zero_point, color, sigma_color) = self._color_constraint
+            (ref_dataset, ref_zero_point) = self._color_constraint[:2]
+            (color, sigma_color) = self._color_constraint[2:]
         elif len(self._color_constraint) == 8:
             (ref_dataset, ref_dataset_1) = self._color_constraint[:2]
             (ref_dataset_2, ref_zero_point) = self._color_constraint[2:4]
@@ -324,16 +330,24 @@ class Minimizer(object):
             sigma *= self.sigma_scale
             chi2_sat.append(np.sum((residuals/sigma)**2))
         # Correct the line below.
-        # chi2_sat = [np.sum(self._sat_masks[i])*(self.cpm_sources[i].residuals_rms/np.mean(self.event.datasets[n+i].err_flux))**2 for i in range(self.n_sat)]
+        # chi2_sat = [
+        #     np.sum(self._sat_masks[i]) *
+        #     (self.cpm_sources[i].residuals_rms/np.mean(
+        #     self.event.datasets[n+i].err_flux))**2
+        #     for i in range(self.n_sat)]
         # We also tried:
         # chi2_sat = 0.
         # for i in range(self.n_sat):
             # ii = n + i
-            # rms = self.cpm_sources[i].residuals_rms_prf_photometry(self._sat_models[i])
+            # rms = self.cpm_sources[i].residuals_rms_prf_photometry(
+            #     self._sat_models[i])
             # rms /= np.mean(self.event.datasets[n+i].err_flux)
             # chi2_sat += np.sum(self._sat_masks[i]) * rms**2
 
-        # self.chi2 = [self.event.get_chi2_for_dataset(i, fit_blending=self.fit_blending[i]) for i in range(n)]
+        # self.chi2 = [
+        #     self.event.get_chi2_for_dataset(
+        #         i, fit_blending=self.fit_blending[i])
+        #     for i in range(n)]
         # try:
         if True:
             temp_chi2 = self.event.get_chi2_per_point()  # XXX - this ignores
@@ -378,7 +392,8 @@ class Minimizer(object):
             coeffs = []
             for i in range(self.n_sat):
                 n_pixels = self.cpm_sources[i].n_pixels
-                c = [self.cpm_sources[i].pixel_coeffs(j).flatten() for j in range(n_pixels)]
+                source = self.cpm_sources[i]
+                c = [source.pixel_coeffs(j).flatten() for j in range(n_pixels)]
                 coeffs.append(np.array(c))
             self._coeffs_cache[tuple(theta.tolist())] = coeffs
 
@@ -584,7 +599,7 @@ class Minimizer(object):
         remembers how to transform unit cube to physical parameters for MN
         """
         self._MN_cube = [(min_values[i], (max_values[i]-min_values[i]))
-                            for i in range(self.n_parameters)]
+                         for i in range(self.n_parameters)]
 
     def transform_MN_cube(self, cube):
         """transform unit cube to physical parameters"""
@@ -843,4 +858,3 @@ class Minimizer(object):
         plt.subplot(grid_spec[1])
         self.event.plot_residuals(subtract_2450000=True)
         plt.xlim(t_start, t_stop)
-
