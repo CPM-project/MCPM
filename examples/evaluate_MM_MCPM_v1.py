@@ -63,7 +63,8 @@ for campaign in MCPM_options['campaigns']:
     cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'], 
                 l2_per_pixel=MCPM_options['l2_per_pixel'])
     cpm_source.set_pixels_square(MCPM_options['half_size'])
-    cpm_source.select_highest_prf_sum_pixels(MCPM_options['n_select'])
+    if 'n_select' in MCPM_options:
+        cpm_source.select_highest_prf_sum_pixels(MCPM_options['n_select'])
 
     cpm_sources.append(cpm_source)
 
@@ -169,12 +170,13 @@ for zip_single in zipped:
         #y = minimizer._sat_models[0][y_mask]
         y_err = cpm_source.all_pixels_flux_err[y_mask]
         y_err *= MCPM_options['sat_sigma_scale']
-        np.savetxt(txt_file, np.array([x, y, y_err]).T)
+        y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
+        np.savetxt(txt_file, np.array([x, y, y_err, y-y_model]).T)
     if txt_model is not None:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]
-        y = minimizer._sat_models[0][y_mask]
-        np.savetxt(txt_model, np.array([x, y]).T)
+        y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
+        np.savetxt(txt_model, np.array([x, y_model]).T)
     if plot_file is not None:
         minimizer.set_satellite_data(values)
         if 'xlim' in plot_settings:
@@ -213,12 +215,13 @@ for zip_single in zipped:
     if len(datasets) > 1:
         for (i, data) in enumerate(datasets):
             chi2_data = event.get_chi2_for_dataset(
-                i, fit_blending=minimizer.fit_blending)
+                i, fit_blending=minimizer.fit_blending[i])
             print(
                 i, chi2_data,
                 event.fit.flux_of_sources(data)[0],
                 event.fit.blending_flux(data))
     if len(cpm_sources) > 0:
-        print(minimizer.satellite_maximum())
+        print("Satellite t_0, u_0, A_max:")
+        print(*minimizer.satellite_maximum())
     print()
 
