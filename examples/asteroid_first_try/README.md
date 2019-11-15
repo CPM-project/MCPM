@@ -14,5 +14,11 @@ python clean_2.py ephem_C9b_v1/30617.ephem_v2 > ephem_C9b_v1/30617.ephem_v3
 
 Next step is to get Channel, Column, Row (CCR) for each epoch:
 
+```
+python get_CCR.py ephem_C9b_v1/30617.ephem_v3 > ephem_C9b_v1/30617.ephem_v4
+```
+
+After that, we prepare configuration files - one per epoch:
+
 ...
 
