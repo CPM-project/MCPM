@@ -52,7 +52,7 @@ if __name__ == '__main__':
     (on_silicon, ch, col, row) = get_CCR(ra, dec)
 
     for i in range(len(on_silicon)):
-        text = "F  0    0.0    0.0"
+        text = " 0    0.0    0.0"
         if on_silicon[i]:
-            text = "T {:} {:6.1f} {:6.1f}".format(ch[i], col[i], row[i])
+            text = "{:} {:6.1f} {:6.1f}".format(ch[i], col[i], row[i])
         print("{:} {:} {:}  {:}".format(*fdata[i][:3], text))
