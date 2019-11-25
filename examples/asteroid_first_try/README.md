@@ -33,5 +33,21 @@ python make_cfg_1.py > settings_30617.txt
 python prepare_1.py settings_30617.txt template_1.cfg
 ```
 
-...
+We need file with Kepler ephemeris:
+```
+cp ../K2_ephemeris_01.dat .
+```
+
+Now we have to run all the cfg files. I do it this way (this is very inefficient and takes hours!):
+
+```
+awk 'BEGIN{print "#! /bin/tcsh"}{split($1, a, "."); split (a[1], b, "/");  printf "(time python3 ../evaluate_MM_MCPM_v1.py %s > out_files/%s.out ) >& out_files/%s.err\n", $1, b[2], b[2]}' settings_30617.txt > run.sh
+chmod u+x run.sh
+(time ./run.sh > run.out ) >& run.err &
+```
+
+Extract specific epoch from each file:
+```
+awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617.txt | python extract_epoch.py /dev/stdin
+```
 
