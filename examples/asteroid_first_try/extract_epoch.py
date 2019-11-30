@@ -13,6 +13,7 @@ def get_index_nearest(array, value):
     """
     return (np.abs(array - value)).argmin()
 
+
 max_time_diff = 0.005  # days; = 7.2 min.
 dt = 2450000.
 

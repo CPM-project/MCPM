@@ -15,7 +15,8 @@ step = "15m"
 directories = ["ephem_C9a_v1", "ephem_C9b_v1"]
 columns = ['datetime_jd', 'RA', 'DEC', 'V']
 
-### Settings end here.
+# Settings end here.
+
 
 def print_output(ephem, columns, directory, file_name_root):
     """save selected columns from ephemeris to a file"""
@@ -43,12 +44,12 @@ with open(sys.argv[1]) as in_data:
         try:
             horizons = Horizons(id=id_name, **kwargs_1)
             ephem = horizons.ephemerides()
-        except:
+        except Exception:
             id_name = id_name.replace("_", " ")
             try:
                 horizons = Horizons(id=id_name, **kwargs_1)
                 ephem = horizons.ephemerides()
-            except:
+            except Exception:
                 raise
         print_output(ephem, columns, directories[0], id_name_orig)
         horizons = Horizons(id=id_name, **kwargs_2)
