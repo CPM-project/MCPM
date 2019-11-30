@@ -12,7 +12,7 @@ python get_K2_epochs.py in_2.yaml
 ```
 It produces `ephem_C9b_v1/30617_time_tpf.dat` and uses coords which are currently found in non-automatic way (that will be corrected).
 
-Interpolate ephemeris (_requires corrections at edges_):
+Interpolate ephemeris:
 ```
 python interpolate_ephemeris.py > ephem_C9b_v1/30617.ephem_interp
 ```
@@ -50,4 +50,3 @@ Extract specific epoch from each file:
 ```
 awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617.txt | python extract_epoch.py /dev/stdin
 ```
-
