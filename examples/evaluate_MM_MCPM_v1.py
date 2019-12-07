@@ -123,6 +123,8 @@ if 'coeffs_fits_in' in MCPM_options:
     minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
 if 'coeffs_fits_out' in MCPM_options:
     raise ValueError("coeffs_fits_out cannot be set in this program")
+if 'sat_sigma_scale' in MCPM_options:
+    minimizer.sigma_scale = MCPM_options['sat_sigma_scale']
 if 'color_constraint' in MCPM_options:
     cc = 'color_constraint'
     ref_dataset = files.index(MCPM_options[cc][0])
@@ -156,7 +158,8 @@ for zip_single in zipped:
     (values, name, plot_file) = zip_single[:3]
     (txt_file, txt_file_prf_phot, txt_model) = zip_single[3:]
     minimizer.set_parameters(values)
-    print(name, minimizer.chi2_fun(values))
+    chi2 = minimizer.chi2_fun(values)
+    print(name, chi2)
     minimizer.set_satellite_data(values)
     
     if txt_file_prf_phot is not None:
@@ -213,13 +216,15 @@ for zip_single in zipped:
             print("{:} file saved".format(plot_file))
         plt.close()
     if len(datasets) > 1:
-        for (i, data) in enumerate(datasets):
-            chi2_data = event.get_chi2_for_dataset(
-                i, fit_blending=minimizer.fit_blending[i])
-            print(
-                i, chi2_data,
-                event.fit.flux_of_sources(data)[0],
-                event.fit.blending_flux(data))
+        print("Non-K2 datasets (i, chi2, F_s, F_b):")
+        for (i, (dat, fb)) in enumerate(zip(datasets, minimizer.fit_blending)):
+            chi2_data = event.get_chi2_for_dataset(i, fit_blending=fb)
+            print(i, chi2_data, event.fit.flux_of_sources(dat)[0],
+                  event.fit.blending_flux(dat))
+            if i < len(files):
+                chi2 -= chi2_data
+        print("-----")
+        print("K2 chi2: ", chi2)
     if len(cpm_sources) > 0:
         print("Satellite t_0, u_0, A_max:")
         print(*minimizer.satellite_maximum())

@@ -219,7 +219,11 @@ class Minimizer(object):
             #     self.cpm_sources[i].residuals_mask]
             # flux = self._sat_models[i][self.cpm_sources[i].residuals_mask]
             # flux += sat_residuals
-            self.event.datasets[ii].flux = flux
+            #
+            # Below we use private properties from MulensModel - this
+            # should be corrected (maybe make new MulensData object and
+            # delete the old one).
+            self.event.datasets[ii]._flux = flux
             mag_and_err = Utils.get_mag_and_err_from_flux(
                 flux,
                 self.event.datasets[ii].err_flux, zeropoint=K2_MAG_ZEROPOINT)
