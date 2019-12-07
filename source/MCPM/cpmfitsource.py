@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+import warnings
 
 from MCPM.multipletpf import MultipleTpf
 from MCPM.campaigngridradec2pix import CampaignGridRaDec2Pix
@@ -785,8 +786,10 @@ class CpmFitSource(object):
             self._plot_residuals_of_last_model(mask, mask_2, f_s)
 
     def _plot_residuals_of_last_model(self, mask, mask_2=None, f_s=None):
-        """inner function that makes the plotting; magnification is plotted instead of counts 
-        if f_s is provided"""
+        """
+        inner function that makes the plotting; magnification is plotted
+        instead of counts if f_s is provided
+        """
         lw = 5
         plt.plot(self.pixel_time[mask], np.zeros_like(pixel_time[mask]), 'k--', lw=lw)
 
@@ -819,3 +822,43 @@ class CpmFitSource(object):
         plt.plot(self.pixel_time[mask_], signal[mask_], 'ks')
         plt.plot(self.pixel_time[mask_], self.pixel_flux[pixel_i][mask_], 'ro')
 
+    def plot_image(self, time, data_type="cpm_residuals", **kwargs):
+        """
+        Plot small part of an image.
+
+        Parameters :
+            time: *float*
+                Short-format (ie. no 245) BJD to be searched for.
+                The closest epoch will be shown.
+            data_type: 'cpm_residuals' or 'pixel_flux'
+                Type of data to be plotted. The default 'cpm_residuals' means
+                that instrumental trends are removed. The 'pixel_flux' means
+                raw data.
+            ``**kwargs``
+                are passed to pyplot.imshow()
+        """
+        index = np.nanargmin(np.abs(self.pixel_time-time))
+        if np.abs(self.pixel_time[index] - time) > 0.007:
+            warnings.warn(
+                'large difference between requested and closest epoch:' +
+                '{:.5f} '.format(self.pixel_time[index] - time) +
+                '{:.5f} {:.5f}'.format(self.pixel_time[index], time))
+        x = self.pixels[:,0]
+        y = self.pixels[:,1]
+        min_x = min(x)
+        min_y = min(y)
+        image = np.zeros( (max(x)-min_x+1, max(y)-min_y+1) )
+        x -= min_x
+        y -= min_y
+
+        for i in range(self.n_pixels):
+            if data_type == 'cpm_residuals':
+                image[x[i], y[i]] = self._cpm_pixel[i].cpm_residuals[index]
+            elif data_type == 'pixel_flux':
+                image[x[i], y[i]] = self.pixel_flux[i][index]
+            else:
+                raise ValueError('Unrecognized data_type: ' + data_type)
+
+        plt.title("{:.5f}".format(self.pixel_time[index]))
+        plt.imshow(image, **kwargs)
+        plt.colorbar()

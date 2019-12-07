@@ -28,7 +28,7 @@ def check_sections_in_config(config):
         'MultiNest', 'EMCEE_starting_mean_sigma', 'EMCEE_min_values',
         'EMCEE_max_values', 'EMCEE_settings', 'MCPM', 'other_constraints',
         'models_1_line', 'plot_files', 'txt_files', 'txt_files_prf_phot',
-        'txt_models', 'plot_settings']
+        'txt_models', 'plot_settings', 'plot_difference_images']
     difference = set(config.sections()) - set(allowed)
     if len(difference) > 0:
         txt = ("\nThere are unexpected sections in config file (they will " +
@@ -467,8 +467,20 @@ def read_models(config):
         for var in config[section]:
             txt_models[model_ids.index(var)] = config.get(section, var)
 
+    section = 'plot_difference_images'
+    plot_epochs = [None] * len(model_ids)
+    plot_epochs_type = None
+    if section in config.sections():
+        for var in config[section]:
+            if var == 'type':
+                plot_epochs_type = config.get(section, var)
+            else:
+                words = config.get(section, var).split()
+                plot_epochs[model_ids.index(var)] = [float(t) for t in words]
+
     return (parameter_values, model_ids, plot_files, txt_files,
-            txt_files_prf_phot, txt_models, parameters_to_fit)
+            txt_files_prf_phot, txt_models, parameters_to_fit, plot_epochs,
+            plot_epochs_type)
 
 def read_plot_settings(config):
     """

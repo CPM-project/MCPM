@@ -32,8 +32,9 @@ out = read_config.read_general_options(config)
 
 # Read models:
 out = read_config.read_models(config)
-(parameter_values, model_ids, plot_files) = out[:3]
-(txt_files, txt_files_prf_phot, txt_models, parameters_to_fit) = out[3:]
+(parameter_values, model_ids, plot_files, txt_files) = out[:4]
+(txt_files_prf_phot, txt_models, parameters_to_fit) = out[4:7]
+(plot_epochs, plot_epochs_type) = out[7:]
 plot_settings = read_config.read_plot_settings(config)
 
 # Read MCPM options:
@@ -153,10 +154,10 @@ if 'mask_model_epochs' in MCPM_options:
 
 # main loop:
 zipped = zip(parameter_values, model_ids, plot_files, txt_files, 
-    txt_files_prf_phot, txt_models)
+             txt_files_prf_phot, txt_models, plot_epochs)
 for zip_single in zipped:
     (values, name, plot_file) = zip_single[:3]
-    (txt_file, txt_file_prf_phot, txt_model) = zip_single[3:]
+    (txt_file, txt_file_prf_phot, txt_model, plot_epochs_) = zip_single[3:]
     minimizer.set_parameters(values)
     chi2 = minimizer.chi2_fun(values)
     print(name, chi2)
@@ -215,6 +216,15 @@ for zip_single in zipped:
             plt.savefig(plot_file, dpi=400)
             print("{:} file saved".format(plot_file))
         plt.close()
+    if plot_epochs_ is not None:
+        if minimizer.n_sat != 1:
+            raise ValueError('.n_sat != 1 is not implemented')
+        for epoch in plot_epochs_:
+            args = [epoch - 2450000.]
+            if plot_epochs_type is not None:
+                args.append(plot_epochs_type)
+            minimizer.cpm_sources[0].plot_image(*args)
+            plt.show()
     if len(datasets) > 1:
         print("Non-K2 datasets (i, chi2, F_s, F_b):")
         for (i, (dat, fb)) in enumerate(zip(datasets, minimizer.fit_blending)):

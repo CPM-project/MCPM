@@ -50,3 +50,15 @@ Extract specific epoch from each file:
 ```
 awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617.txt | python extract_epoch.py /dev/stdin
 ```
+
+### Difference image
+
+We want to plot postage stamp images for selected epochs. And we the images will be after the CPM is applied, i.e., instrumental trends are removed. Selected epochs for two bright objects (first one moves very slow, second - very fast):
+
+```
+python ../evaluate_MM_MCPM_v1.py 30617_plot.cfg
+python ../evaluate_MM_MCPM_v1.py 14352_plot.cfg
+```
+
+If you want to plot raw data, then change `type = cpm_residuals` to `type = pixel_flux` and re-run the scripts. Note the changes in color scale.
+
