@@ -162,7 +162,7 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
     MN_args = {
         'n_dims': len(parameters_to_fit),
         'importance_nested_sampling': False,
-        'multimodal': True,
+        'multimodal': False,
         'n_live_points': 500,
         'outputfiles_basename': os.path.join(dir_out, split_[0] + "_"),
         'resume': False}

@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import sys
 import os
-import emcee
 from pymultinest.solve import solve
 from astropy.coordinates import SkyCoord
 from astropy import units as u
@@ -21,8 +20,9 @@ files_fmt = ['mag', 'flux', 'flux', 'flux']
 ephemeris_file = 'K2_ephemeris_01.dat'
 
 # info on fitting:
-parameters_to_fit = ['pi_E_N', 'pi_E_E', "u_0", "t_0", "t_E"] 
-# The order is forced by MultiNest, because it runs clustering on first N parameters (N=3 in our case - see n_modes below)
+parameters_to_fit = ['pi_E_N', 'pi_E_E', "u_0", "t_0", "t_E", "f_s_sat"]
+# The order is forced by MultiNest, because it runs clustering on
+# the first N parameters (N=3 in our case - see n_modes below)
 t_0_par = 2457573.5
 t_0 = 2457573.4
 u_0 = 0.45
