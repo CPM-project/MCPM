@@ -14,6 +14,7 @@ from MCPM.cpmfitsource import CpmFitSource
 from MCPM.minimizer import Minimizer
 
 import read_config
+import redirect_stdout
 
 
 if len(sys.argv) != 2:
@@ -175,31 +176,26 @@ dir_out = os.path.dirname(MN_args['outputfiles_basename'])
 if not os.path.exists(dir_out):
     os.mkdir(dir_out)
 minimizer.set_MN_cube(mn_min, mn_max)
-# HERE
-MN_args['resume'] = True
-import redirect_stdout
-#with open(os.devnull, 'w') as null:
 with redirect_stdout.stdout_redirect_2():
-        result = solve(
-            LogLikelihood=minimizer.ln_like,
-            Prior=minimizer.transform_MN_cube,
-            **MN_args)
-# XXX minimizer.close_file_all_models()
+    result = solve(
+        LogLikelihood=minimizer.ln_like,
+        Prior=minimizer.transform_MN_cube,
+        **MN_args)
+minimizer.close_file_all_models()
 
 # Analyze output:
 analyzer = Analyzer(
     n_params=MN_args['n_dims'],
     outputfiles_basename=MN_args['outputfiles_basename'], verbose=False)
 stats = analyzer.get_stats()
-print("=====")
-print()
-print("Number of modes found: {:}".format(len(stats['modes'])))
 msg = "Log-eveidence: {:.4f} +- {:.4f}"
 log_evidence = stats['nested sampling global log-evidence']
 log_evidence_err = stats['nested sampling global log-evidence error']
 print(msg.format(log_evidence, log_evidence_err))
 print('parameter values:')
-for (name, values) in zip(parameters_to_fit, stats['marginals']):
-    median = values['median']
-    sigma = (values['1sigma'][1] - values['1sigma'][0]) / 2.
-    print('{:10s} : {:.4f} +- {:.4f}'.format(name, median, sigma))
+for (name, v) in zip(parameters_to_fit, stats['marginals']):
+    median = v['median']
+    sigmas = [v['1sigma'][1] - median, median - v['1sigma'][0]]
+    print('{:7s} : {:.4f} {:.4f} {:.4f}'.format(name, median, *sigmas))
+print('Best model:')
+minimizer.print_min_chi2()
