@@ -56,17 +56,18 @@ else:
 if files is not None:
     for (file_, fmt, kwargs) in zip(files, files_formats, files_kwargs):
         data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt,
-                coords=coords, **kwargs)
+                             coords=coords, **kwargs)
         datasets.append(data)
 
 # satellite datasets
 cpm_sources = []
 for campaign in MCPM_options['campaigns']:
-    cpm_source = CpmFitSource(ra=skycoord.ra.deg, dec=skycoord.dec.deg, 
-                campaign=campaign, channel=MCPM_options['channel'])
+    cpm_source = CpmFitSource(
+        ra=skycoord.ra.deg, dec=skycoord.dec.deg,
+        campaign=campaign, channel=MCPM_options['channel'])
     cpm_source.get_predictor_matrix(**MCPM_options['predictor_matrix'])
-    cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'], 
-                l2_per_pixel=MCPM_options['l2_per_pixel'])
+    cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'],
+                                   l2_per_pixel=MCPM_options['l2_per_pixel'])
     cpm_source.set_pixels_square(MCPM_options['half_size'])
     cpm_source.select_highest_prf_sum_pixels(MCPM_options['n_select'])
 
@@ -75,7 +76,8 @@ for campaign in MCPM_options['campaigns']:
 # initiate model
 starting = utils.generate_random_points(
     starting_settings, parameters_to_fit, emcee_settings['n_walkers'])
-parameters = {key: value for (key, value) in zip(parameters_to_fit, starting[0])}
+zip_ = zip(parameters_to_fit, starting[0])
+parameters = {key: value for (key, value) in zip_}
 parameters.update(parameters_fixed)
 parameters_ = {**parameters}
 for param in list(parameters_.keys()).copy():
@@ -100,23 +102,25 @@ for cpm_source in cpm_sources:
             model_magnification = model.magnification(times)
         else:
             model_magnification = model.magnification(
-                times, separate=True)[0] # This is very simple solution.
+                times, separate=True)[0]  # This is very simple solution.
     cpm_source.run_cpm(parameters['f_s_sat'] * model_magnification)
-    
+
     utils.apply_limit_time(cpm_source, MCPM_options)
 
     mask = cpm_source.residuals_mask
     if 'mask_model_epochs' in MCPM_options:
-        mask *= utils.mask_nearest_epochs(cpm_source.pixel_time+2450000., 
-            MCPM_options['mask_model_epochs'])
+        mask *= utils.mask_nearest_epochs(
+            cpm_source.pixel_time+2450000., MCPM_options['mask_model_epochs'])
     sat_time = cpm_source.pixel_time[mask] + 2450000.
-    #sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
-    sat_sigma = np.sqrt(np.sum(np.array([err[mask] for err in cpm_source.pixel_flux_err])**2, axis=0))
+    # sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
+    sat_sigma = np.sqrt(np.sum(
+        np.array([err[mask] for err in cpm_source.pixel_flux_err])**2, axis=0))
     if 'sat_sigma_scale' in MCPM_options:
         sat_sigma *= MCPM_options['sat_sigma_scale']
-    data = MM.MulensData([sat_time, 0.*sat_time, sat_sigma],
-            phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'],
-            bandpass="K2")
+    data = MM.MulensData(
+        [sat_time, 0.*sat_time, sat_sigma],
+        phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'],
+        bandpass="K2")
     datasets.append(data)
 
 # initiate event and minimizer
@@ -138,13 +142,15 @@ if 'color_constraint' in MCPM_options:
         ref_mag = MM.utils.MAG_ZEROPOINT
     else:
         ref_mag = MCPM_options[cc][1]
-        
+
     if len(MCPM_options[cc]) in [3, 4]:
-        minimizer.add_color_constraint(ref_dataset, ref_mag, 
+        minimizer.add_color_constraint(
+            ref_dataset, ref_mag,
             MCPM_options[cc][-2], MCPM_options[cc][-1])
     elif len(MCPM_options[cc]) in [5, 6, 7, 8]:
-        minimizer.add_full_color_constraint(ref_dataset,
-            files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]), 
+        minimizer.add_full_color_constraint(
+            ref_dataset,
+            files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]),
             *MCPM_options[cc][3:])
     else:
         raise ValueError('wrong size of "color_constraint" option')
@@ -168,7 +174,7 @@ if 'mask_model_epochs' in MCPM_options:
 
 # EMCEE fit:
 print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
-    emcee_settings['n_walkers'], emcee_settings['n_steps'], 
+    emcee_settings['n_walkers'], emcee_settings['n_steps'],
     emcee_settings['n_burn']))
 minimizer.set_prior_boundaries(min_values, max_values)
 for start_ in starting:
@@ -178,7 +184,7 @@ sampler = emcee.EnsembleSampler(
     emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
 acceptance_fractions = []
 # run:
-#sampler.run_mcmc(starting, emcee_settings['n_steps'])
+# sampler.run_mcmc(starting, emcee_settings['n_steps'])
 for results in sampler.sample(starting, iterations=emcee_settings['n_steps']):
     acceptance_fractions.append(np.mean(sampler.acceptance_fraction))
 
@@ -189,10 +195,11 @@ if out_name is not None:
         out_name = config_file_root + ".accept"
     with open(out_name, 'w') as file_out:
         file_out.write('\n'.join([str(af) for af in acceptance_fractions]))
-samples = sampler.chain[:, emcee_settings['n_burn']:, :].reshape((-1, n_params))
+n_burn = emcee_settings['n_burn']
+samples = sampler.chain[:, n_burn:, :].reshape((-1, n_params))
 blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
 n_fluxes = blob_sampler.shape[-1]
-blob_samples = blob_sampler[:, emcee_settings['n_burn']:, :].reshape((-1, n_fluxes))
+blob_samples = blob_sampler[:, n_burn:, :].reshape((-1, n_fluxes))
 if 'coeffs_fits_out' in MCPM_options:
     minimizer.set_pixel_coeffs_from_samples(samples)
     minimizer.save_coeffs_to_fits(MCPM_options['coeffs_fits_out'])
@@ -203,15 +210,16 @@ minimizer.close_file_all_models()
 print("Mean acceptance fraction: {:.4f} +- {:.4f}".format(
     np.mean(sampler.acceptance_fraction),
     np.std(sampler.acceptance_fraction)))
-results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]),
-        zip(*np.percentile(samples, [16, 50, 84], axis=0)))
+zip_ = zip(*np.percentile(samples, [16, 50, 84], axis=0))
+results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip_)
 for (param, r) in zip(parameters_to_fit, results):
     print('{:7s} : {:.4f} {:.4f} {:.4f}'.format(param, *r))
 percentiles = np.percentile(blob_samples, [16, 50, 84], axis=0)
 blob_results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*percentiles))
 flux_name = ['S', 'B']
+msg = 'flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'
 for (i, r) in zip(range(n_fluxes), blob_results):
-    print('flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'.format(flux_name[i%2], i//2+1, *r))
+    print(msg.format(flux_name[i % 2], i//2+1, *r))
 if 'file_posterior' in emcee_settings:
     if len(emcee_settings['file_posterior']) == 0:
         emcee_settings['file_posterior'] = config_file_root + ".posterior"
@@ -219,4 +227,3 @@ if 'file_posterior' in emcee_settings:
     np.save(emcee_settings['file_posterior'], all_samples)
 print('Best model:')
 minimizer.print_min_chi2()
-
