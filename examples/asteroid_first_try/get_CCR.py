@@ -8,7 +8,7 @@ import numpy as np
 import K2fov
 
 
-def get_CCR(ra, deg, campaign=9):
+def get_CCR(ra, dec, campaign=9):
     """
     Get Channel, Column & Row for given ra, deg
     (both in deg and both np.arrays).
