@@ -48,7 +48,12 @@ chmod u+x run.sh
 
 Extract specific epoch from each file:
 ```
-awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617.txt | python extract_epoch.py /dev/stdin
+awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617.txt | python extract_epoch.py /dev/stdin > lc_30617.dat
+```
+
+and plot:
+```
+python plot_30617.py
 ```
 
 ### Difference image
