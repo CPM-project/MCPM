@@ -6,20 +6,9 @@ python get_coords_1.py in_1.txt
 ```
 This produces `ephem_C9a_v1/30617.ephem` and `ephem_C9b_v1/30617.ephem`.
 
-Get epochs for specific target:
+Interpolate ephemeris, remove the epochs which are not inside K2C9 superstamp, and get epochs:
 ```
-python get_K2_epochs.py in_2.yaml
-```
-It produces `ephem_C9b_v1/30617_time_tpf.dat` and uses coords which are currently found in non-automatic way (that will be corrected).
-
-Interpolate ephemeris:
-```
-python interpolate_ephemeris.py > ephem_C9b_v1/30617.ephem_interp
-```
-
-Then remove the epochs which are not inside K2C9 superstamp:
-```
-python clean_1.py ephem_C9b_v1/30617.ephem_interp > ephem_C9b_v1/30617.ephem_interp_v2
+python format_ephemeris.py > ephem_C9b_v1/30617.ephem_interp_v2
 ```
 
 Next step is to get Channel, Column, Row (CCR) for each epoch:

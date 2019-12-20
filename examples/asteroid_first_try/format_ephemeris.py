@@ -32,9 +32,11 @@ def get_index_nearest(array, value):
 
 def get_in_superstamp_mask(ra, dec):
     """
-    XXX
+    Take numpy arrays of ra & dec (both in deg) and check XXX
+    XXX - seems now it only checks if it's in superstamp CHANNELS
+    Result is a mask that indicates which coords
     """
-    ok_channels = [30, 31, 49, 52]
+    ok_channels = [30, 31, 32, 49, 52]
 
     # approximate trimming to superstamp area
     mask_1 = select_in_superstamp_approx(ra, dec)
@@ -69,25 +71,30 @@ if __name__ == '__main__':
 
     # trimming to superstamp area
     mask_1 = get_in_superstamp_mask(ra, dec)
-    where_1 = np.where(mask_1)[0]
+    where_1 = np.where(mask_1)[0].tolist()
 
-    # select epoch/position in the middle and get K2 epochs
-    i_middle = where_1[len(where_1)//2]
-    ra_middle = ra[i_middle]
-    dec_middle = dec[i_middle]
-
-# XXX - line below fails on ephem_C9a_v1/264.ephem
-    (time_3, mask_3) = get_time_mask(ra_middle, dec_middle, campaign)
+    # get time vector for single coordinates, starting from
+    # the middle of the masked vector
+    i_middle = len(where_1)//2
+    indexes = where_1[i_middle:] + where_1[:i_middle]
+    for index in indexes:
+        try:
+            (time_3, mask_3) = get_time_mask(ra[index], dec[index], campaign)
+        except Exception:  # i.e., the pixel is not in a superstamp
+            if index == indexes[-1]:
+                raise ValueError('no epochs in superstamp - stage 3')
+        else:
+            break
     mask_ = np.logical_not(np.isnan(time_3))
     time_3 = time_3[mask_] + 2450000.
     mask_3 = mask_3[mask_]
     if np.sum(mask_3) == 0:
-        raise ValueError('no epochs on silicon - stage 3')
+        raise ValueError('no epochs on silicon - stage 4')
 
     # interpolate ephemeris
     (ra_3, dec_3) = interpolate_ephemeris(time, ra, dec, time_3)
 
-    # trim interpolated ephmeris
+    # trim interpolated ephemeris
     mask_4 = get_in_superstamp_mask(ra_3, dec_3)
     time_4 = time_3[mask_4]
     ra_4 = ra_3[mask_4]
@@ -95,17 +102,28 @@ if __name__ == '__main__':
 
     # check exact epochs and masks for interpolated ephemeris
     time_5 = []
+    previous_epic = None
     for (time_, ra_, dec_) in zip(time_4, ra_4, dec_4):
+        # epic = ...
+        # if epic is None:
+        #     continue
+        # if previous_epic != epic:
+        # XXX - AND NO INDENT BLOCK try BELOW:
         try:
+            # XXX this is probably the slowest part - can be speed up if we
+            # use the times from previous coords provided that they're in
+            # the same TPF - check it using
+            # TpfRectangles.get_epic_id_for_pixel(x, y)
+            # XXX - make sure results are the same
             (time_tmp, mask_tmp) = get_time_mask(ra_, dec_, campaign)
         except Exception:
-            pass
+            continue
         else:
             mask_ = np.logical_not(np.isnan(time_tmp))
             time_tmp = time_tmp[mask_] + 2450000.
-            index = get_index_nearest(time_tmp, time_)
-            if mask_tmp[mask_][index]:
-                time_5.append(time_tmp[index])
+        index = get_index_nearest(time_tmp, time_)
+        if mask_tmp[mask_][index]:
+            time_5.append(time_tmp[index])
 
     # final interpolation:
     (ra_5, dec_5) = interpolate_ephemeris(time, ra, dec, np.array(time_5))
