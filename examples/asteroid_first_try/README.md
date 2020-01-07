@@ -8,7 +8,7 @@ This produces `ephem_C9a_v1/30617.ephem` and `ephem_C9b_v1/30617.ephem`.
 
 Interpolate ephemeris, remove the epochs which are not inside K2C9 superstamp, and get epochs:
 ```
-python format_ephemeris.py > ephem_C9b_v1/30617.ephem_interp_v2
+python format_ephemeris.py ephem_C9b_v1/30617.ephem > ephem_C9b_v1/30617.ephem_interp_v2
 ```
 
 Next step is to get Channel, Column, Row (CCR) for each epoch:
