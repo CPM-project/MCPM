@@ -6,7 +6,7 @@ python get_coords_1.py in_1.txt
 ```
 This produces `ephem_C9a_v1/30617.ephem` and `ephem_C9b_v1/30617.ephem`.
 
-Interpolate ephemeris, remove the epochs which are not inside K2C9 superstamp, and get epochs:
+Interpolate ephemeris, remove the epochs which are not inside K2C9 superstamp, and get epochs (here we use C9b only):
 ```
 python format_ephemeris.py ephem_C9b_v1/30617.ephem > ephem_C9b_v1/30617.ephem_interp_v2
 ```
