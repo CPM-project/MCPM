@@ -31,7 +31,7 @@ out = read_config.read_general_options(config)
 # Read models:
 out = read_config.read_models(config)
 (parameter_values, model_ids, plot_files) = out[:3]
-(txt_files, txt_files_prf_phot, txt_models, parameters_to_fit) = out[3:]
+(txt_files, txt_files_prf_phot, txt_models, parameters_to_fit, _, _) = out[3:]
 
 # Read MCPM options:
 MCPM_options = read_config.read_MCPM_options(config)
@@ -110,8 +110,11 @@ for zip_single in zipped:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]
         y = cpm_source.residuals[y_mask]
-        y += utils.scale_model(values[0], values[2], values[1], x+2450000., 
-                model_time, model_value)
+        y += utils.scale_model(
+            values[parameters_to_fit.index('t_0')],
+            values[parameters_to_fit.index('width_ratio')],
+            values[parameters_to_fit.index('flux')],
+            x+2450000., model_time, model_value)
         y_err = cpm_source.all_pixels_flux_err[y_mask]
         y_err *= MCPM_options['sat_sigma_scale']
         np.savetxt(txt_file, np.array([x, y, y_err]).T)

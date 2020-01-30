@@ -662,6 +662,7 @@ class Minimizer(object):
         """
         plots legend for standard plots
         """
+        # legend_kwargs['ncol'] = 2 # XXX
         if legend_order is not None:
             (handles, labels) = plt.gca().get_legend_handles_labels()
             if isinstance(legend_order, tuple):

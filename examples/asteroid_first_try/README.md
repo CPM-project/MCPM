@@ -45,6 +45,12 @@ and plot:
 python plot_30617.py
 ```
 
+For C9a:
+ - change file names (i.e., use ephem\_C9a\_v1/ instead of ephem\_C9b\_v1/)
+ - change input\_file in make\_cfg\_1.py
+ - set `campaigns = 91` in template\_1.cfg
+
+
 ### Difference image
 
 We want to plot postage stamp images for selected epochs. And we the images will be after the CPM is applied, i.e., instrumental trends are removed. Selected epochs for two bright objects (first one moves very slow, second - very fast):
