@@ -18,8 +18,8 @@ python get_CCR.py ephem_C9b_v1/30617.ephem_interp_v2 > ephem_C9b_v1/30617.ephem_
 
 After that, we prepare configuration files - one per epoch:
 ```
-python make_cfg_1.py > settings_30617.txt
-python prepare_1.py settings_30617.txt template_1.cfg
+python make_cfg_1.py ephem_C9b_v1/30617.ephem_interp_CCR 30617 > settings_30617_92.txt
+python prepare_1.py settings_30617_92.txt template_1.cfg
 ```
 
 We need file with Kepler ephemeris:
@@ -27,17 +27,17 @@ We need file with Kepler ephemeris:
 cp ../K2_ephemeris_01.dat .
 ```
 
-Now we have to run all the cfg files. I do it this way (this is very inefficient and takes hours!):
+Now we have to run all the cfg files. I do it this way (this takes hours!):
 
 ```
-awk 'BEGIN{print "#! /bin/tcsh"}{split($1, a, "."); split (a[1], b, "/");  printf "(time python3 ../evaluate_MM_MCPM_v1.py %s > out_files/%s.out ) >& out_files/%s.err\n", $1, b[2], b[2]}' settings_30617.txt > run.sh
-chmod u+x run.sh
-(time ./run.sh > run.out ) >& run.err &
+awk 'BEGIN{print "#! /bin/tcsh"}{split($1, a, "."); split (a[1], b, "/");  printf "(time python3 ../evaluate_MM_MCPM_v1.py %s > out_files/%s.out ) >& out_files/%s.err\n", $1, b[2], b[2]}' settings_30617_92.txt > run_30617_92.sh
+chmod u+x run_30617_92.sh
+(time ./run_30617_92.sh > run_30617_92.out ) >& run_30617_92.err &
 ```
 
 Extract specific epoch from each file:
 ```
-awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617.txt | python extract_epoch.py /dev/stdin > lc_30617.dat
+awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617_92.txt | python extract_epoch.py /dev/stdin > lc_30617_92.dat
 ```
 
 and plot:
@@ -45,10 +45,9 @@ and plot:
 python plot_30617.py
 ```
 
-For C9a:
- - change file names (i.e., use ephem\_C9a\_v1/ instead of ephem\_C9b\_v1/)
- - change input\_file in make\_cfg\_1.py
- - set `campaigns = 91` in template\_1.cfg
+For C9a one has to change directory and file names and the parameters above:
+ - C9a -> C9b
+ - 91 -> 92
 
 
 ### Difference image
