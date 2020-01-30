@@ -15,9 +15,10 @@ def guess_campaign(time):
     """
     guess campaign (*int*: 91 or 92) based on time vector
     """
-    if np.all(time > 2457530.) and np.all(time < 2457575.):
+    time_ = np.array(time)
+    if np.all(time_ > 2457530.) and np.all(time_ < 2457575.):
         return 92
-    elif np.all(time > 2457500.) and np.all(time < 2457530.):
+    elif np.all(time_ > 2457500.) and np.all(time_ < 2457530.):
         return 91
     else:
         raise ValueError('campaign unknown')
