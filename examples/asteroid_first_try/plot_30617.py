@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-file_name = "lc_30617.dat"
+file_name = "lc_30617_v1.dat"
 
 (time, flux) = np.loadtxt(file_name, unpack=True)
 

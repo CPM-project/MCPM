@@ -37,7 +37,11 @@ chmod u+x run_30617_92.sh
 
 Extract specific epoch from each file:
 ```
-awk '{printf "%s %.5f\n", $7, ($5+$6)/2}' settings_30617_92.txt | python extract_epoch.py /dev/stdin > lc_30617_92.dat
+awk '{printf "%s %.5f\n", $8, ($6+$7)/2}' settings_30617_92.txt | python extract_epoch.py /dev/stdin > lc_30617_92_v1.dat
+```
+and from the second type of photometry:
+```
+awk '{printf "%s %.5f\n", $9, ($6+$7)/2}' settings_30617_92.txt | python extract_epoch.py /dev/stdin > lc_30617_92_v2.dat
 ```
 
 and plot:

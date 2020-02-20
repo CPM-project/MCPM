@@ -27,7 +27,7 @@ for line in in_data:
     ref_epoch = float(line.split()[1]) - dt
     if not os.path.isfile(file_name):
         continue
-    (time, flux) = np.loadtxt(file_name, unpack=True)
+    (time, flux) = np.loadtxt(file_name, unpack=True, usecols=(0, 1))
     index = get_index_nearest(time, ref_epoch)
     if np.abs(time[index] - ref_epoch) > max_time_diff:
         continue
