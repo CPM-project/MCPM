@@ -118,8 +118,13 @@ class TpfData(object):
         except exceptions:
             print("\n\nFailed to download file {:}\n\n".format(url_to_load))
             raise
+        if not path.isfile(self._path):
+            print("", file=sys.stderr, flush=True)
+            raise ValueError(
+                'Download of\n' + url_to_load + '\nto\n' + self._path +
+                'somehow failed')
         print(" done", file=sys.stderr, flush=True)
-    
+
     @property
     def reference_pixel(self):
         """return array that gives reference pixel position"""
