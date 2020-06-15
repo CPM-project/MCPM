@@ -85,8 +85,8 @@ class PrfData(object):
         # grid on which prf is defined:
         x_lim = self._keywords[0]['CRPIX1P'] - .5
         y_lim = self._keywords[0]['CRPIX2P'] - .5
-        self._prf_grid_x = np.linspace(-x_lim, x_lim, num=2*x_lim+1)
-        self._prf_grid_y = np.linspace(-y_lim, y_lim, num=2*y_lim+1)
+        self._prf_grid_x = np.linspace(-x_lim, x_lim, num=int(2*x_lim+1+.5))
+        self._prf_grid_y = np.linspace(-y_lim, y_lim, num=int(2*y_lim+1+.5))
         self._prf_grid_x *= self._keywords[0]['CDELT1P']
         self._prf_grid_y *= self._keywords[0]['CDELT2P']
         #self._prf_grid_x = (np.arange(nx) - nx / 2. + .5) * self._keywords[0]['CDELT1P']
