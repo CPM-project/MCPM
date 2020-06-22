@@ -179,7 +179,7 @@ print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
 minimizer.set_prior_boundaries(min_values, max_values)
 for start_ in starting:
     if minimizer.ln_prior(start_) <= -float('inf'):
-        raise ValueError('starting point is not in prior\n', start_)
+        raise ValueError('starting point is not in prior:\n' + str(start_))
 sampler = emcee.EnsembleSampler(
     emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
 acceptance_fractions = []
