@@ -193,8 +193,10 @@ out_name = emcee_settings.get('file_acceptance_fractions', None)
 if out_name is not None:
     if len(out_name) == 0:
         out_name = config_file_root + ".accept"
+    data_save = [str(i+1) + " " + str(af)
+                 for (i, af) in enumerate(acceptance_fractions)]
     with open(out_name, 'w') as file_out:
-        file_out.write('\n'.join([str(af) for af in acceptance_fractions]))
+        file_out.write('\n'.join(data_save))
 n_burn = emcee_settings['n_burn']
 samples = sampler.chain[:, n_burn:, :].reshape((-1, n_params))
 blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
