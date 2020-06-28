@@ -63,7 +63,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         raise ValueError('one parameter needed - file with ephemeris')
 
-    data = np.loadtxt(sys.argv[1], unpack=True)
+    data = np.loadtxt(sys.argv[1], unpack=True, usecols=(0, 1, 2))
     time = data[0]
     ra = data[1]
     dec = data[2]

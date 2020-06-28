@@ -50,7 +50,8 @@ with open(sys.argv[1]) as in_data:
                 horizons = Horizons(id=id_name, **kwargs_1)
                 ephem = horizons.ephemerides()
             except Exception:
-                raise
+                print(id_name_orig, "FAILED")
+        #        raise
         print_output(ephem, columns, directories[0], id_name_orig)
         horizons = Horizons(id=id_name, **kwargs_2)
         ephem = horizons.ephemerides()

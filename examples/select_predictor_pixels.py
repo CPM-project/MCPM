@@ -45,7 +45,8 @@ def select_predictor_pixels(file_in, n_select, file_out):
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
-        raise ValueError('3 parameters required')
+        raise ValueError('3 parameters required: input file, n_pixels, ' +
+                         'output file (both are FITS type).')
     n_select = int(sys.argv[2])
 
     select_predictor_pixels(sys.argv[1], n_select, sys.argv[3])
