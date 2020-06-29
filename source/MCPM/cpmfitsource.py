@@ -491,7 +491,14 @@ class CpmFitSource(object):
                 assert head['n_pca'] == self._predictor_matrix_kwargs['n_pca']
             else:
                 assert self._predictor_matrix_kwargs['n_pca'] == 0
-            pixels = np.array([[a,b] for (a, b) in hdu[1].data])
+            try:
+                pixels = np.array([[a,b] for (a, b) in hdu[1].data])
+            except Exception:
+                print(
+                    "Reading FITS file failed in read_coeffs_from_fits().\n" +
+                    "Maybe you wanted to use option 'selected_pixels_file' " +
+                    "of get_predictor_matrix() instead/", file=sys.stderr)
+                raise
             assert np.all([[a,b] for (a, b) in hdu[1].data] == self.pixels) 
             rows = [a[0] for a in hdu[2].data]
             assert np.all(rows == self._predictor_matrix_row)
