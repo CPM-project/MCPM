@@ -51,6 +51,7 @@ with open(sys.argv[1]) as in_data:
                 ephem = horizons.ephemerides()
             except Exception:
                 print(id_name_orig, "FAILED")
+                continue
         #        raise
         print_output(ephem, columns, directories[0], id_name_orig)
         horizons = Horizons(id=id_name, **kwargs_2)
