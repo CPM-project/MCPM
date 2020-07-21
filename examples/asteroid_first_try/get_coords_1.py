@@ -12,7 +12,7 @@ location = '@-227'
 begins = ["2016-04-22 12:00:00", "2016-05-22 17:00:00"]
 ends = ["2016-05-18 23:59:00", "2016-07-02 23:59:00"]
 step = "15m"
-directories = ["ephem_C9a_v1", "ephem_C9b_v1"]
+directories = ["ephem_C9a_v2", "ephem_C9b_v2"]
 columns = ['datetime_jd', 'RA', 'DEC', 'V']
 
 # Settings end here.
@@ -44,15 +44,16 @@ with open(sys.argv[1]) as in_data:
         try:
             horizons = Horizons(id=id_name, **kwargs_1)
             ephem = horizons.ephemerides()
-        except Exception:
+        except Exception as exception_1:
             id_name = id_name.replace("_", " ")
             try:
                 horizons = Horizons(id=id_name, **kwargs_1)
                 ephem = horizons.ephemerides()
-            except Exception:
+            except Exception as exception_2:
                 print(id_name_orig, "FAILED")
+                print(exception_1)
+                print(exception_2)
                 continue
-        #        raise
         print_output(ephem, columns, directories[0], id_name_orig)
         horizons = Horizons(id=id_name, **kwargs_2)
         ephem = horizons.ephemerides()
