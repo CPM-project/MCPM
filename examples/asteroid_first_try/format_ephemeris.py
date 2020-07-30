@@ -125,6 +125,7 @@ if __name__ == '__main__':
             (time_tmp, mask_tmp) = get_time_mask(ra_, dec_, campaign)
         except Exception as ex:
             print("XX", time_, ra_, dec_, campaign, ex, flush=True)
+            continue
         else:
             mask_ = np.logical_not(np.isnan(time_tmp))
             time_tmp = time_tmp[mask_] + 2450000.
