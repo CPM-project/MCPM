@@ -123,9 +123,12 @@ if __name__ == '__main__':
             # TpfRectangles.get_epic_id_for_pixel(x, y)
             # XXX - make sure results are the same
             (time_tmp, mask_tmp) = get_time_mask(ra_, dec_, campaign)
-        except Exception as ex:
-            print("XX", time_, ra_, dec_, campaign, ex, flush=True)
+        except ValueError as ex:
+            print("##", time_, ra_, dec_, campaign, ex, flush=True)
             continue
+        except IndexError as ex:
+            print("##", time_, ra_, dec_, campaign, ex, flush=True)
+            raise
         else:
             mask_ = np.logical_not(np.isnan(time_tmp))
             time_tmp = time_tmp[mask_] + 2450000.
@@ -133,7 +136,7 @@ if __name__ == '__main__':
         if mask_tmp[mask_][index]:
             time_5.append(time_tmp[index])
         else:
-            print("XX", time_, ra_, dec_, campaign, index, flush=True)
+            print("##", time_, ra_, dec_, campaign, index, flush=True)
     print("# len 2", len(time_5))
 
     # final interpolation:
