@@ -32,6 +32,7 @@ class TpfData(object):
     # The directory where TPF files are stored.
 
     def __init__(self, epic_id=None, campaign=None, file_name=None):
+        print("# TPF INIT", epic_id, campaign, file_name, file=sys.stderr, flush=True)
         if (epic_id is None) != (campaign is None):
             raise ValueError('wrong parameters epic_id and campaign in TpfData.__init__()')
         if (file_name is not None) and (epic_id is not None):
@@ -55,12 +56,17 @@ class TpfData(object):
     def _load_data(self, file_name):
         """loads header information and data from given file"""
         hdu_list = pyfits.open(file_name)
-        self.ra_object = hdu_list[2].header['RA_OBJ']
-        self.dec_object = hdu_list[2].header['DEC_OBJ']
+        print(hdu_list.info())
+#        for (i, hdu) in enumerate(hdu_list):
+#            print("HDU", i)
+#            print(hdu.header)
+        hdu_2 = hdu_list[2]
+        self.ra_object = hdu_2.header['RA_OBJ']
+        self.dec_object = hdu_2.header['DEC_OBJ']
         self.channel = hdu_list[0].header['CHANNEL']
-        self.reference_column = hdu_list[2].header['CRVAL1P']
-        self.reference_row = hdu_list[2].header['CRVAL2P']
-        self.mask = hdu_list[2].data 
+        self.reference_column = hdu_2.header['CRVAL1P']
+        self.reference_row = hdu_2.header['CRVAL2P']
+        self.mask = hdu_2.data
         self.n_rows = self.mask.shape[0]
         self.n_columns = self.mask.shape[1]
         self.n_pixels = self.n_rows * self.n_columns
