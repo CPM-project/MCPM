@@ -6,7 +6,7 @@ import numpy as np
 if sys.version_info[0] > 2:
     from urllib.request import URLopener
     from urllib.error import HTTPError, URLError
-    exceptions = (HTTPError, URLError)
+    exceptions = (HTTPError, URLError, OSError)
 else:
     from urllib import URLopener
     exceptions = (IOError)
@@ -32,7 +32,6 @@ class TpfData(object):
     # The directory where TPF files are stored.
 
     def __init__(self, epic_id=None, campaign=None, file_name=None):
-        print("# TPF INIT", epic_id, campaign, file_name, file=sys.stderr, flush=True)
         if (epic_id is None) != (campaign is None):
             raise ValueError('wrong parameters epic_id and campaign in TpfData.__init__()')
         if (file_name is not None) and (epic_id is not None):
@@ -56,10 +55,12 @@ class TpfData(object):
     def _load_data(self, file_name):
         """loads header information and data from given file"""
         hdu_list = pyfits.open(file_name)
-        print(hdu_list.info())
-#        for (i, hdu) in enumerate(hdu_list):
-#            print("HDU", i)
-#            print(hdu.header)
+        if len(hdu_list) < 3:
+            raise IndexError(
+                "error with TPF file, EPIC: " + str(self.epic_id) +
+                "campaign: " + str(self.campaign) + "\nFile name:\n\n" +
+                file_name + "\n\nYou may want to remove this file before " +
+                "re-running the code.")
         hdu_2 = hdu_list[2]
         self.ra_object = hdu_2.header['RA_OBJ']
         self.dec_object = hdu_2.header['DEC_OBJ']
@@ -122,11 +123,12 @@ class TpfData(object):
         try:
             url_retriever.retrieve(url_to_load, self._path)
         except exceptions:
-            print("\n\nFailed to download file {:}\n\n".format(url_to_load))
-            raise
+            print("", file=sys.stderr, flush=True)
+            raise IOError(
+                "\n\nFailed to download file {:}\n\n".format(url_to_load))
         if not path.isfile(self._path):
             print("", file=sys.stderr, flush=True)
-            raise ValueError(
+            raise IOError(
                 'Download of\n' + url_to_load + '\nto\n' + self._path +
                 'somehow failed')
         print(" done", file=sys.stderr, flush=True)
