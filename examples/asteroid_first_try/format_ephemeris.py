@@ -41,7 +41,6 @@ def get_in_superstamp_mask(ra, dec):
 
     # approximate trimming to superstamp area
     mask_1 = select_in_superstamp_approx(ra, dec)
-    # print("# mask 4", np.sum(mask_1))
     if np.sum(mask_1) == 0:
         raise ValueError('no epochs on silicon - stage 1')
     ra_1 = ra[mask_1]
@@ -56,7 +55,6 @@ def get_in_superstamp_mask(ra, dec):
             mask_2[index] = True
     if np.sum(mask_2) == 0:
         raise ValueError('no epochs on silicon - stage 2')
-    # print("# mask 5", np.sum(mask_2))
 
     return mask_2
 
@@ -73,9 +71,11 @@ if __name__ == '__main__':
     campaign = guess_campaign(time)
 
     # trimming to superstamp area
-    mask_1 = get_in_superstamp_mask(ra, dec)
+    try:
+        mask_1 = get_in_superstamp_mask(ra, dec)
+    except ValueError:
+        sys.exit()
     where_1 = np.where(mask_1)[0].tolist()
-    # print("# mask 1", np.sum(mask_1))
 
     # get time vector for single coordinates, starting from
     # the middle of the masked vector
@@ -86,11 +86,10 @@ if __name__ == '__main__':
             (time_3, mask_3) = get_time_mask(ra[index], dec[index], campaign)
         except Exception:  # i.e., the pixel is not in a superstamp
             if index == indexes[-1]:
-                raise ValueError('no epochs in superstamp - stage 3')
+                sys.exit()
         else:
             break
     mask_ = np.logical_not(np.isnan(time_3))
-    # print("# mask 2", np.sum(mask_))
     time_3 = time_3[mask_] + 2450000.
     mask_3 = mask_3[mask_]
     if np.sum(mask_3) == 0:
@@ -98,11 +97,12 @@ if __name__ == '__main__':
 
     # interpolate ephemeris
     (ra_3, dec_3) = interpolate_ephemeris(time, ra, dec, time_3)
-    # print("# len 1", len(ra_3))
 
     # trim interpolated ephemeris
-    mask_4 = get_in_superstamp_mask(ra_3, dec_3)
-    # print("# mask 3", np.sum(mask_4))
+    try:
+        mask_4 = get_in_superstamp_mask(ra_3, dec_3)
+    except ValueError:
+        sys.exit()
     time_4 = time_3[mask_4]
     ra_4 = ra_3[mask_4]
     dec_4 = dec_3[mask_4]
@@ -135,11 +135,9 @@ if __name__ == '__main__':
         index = get_index_nearest(time_tmp, time_)
         if mask_tmp[mask_][index]:
             time_5.append(time_tmp[index])
-    # print("# len 2", len(time_5))
 
     # final interpolation:
     (ra_5, dec_5) = interpolate_ephemeris(time, ra, dec, np.array(time_5))
-    # print("# len 3", len(ra_5))
 
     for (time_, ra_, dec_) in zip(time_5, ra_5, dec_5):
         print("{:.5f} {:.6f} {:.6f}".format(time_, ra_, dec_))

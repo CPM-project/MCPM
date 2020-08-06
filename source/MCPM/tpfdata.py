@@ -55,12 +55,17 @@ class TpfData(object):
     def _load_data(self, file_name):
         """loads header information and data from given file"""
         hdu_list = pyfits.open(file_name)
-        if len(hdu_list) < 3:
-            raise IndexError(
-                "error with TPF file, EPIC: " + str(self.epic_id) +
-                "campaign: " + str(self.campaign) + "\nFile name:\n\n" +
-                file_name + "\n\nYou may want to remove this file before " +
-                "re-running the code.")
+        file_ok = True
+        try:
+            n_hdu = len(hdu_list)
+        except:
+            file_ok = False
+        else:
+            if n_hdu < 3:
+                file_ok = False
+        if not file_ok:
+            raise OSError('Error reading file:\n\n' + file_name +
+                          '\n\nYou may want to remove it and rerun the code.')
         hdu_2 = hdu_list[2]
         self.ra_object = hdu_2.header['RA_OBJ']
         self.dec_object = hdu_2.header['DEC_OBJ']
@@ -72,7 +77,11 @@ class TpfData(object):
         self.n_columns = self.mask.shape[1]
         self.n_pixels = self.n_rows * self.n_columns
         
-        data = hdu_list[1].data
+        try:
+            data = hdu_list[1].data
+        except:
+            raise OSError('Error reading file:\n\n' + file_name +
+                          '\n\nYou may want to remove it and rerun the code.')
         self.jd_short = data["time"] + 4833. # it is BJD
         self.quality_flags = data["quality"].astype(dtype=int)  
         flux = data["flux"]

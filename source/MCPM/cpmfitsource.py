@@ -319,8 +319,11 @@ class CpmFitSource(object):
         self._pixel_flux_err = out[2]
         self._pixel_mask = out[3]
 
-        errors = np.array(self._pixel_flux_err)
-        self._all_pixels_flux_err = np.sqrt(np.sum(errors**2, axis=0))
+        if self._pixel_flux_err[0] is None:
+            self._all_pixels_flux_err = None
+        else:
+            errors = np.array(self._pixel_flux_err)
+            self._all_pixels_flux_err = np.sqrt(np.sum(errors**2, axis=0))
 
     @property
     def pixel_time(self):

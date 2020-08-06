@@ -363,8 +363,10 @@ class MultipleTpf(object):
         return out
 
     def get_time_flux_mask_for_pixels(self, pixels):
-        """for every pixel in the list extract the time, flux, and epoch masks 
-        from appropriate TPF files; pixels is a list of input pixels"""
+        """
+        for every pixel in the list extract the time, flux, and epoch masks
+        from appropriate TPF files; pixels is a list of input pixels
+        """
         time = []
         flux = []
         flux_err = []
@@ -383,9 +385,11 @@ class MultipleTpf(object):
     def plot_pixel_curves(self, mean_x=None, mean_y=None, half_size=2, 
             pixels=None, flux=None,
             figsize=(15, 10.3), dpi=300, point_size=2, time_mask=None, **kwargs):
-        """Plot raw light curves for pixels in a square. 
+        """
+        Plot raw light curves for pixels in a square.
         Default settings produce large but readable file. 
-        The **kwargs are passed to utils.plot_matrix_subplots()."""
+        The **kwargs are passed to utils.plot_matrix_subplots().
+        """
         fig_args = {"left":0.035, "bottom":0.023, "right":.995, "top":.995}
 
         if flux is not None and pixels is not None: # Data given directly. 
