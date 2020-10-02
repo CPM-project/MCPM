@@ -162,16 +162,16 @@ for zip_single in zipped:
     chi2 = minimizer.chi2_fun(values)
     print(name, chi2)
     minimizer.set_satellite_data(values)
-    
+
     if txt_file_prf_phot is not None:
         (y, y_mask) = cpm_source.prf_photometry()
         x = cpm_source.pixel_time[y_mask]
-        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask]]).T)
+        err = cpm_source.all_pixels_flux_err * MCPM_options['sat_sigma_scale']
+        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask], err[y_mask]]).T)
     if txt_file is not None:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]
         y = minimizer.event.datasets[-1].flux
-        #y = minimizer._sat_models[0][y_mask]
         y_err = cpm_source.all_pixels_flux_err[y_mask]
         y_err *= MCPM_options['sat_sigma_scale']
         y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
