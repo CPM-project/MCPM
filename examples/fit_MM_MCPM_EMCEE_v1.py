@@ -49,8 +49,8 @@ def fit_MM_MCPM_EMCEE(
             ra=skycoord.ra.deg, dec=skycoord.dec.deg,
             campaign=campaign, channel=MCPM_options['channel'])
         cpm_source.get_predictor_matrix(**MCPM_options['predictor_matrix'])
-        cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'],
-                                       l2_per_pixel=MCPM_options['l2_per_pixel'])
+        cpm_source.set_l2_l2_per_pixel(
+            l2=MCPM_options['l2'], l2_per_pixel=MCPM_options['l2_per_pixel'])
         cpm_source.set_pixels_square(MCPM_options['half_size'])
         cpm_source.select_highest_prf_sum_pixels(MCPM_options['n_select'])
 
@@ -64,7 +64,7 @@ def fit_MM_MCPM_EMCEE(
     parameters.update(parameters_fixed)
     parameters_ = {**parameters}
     for param in list(parameters_.keys()).copy():
-        if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
+        if param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f':
             parameters_.pop(param)
     model = MM.Model(parameters_, coords=coords)
     for (m_key, m_value) in methods.items():
@@ -93,11 +93,13 @@ def fit_MM_MCPM_EMCEE(
         mask = cpm_source.residuals_mask
         if 'mask_model_epochs' in MCPM_options:
             mask *= utils.mask_nearest_epochs(
-                cpm_source.pixel_time+2450000., MCPM_options['mask_model_epochs'])
+                cpm_source.pixel_time+2450000.,
+                MCPM_options['mask_model_epochs'])
         sat_time = cpm_source.pixel_time[mask] + 2450000.
         # sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
         sat_sigma = np.sqrt(np.sum(
-            np.array([err[mask] for err in cpm_source.pixel_flux_err])**2, axis=0))
+            np.array([err[mask] for err in cpm_source.pixel_flux_err])**2,
+            axis=0))
         if 'sat_sigma_scale' in MCPM_options:
             sat_sigma *= MCPM_options['sat_sigma_scale']
         data = MM.MulensData(
@@ -133,7 +135,8 @@ def fit_MM_MCPM_EMCEE(
         elif len(MCPM_options[cc]) in [5, 6, 7, 8]:
             minimizer.add_full_color_constraint(
                 ref_dataset,
-                files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]),
+                files.index(MCPM_options[cc][1]),
+                files.index(MCPM_options[cc][2]),
                 *MCPM_options[cc][3:])
         else:
             raise ValueError('wrong size of "color_constraint" option')
@@ -168,7 +171,7 @@ def fit_MM_MCPM_EMCEE(
     acceptance_fractions = []
     # run:
     # sampler.run_mcmc(starting, emcee_settings['n_steps'])
-    for results in sampler.sample(starting, iterations=emcee_settings['n_steps']):
+    for _ in sampler.sample(starting, iterations=emcee_settings['n_steps']):
         acceptance_fractions.append(np.mean(sampler.acceptance_fraction))
 
     # cleanup and close minimizer:
@@ -184,7 +187,6 @@ def fit_MM_MCPM_EMCEE(
     samples = sampler.chain[:, n_burn:, :].reshape((-1, n_params))
     blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
     n_fluxes = blob_sampler.shape[-1]
-    blob_samples = blob_sampler[:, n_burn:, :].reshape((-1, n_fluxes))
     if 'coeffs_fits_out' in MCPM_options:
         minimizer.set_pixel_coeffs_from_samples(samples)
         minimizer.save_coeffs_to_fits(MCPM_options['coeffs_fits_out'])
@@ -199,12 +201,14 @@ def fit_MM_MCPM_EMCEE(
     results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip_)
     for (param, r) in zip(parameters_to_fit, results):
         print('{:7s} : {:.4f} {:.4f} {:.4f}'.format(param, *r))
-    percentiles = np.percentile(blob_samples, [16, 50, 84], axis=0)
-    blob_results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*percentiles))
-    flux_name = ['S', 'B']
-    msg = 'flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'
-    for (i, r) in zip(range(n_fluxes), blob_results):
-        print(msg.format(flux_name[i % 2], i//2+1, *r))
+    if n_fluxes > 0:
+        blob_samples = blob_sampler[:, n_burn:, :].reshape((-1, n_fluxes))
+        percentiles = np.percentile(blob_samples, [16, 50, 84], axis=0)
+        blob_results = map(
+            lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip(*percentiles))
+        msg = 'flux_{:}_{:} : {:.4f} {:.4f} {:.4f}'
+        for (i, r) in zip(range(n_fluxes), blob_results):
+            print(msg.format(['S', 'B'][i % 2], i//2+1, *r))
     if 'file_posterior' in emcee_settings:
         if len(emcee_settings['file_posterior']) == 0:
             emcee_settings['file_posterior'] = config_file_root + ".posterior"
@@ -243,4 +247,3 @@ if __name__ == '__main__':
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
         file_all_models)
-
