@@ -114,6 +114,8 @@ def fit_MM_MCPM_EMCEE(
     minimizer = Minimizer(event, params, cpm_sources)
     minimizer.file_all_models = file_all_models
     minimizer.set_chi2_0()
+    if 'f_s_sat' in parameters_fixed:
+        minimizer.set_satellite_source_flux(parameters_fixed['f_s_sat'])
     if 'coeffs_fits_in' in MCPM_options:
         minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
     if 'coeffs_fits_out' in MCPM_options:
@@ -198,9 +200,9 @@ def fit_MM_MCPM_EMCEE(
         np.mean(sampler.acceptance_fraction),
         np.std(sampler.acceptance_fraction)))
     zip_ = zip(*np.percentile(samples, [16, 50, 84], axis=0))
-    results = map(lambda v: (v[1], v[2]-v[1], v[1]-v[0]), zip_)
+    results = map(lambda v: (v[1], v[2]-v[1], v[0]-v[1]), zip_)
     for (param, r) in zip(parameters_to_fit, results):
-        print('{:7s} : {:.4f} {:.4f} {:.4f}'.format(param, *r))
+        print('{:7s} : {:.4f} {:+.4f} {:+.4f}'.format(param, *r))
     if n_fluxes > 0:
         blob_samples = blob_sampler[:, n_burn:, :].reshape((-1, n_fluxes))
         percentiles = np.percentile(blob_samples, [16, 50, 84], axis=0)

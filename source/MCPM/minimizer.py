@@ -104,9 +104,21 @@ class Minimizer(object):
 
     def print_min_chi2(self):
         """Print minimum chi2 and corresponding values"""
-        fmt = " ".join(["{:.4f}"] * self.n_parameters)
+        # fmt = " ".join(["{:.4f}"] * self.n_parameters)
+        fmt = " ".join(["{:}"] * self.n_parameters)
         parameters = fmt.format(*list(self._min_chi2_theta))
         print("{:.3f}  {:}".format(self._min_chi2, parameters))
+
+    def set_satellite_source_flux(self, sat_source_flux):
+        """
+        Provide value of satellite source flux. It's useful only if f_s_sat
+        is not a fitting parameter.
+
+        Parameters :
+            sat_source_flux: *float*
+                Satellite source flux
+        """
+        self._sat_source_flux = sat_source_flux
 
     def set_parameters(self, theta):
         """
@@ -118,7 +130,7 @@ class Minimizer(object):
                     len(self.parameters_to_fit), len(theta)))
         for (i, param) in enumerate(self.parameters_to_fit):
             if param == 'f_s_sat':
-                self._sat_source_flux = theta[i]
+                self.set_satellite_source_flux(theta[i])
             elif param == 'f_b_sat':
                 self._sat_blending_flux = theta[i]
             elif param == 'q_f':
