@@ -768,6 +768,8 @@ class Minimizer(object):
             color_list=color_list_, label_list=label_list)
         if ylim is not None:
             plt.ylim(ylim[0], ylim[1])
+        else:
+            ylim = plt.ylim()
         plt.xlim(t_start, t_stop)
         plt.gca().tick_params(top=True, direction='in')
 
@@ -776,14 +778,19 @@ class Minimizer(object):
         self._legend_standard_plot(legend_order, legend_kwargs, color_list,
                                    label_list, alphas)
 
+        y_K2_max = self._magnitude_to_sat_flux(np.min(ylim))
+        y_K2_min = self._magnitude_to_sat_flux(np.max(ylim))
         print("Y-axis limits:")
         print("   mag:      {:.3f} {:.3f}".format(*ylim))
-        print("   K2 flux:  {:.2f} {:.2f}".format(
-            *self._magnitude_to_sat_flux(np.array(ylim)).tolist()))
+        print("   K2 flux:  {:.2f} {:.2f}".format(y_K2_min, y_K2_max))
 
         if fluxes_y_axis is not None:
             y_color = 'red'
             y_label = r'K2 differential counts [e$^-$s$^{-1}$]'
+
+            min_ = np.min(fluxes_y_axis)
+            if min_ < y_K2_min or np.max(fluxes_y_axis) > y_K2_max:
+                raise ValueError('ylim incompatible with fluxes_y_axis')
 
             (fs, fb) = self.event.model.get_ref_fluxes()
             mags = self._sat_flux_to_magnification(np.array(fluxes_y_axis))
