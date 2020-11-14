@@ -47,3 +47,11 @@ class PixelLensingModel(object):
         else:
             self._datasets = [datasets]
         self.data_ref = data_ref
+
+    @property
+    def parameters(self):
+        """
+        PixelLensingModelParameters instance
+        """
+        return self._parameters
+

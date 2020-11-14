@@ -173,12 +173,14 @@ class Minimizer(object):
                 'satellite_skycoord': data[n_0+i].satellite_skycoord}
             if self.event.model.n_sources == 2:
                 kwargs['flux_ratio_constraint'] = 'K2'
-            self._sat_magnifications[i] = self.event.model.magnification(
-                **kwargs)
-            if not self._MM:
-                raise NotImplementedError('not yet coded in pixel_lensing')
-            model = self._magnification_to_sat_flux(
-                self._sat_magnifications[i])
+            if self._MM:
+                self._sat_magnifications[i] = self.event.model.magnification(
+                    **kwargs)
+                model = self._magnification_to_sat_flux(
+                    self._sat_magnifications[i])
+            else:
+                model = self.event.model.flux_difference(self._sat_times[i])
+                # XXX satellite_skycoord is ignored above
             self._sat_models[i][self._sat_masks[i]] = model
             self.cpm_sources[i].run_cpm(
                 self._sat_models[i], model_mask=self.model_masks[i])
@@ -379,8 +381,13 @@ class Minimizer(object):
         #     for i in range(n)]
         # try:
         if True:
-            temp_chi2 = self.event.get_chi2_per_point()  # XXX - this ignores
-            # self.fit_blending
+            if self._MM:
+                temp_chi2 = self.event.get_chi2_per_point()  # XXX - this ignores
+                # self.fit_blending
+            else:
+                if n > 0:
+                    raise NotImplementedError('not yet coded in pixel_lensing')
+                temp_chi2 = []
 
             self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
             self.chi2 += chi2_sat
@@ -397,7 +404,7 @@ class Minimizer(object):
         if self.save_fluxes:
             self.fluxes = 2 * n * [0.]
             # try:
-            if True:
+            if self._MM:
                 self.event.get_chi2_per_point()
                 for i in range(n):
                     d = self.event.datasets[i]

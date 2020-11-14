@@ -32,3 +32,8 @@ class PixelLensingEvent(object):
         if len(self._datasets) == 0:
             raise ValueError('No datasets were linked to the model')
         return self._datasets
+
+    @property
+    def model(self):
+        """a PixelLensingModel instance"""
+        return self._model
