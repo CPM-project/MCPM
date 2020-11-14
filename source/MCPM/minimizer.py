@@ -7,7 +7,7 @@ import matplotlib.lines as mlines
 import warnings
 
 from MulensModel.utils import Utils, MAG_ZEROPOINT
-from MulensModel import Trajectory
+from MulensModel import Event, Trajectory
 
 
 K2_MAG_ZEROPOINT = 25.
@@ -44,6 +44,7 @@ class Minimizer(object):
     """
     def __init__(self, event, parameters_to_fit, cpm_sources):
         self.event = event
+        self._MM = isinstance(event, Event)
         self.n_datasets = len(self.event.datasets)
         self.parameters_to_fit = parameters_to_fit
         self.n_parameters = len(self.parameters_to_fit)
@@ -125,6 +126,8 @@ class Minimizer(object):
         for given event set attributes from parameters_to_fit (list of str)
         to values from theta list
         """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         if len(self.parameters_to_fit) != len(theta):
             raise ValueError('wrong number of parameters {:} vs {:}'.format(
                     len(self.parameters_to_fit), len(theta)))
@@ -172,6 +175,8 @@ class Minimizer(object):
                 kwargs['flux_ratio_constraint'] = 'K2'
             self._sat_magnifications[i] = self.event.model.magnification(
                 **kwargs)
+            if not self._MM:
+                raise NotImplementedError('not yet coded in pixel_lensing')
             model = self._magnification_to_sat_flux(
                 self._sat_magnifications[i])
             self._sat_models[i][self._sat_masks[i]] = model
@@ -219,6 +224,8 @@ class Minimizer(object):
 
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         self._run_cpm(theta)
         n_0 = self.n_datasets - self.n_sat
         for i in range(self.n_sat):
@@ -288,6 +295,8 @@ class Minimizer(object):
         It uses self.fit_blending properly.
         index - int
         """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         if self.fit_blending[index]:
             return self.event.get_ref_fluxes(index)[0][0]
 
@@ -302,6 +311,8 @@ class Minimizer(object):
 
     def _chi2_for_color_constraint(self, satellite_flux):
         """calculate chi2 for flux constraint"""
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         before_ref = self.event.data_ref
         if len(self._color_constraint) == 4:
             (ref_dataset, ref_zero_point) = self._color_constraint[:2]
@@ -335,6 +346,8 @@ class Minimizer(object):
 
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         self._run_cpm(theta)
         n = self.n_datasets - self.n_sat
         chi2_sat = []
@@ -572,6 +585,8 @@ class Minimizer(object):
                 if not self.fit_blending[index]:
                     raise NotImplementedError(
                         'min_blending_flux and no blending flux make no sense')
+                if not self._MM:
+                    raise NotImplementedError('not yet coded in pixel_lensing')
                 self.event.get_chi2_for_dataset(index)
                 if self.event.fit.blending_flux(data) <= limit:
                     return outside
@@ -633,6 +648,8 @@ class Minimizer(object):
 
         NOTE: This function is not yet fully tested.
         """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         if self.n_sat > 1:
             raise ValueError(
                 "satellite_maximum() doesn't allow " +
@@ -656,6 +673,8 @@ class Minimizer(object):
         """
         Plot satellite model in reference magnitude system
         """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
         n = self.n_datasets - self.n_sat
@@ -728,6 +747,8 @@ class Minimizer(object):
             fluxes_y_axis: *list* or *np.ndarray* of *floats*
                 K2 fluxes which will be marked on right side of Y axis.
         """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         if (label_list is None) != (color_list is None):
             raise ValueError('wrong input in standard_plot')
         if not separate_residuals:
@@ -831,6 +852,8 @@ class Minimizer(object):
 
     def very_standard_plot(self, t_start, t_stop, ylim, title=None):
         """Make plot of the event and residuals. """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         grid_spec = gridspec.GridSpec(2, 1, height_ratios=[5, 1], hspace=0.1)
         plt.figure()
         plt.subplot(grid_spec[0])
