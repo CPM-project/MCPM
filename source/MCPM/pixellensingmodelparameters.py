@@ -36,3 +36,35 @@ class PixelLensingModelParameters(object):
                     raise ValueError("{:} cannot be negative: {:}".format(
                         name, parameters[name]))
 
+    @property
+    def t_0(self):
+        """
+        *float*
+        """
+        return self.parameters['t_0']
+
+    @t_0.setter
+    def t_0(self, new_t_0):
+        self.parameters['t_0'] = new_t_0
+
+    @property
+    def t_E_beta(self):
+        """
+        *float*
+        """
+        return self.parameters['t_E_beta']
+
+    @t_E_beta.setter
+    def t_E_beta(self, new_t_E_beta):
+        self.parameters['t_E_beta'] = new_t_E_beta
+
+    @property
+    def f_s_sat_over_beta(self):
+        """
+        *float*
+        """
+        return self.parameters['f_s_sat_over_beta']
+
+    @f_s_sat_over_beta.setter
+    def f_s_sat_over_beta(self, new_f_s_sat_over_beta):
+        self.parameters['f_s_sat_over_beta'] = new_f_s_sat_over_beta

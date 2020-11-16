@@ -34,7 +34,7 @@ class PixelLensingModel(object):
         t_0 = self._parameters.parameters['t_0']
         t_E_beta = self._parameters.parameters['t_E_beta']
         f_s_sat_over_beta = self._parameters.parameters['f_s_sat_over_beta']
-        
+
         g = 1./np.sqrt(((times - t_0) / t_E_beta)**2 + 1)
         return f_s_sat_over_beta * g
 
@@ -54,4 +54,3 @@ class PixelLensingModel(object):
         PixelLensingModelParameters instance
         """
         return self._parameters
-

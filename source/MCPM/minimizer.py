@@ -126,8 +126,6 @@ class Minimizer(object):
         for given event set attributes from parameters_to_fit (list of str)
         to values from theta list
         """
-        if not self._MM:
-            raise NotImplementedError('not yet coded in pixel_lensing')
         if len(self.parameters_to_fit) != len(theta):
             raise ValueError('wrong number of parameters {:} vs {:}'.format(
                     len(self.parameters_to_fit), len(theta)))
@@ -382,8 +380,8 @@ class Minimizer(object):
         # try:
         if True:
             if self._MM:
-                temp_chi2 = self.event.get_chi2_per_point()  # XXX - this ignores
-                # self.fit_blending
+                temp_chi2 = self.event.get_chi2_per_point()  # XXX - this
+                # ignores self.fit_blending
             else:
                 if n > 0:
                     raise NotImplementedError('not yet coded in pixel_lensing')
