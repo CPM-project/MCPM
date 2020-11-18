@@ -64,7 +64,7 @@ class Minimizer(object):
 
         self._file_all_models_name = None
         self._file_all_models = None
-        self.save_fluxes = self._MM
+        self.save_fluxes = True
 
         self._sat_masks = None
         self._sat_times = None
