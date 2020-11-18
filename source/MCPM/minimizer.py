@@ -64,7 +64,7 @@ class Minimizer(object):
 
         self._file_all_models_name = None
         self._file_all_models = None
-        self.save_fluxes = True
+        self.save_fluxes = self._MM
 
         self._sat_masks = None
         self._sat_times = None
@@ -170,6 +170,8 @@ class Minimizer(object):
                 'time': self._sat_times[i],
                 'satellite_skycoord': data[n_0+i].satellite_skycoord}
             if self.event.model.n_sources == 2:
+                if not self._MM:
+                    raise NotImplementedError('not yet coded in pixel_lensing')
                 kwargs['flux_ratio_constraint'] = 'K2'
             if self._MM:
                 self._sat_magnifications[i] = self.event.model.magnification(
@@ -346,8 +348,6 @@ class Minimizer(object):
 
     def chi2_fun(self, theta):
         """for a given set of parameters (theta), return the chi2"""
-        if not self._MM:
-            raise NotImplementedError('not yet coded in pixel_lensing')
         self._run_cpm(theta)
         n = self.n_datasets - self.n_sat
         chi2_sat = []
@@ -377,20 +377,15 @@ class Minimizer(object):
         #     self.event.get_chi2_for_dataset(
         #         i, fit_blending=self.fit_blending[i])
         #     for i in range(n)]
-        # try:
-        if True:
-            if self._MM:
-                temp_chi2 = self.event.get_chi2_per_point()  # XXX - this
-                # ignores self.fit_blending
-            else:
-                if n > 0:
-                    raise NotImplementedError('not yet coded in pixel_lensing')
-                temp_chi2 = []
-
-            self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
-            self.chi2 += chi2_sat
-        # except:
-        #    self.chi2 = [1.e6]
+        if self._MM:
+            temp_chi2 = self.event.get_chi2_per_point()  # XXX - this
+            # ignores self.fit_blending
+        else:
+            if n > 0:
+                raise NotImplementedError('not yet coded in pixel_lensing')
+            temp_chi2 = []
+        self.chi2 = [np.sum(temp_chi2[i]) for i in range(n)]
+        self.chi2 += chi2_sat
         if self._color_constraint is not None:
             self.chi2.append(
                 self._chi2_for_color_constraint(self._sat_source_flux))
@@ -401,8 +396,10 @@ class Minimizer(object):
         self._n_calls += 1
         if self.save_fluxes:
             self.fluxes = 2 * n * [0.]
-            # try:
-            if self._MM:
+            if not self._MM:
+                if n > 0:
+                    raise NotImplementedError('not yet coded in pixel_lensing')
+            else:
                 self.event.get_chi2_per_point()
                 for i in range(n):
                     d = self.event.datasets[i]
@@ -411,8 +408,6 @@ class Minimizer(object):
                         self.fluxes[2*i+1] = self.event.fit.blending_flux(d)
                     else:
                         self.fluxes[2*i] = self._get_source_flux(i)
-            # except:
-            #    pass
         if self._file_all_models is not None:
             text = " ".join([repr(chi2)] + [repr(ll) for ll in theta])
             if self.save_fluxes:
