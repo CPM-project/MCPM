@@ -97,7 +97,7 @@ def fit_MM_MCPM_EMCEE(
             else:
                 model_magnification = model.magnification(
                     times, separate=True)[0]  # This is very simple solution.
-            model_flux = model_magnification * parameters['f_s_sat']
+            model_flux = (model_magnification - 1.) * parameters['f_s_sat']
         cpm_source.run_cpm(model_flux)
 
         utils.apply_limit_time(cpm_source, MCPM_options)

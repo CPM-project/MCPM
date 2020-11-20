@@ -12,6 +12,8 @@ import MulensModel as MM
 from MCPM import utils
 from MCPM.cpmfitsource import CpmFitSource
 from MCPM.minimizer import Minimizer
+from MCPM.pixellensingmodel import PixelLensingModel
+from MCPM.pixellensingevent import PixelLensingEvent
 
 import read_config
 
@@ -77,7 +79,10 @@ parameters_ = {**parameters}
 for param in list(parameters_.keys()).copy():
     if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
         parameters_.pop(param)
-model = MM.Model(parameters_, coords=coords)
+try:
+    model = MM.Model(parameters_, coords=coords)
+except KeyError:
+    model = PixelLensingModel(parameters_, coords=coords)
 #for band in {d.bandpass for d in datasets}:
 #    model.set_limb_coeff_gamma(band, 0.)
 for (m_key, m_value) in methods.items():
@@ -87,8 +92,14 @@ for cpm_source in cpm_sources:
     times = cpm_source.pixel_time + 2450000.
     times[np.isnan(times)] = np.mean(times[~np.isnan(times)])
     if model.n_sources == 1:
-        model_magnification = model.magnification(times)
+        if isinstance(model, MM.Model):
+            model_flux = (parameters['f_s_sat'] *
+                          (model.magnification(times) - 1.))
+        else:
+            model_flux = model.flux_difference(times)
     else:
+        if not isinstance(model, MM.Model):
+            raise NotImplementedError('not yet coded for pixel lensing')
         if ('log_q_f' in parameters) or ('q_f' in parameters):
             if 'log_q_f' in parameters:
                 q_f = 10**parameters['log_q_f']
@@ -99,7 +110,8 @@ for cpm_source in cpm_sources:
         else:
             model_magnification = model.magnification(
                 times, separate=True)[0] # This is very simple solution.
-    cpm_source.run_cpm(parameters['f_s_sat'] * model_magnification)
+        model_flux = parameters['f_s_sat'] * (model_magnification - 1.)
+    cpm_source.run_cpm(model_flux)
 
     utils.apply_limit_time(cpm_source, MCPM_options)
 
@@ -117,7 +129,10 @@ for cpm_source in cpm_sources:
     datasets.append(data)
 
 # initiate event
-event = MM.Event(datasets=datasets, model=model)
+if isinstance(model, MM.Model):
+    event = MM.Event(datasets=datasets, model=model)
+else:
+    event = PixelLensingEvent(datasets=datasets, model=model)
 params = parameters_to_fit[:]
 minimizer = Minimizer(event, params, cpm_sources)
 if 'coeffs_fits_in' in MCPM_options:
