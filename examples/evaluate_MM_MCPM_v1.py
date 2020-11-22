@@ -182,7 +182,9 @@ for zip_single in zipped:
         (y, y_mask) = cpm_source.prf_photometry()
         x = cpm_source.pixel_time[y_mask]
         err = cpm_source.all_pixels_flux_err * MCPM_options['sat_sigma_scale']
-        np.savetxt(txt_file_prf_phot, np.array([x, y[y_mask], err[y_mask]]).T)
+        y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
+        out = [x, y[y_mask], err[y_mask], y[y_mask]-y_model]
+        np.savetxt(txt_file_prf_phot, np.array(out).T)
     if txt_file is not None:
         y_mask = cpm_source.residuals_mask
         x = cpm_source.pixel_time[y_mask]

@@ -37,3 +37,10 @@ class PixelLensingEvent(object):
     def model(self):
         """a PixelLensingModel instance"""
         return self._model
+
+    def plot_model(self, **kwargs):
+        """
+        Plot the model light curve in magnitudes.
+        See PixelLensingModel.plot_lc().
+        """
+        self.model.plot_lc(**kwargs)

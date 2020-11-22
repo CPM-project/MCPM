@@ -54,3 +54,27 @@ class PixelLensingModel(object):
         PixelLensingModelParameters instance
         """
         return self._parameters
+
+# {'color': 'black', 'subtract_2450000': True, 't_start': 2457500.3, 't_stop': 2457528.0, 'flux_ratio_constraint': None}
+    def plot_lc(
+            self, times=None, t_range=None, t_start=None, t_stop=None,
+            dt=None, n_epochs=None, data_ref=None, f_source=None, f_blend=None,
+            subtract_2450000=False, subtract_2460000=False,
+            flux_ratio_constraint=None):
+        """
+        Plot the model lightcurve in magnitudes (???)
+        """
+        not_implemented = [times, t_range, dt, n_epochs, data_ref,
+                           f_source, f_blend, subtract_2460000,
+                           flux_ratio_constraint]
+        for t in not_implemented:
+            if not isinstance(t, None):
+                raise NotImplementedError(
+                    'not implemented: {:}\n'.format(t))
+
+        subtract = 0.
+        if subtract_2450000:
+            subtract = 2450000.
+# Input to be implemented:
+# {'color': 'black', 'subtract_2450000': True, 't_start': 2457500.3, 't_stop': 2457528.0}
+        raise NotImplementedError('not finished')
