@@ -253,7 +253,10 @@ for zip_single in zipped:
         print("-----")
         print("K2 chi2: ", chi2)
     if len(cpm_sources) > 0:
-        print("Satellite t_0, u_0, A_max:")
+        if isinstance(model, MM.Model):
+            print("Satellite t_0, u_0, A_max:")
+        else:
+            print("Satellite t_0, delta_flux_max:")
         print(*minimizer.satellite_maximum())
     print()
 

@@ -55,7 +55,6 @@ class PixelLensingModel(object):
         """
         return self._parameters
 
-# {'color': 'black', 'subtract_2450000': True, 't_start': 2457500.3, 't_stop': 2457528.0, 'flux_ratio_constraint': None}
     def plot_lc(
             self, times=None, t_range=None, t_start=None, t_stop=None,
             dt=None, n_epochs=None, data_ref=None, f_source=None, f_blend=None,

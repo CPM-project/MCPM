@@ -226,8 +226,6 @@ class Minimizer(object):
 
     def set_satellite_data(self, theta):
         """set satellite dataset magnitudes and fluxes"""
-        if not self._MM:
-            raise NotImplementedError('not yet coded in pixel_lensing')
         self._run_cpm(theta)
         n_0 = self.n_datasets - self.n_sat
         for i in range(self.n_sat):
@@ -648,8 +646,16 @@ class Minimizer(object):
 
         NOTE: This function is not yet fully tested.
         """
-        if not self._MM:
-            raise NotImplementedError('not yet coded in pixel_lensing')
+        if self._MM:
+            return self._satellite_maximum_MM()
+        else:
+            return (self.event.model.parameters.t_0,
+                    self.event.model.parameters.f_s_sat_over_beta)
+
+    def _satellite_maximum_MM(self):
+        """
+        satellite_maximum() for MulensModel
+        """
         if self.n_sat > 1:
             raise ValueError(
                 "satellite_maximum() doesn't allow " +
