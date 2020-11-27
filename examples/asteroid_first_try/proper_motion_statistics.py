@@ -32,7 +32,7 @@ def calculate_proper_motion_stats(file_name):
         motion_ *= pixel_scale / 24.
         motion += motion_.tolist()
 
-    return (np.median(motion), np.min(motion), np.max(motion), len(motion))
+    return (np.median(motion), np.min(motion), np.max(motion), len(motion)+1)
 
 
 if __name__ == '__main__':

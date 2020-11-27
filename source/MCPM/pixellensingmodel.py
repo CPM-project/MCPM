@@ -74,6 +74,9 @@ class PixelLensingModel(object):
         subtract = 0.
         if subtract_2450000:
             subtract = 2450000.
-# Input to be implemented:
-# {'color': 'black', 'subtract_2450000': True, 't_start': 2457500.3, 't_stop': 2457528.0}
         raise NotImplementedError('not finished')
+# This function should be implemented so that it works with following input:
+# {'color': 'black', 'subtract_2450000': True,
+# 't_start': 2457500.3, 't_stop': 2457528.0}
+# The problem is that we do not have magnitudes here, because we do not have
+# source flux.

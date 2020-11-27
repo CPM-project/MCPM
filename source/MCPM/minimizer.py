@@ -656,6 +656,8 @@ class Minimizer(object):
         """
         satellite_maximum() for MulensModel
         """
+        if not self._MM:
+            raise NotImplementedError('not yet coded in pixel_lensing')
         if self.n_sat > 1:
             raise ValueError(
                 "satellite_maximum() doesn't allow " +
