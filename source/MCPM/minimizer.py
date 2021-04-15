@@ -741,7 +741,7 @@ class Minimizer(object):
                       label_list=None, color_list=None, line_width=1.5,
                       legend_order=None, separate_residuals=False,
                       model_line_width=4., legend_kwargs=None,
-                      fluxes_y_axis=None):
+                      fluxes_y_axis=None, ground_model_zorder=None):
         """
         Make plot of the event and residuals.
 
@@ -754,6 +754,10 @@ class Minimizer(object):
 
             fluxes_y_axis: *list* or *np.ndarray* of *floats*
                 K2 fluxes which will be marked on right side of Y axis.
+
+            ground_model_zorder: *float*
+                Passed to pyplot to control if ground model is plotted
+                at the top or bottom.
         """
         if not self._MM:
             raise NotImplementedError('not yet coded in pixel_lensing')
@@ -776,7 +780,8 @@ class Minimizer(object):
         self.event.plot_model(
             color='black', subtract_2450000=True,
             t_start=t_start+2450000., t_stop=t_stop+2450000.,
-            label="ground-based model", lw=model_line_width)
+            label="ground-based model", lw=model_line_width,
+            zorder=ground_model_zorder)
         self.plot_sat_magnitudes(color='orange', lw=2,
                                  label="K2 model")  # alpha=0.75,
 

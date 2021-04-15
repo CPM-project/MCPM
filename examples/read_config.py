@@ -61,7 +61,7 @@ def read_general_options(config):
         ra = config.getfloat(section, 'RA')
         dec = config.getfloat(section, 'Dec')
         out_skycoord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
-    except:
+    except Exception:
         out_skycoord = None
     file_all_models = None
     if config.has_option(section, 'file_all_models'):
@@ -519,8 +519,10 @@ def read_plot_settings(config):
             elif key in keys_int:
                 plot_settings[key] = [int(val) for val in plot_settings[key]]
 
-    if 'line_width' in config[section]:
-        plot_settings['line_width'] = config.getfloat(section, 'line_width')
+    keys_single_float = ['line_width', 'ground_model_zorder']
+    for key in keys_single_float:
+        if key in config[section]:
+            plot_settings[key] = config.getfloat(section, key)
 
     return plot_settings
 
