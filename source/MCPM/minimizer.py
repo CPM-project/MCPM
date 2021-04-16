@@ -686,14 +686,14 @@ class Minimizer(object):
         data_ref = self.event.model.data_ref
         (fs, fb) = self.event.model.get_ref_fluxes()
         n = self.n_datasets - self.n_sat
+        if 'zorder' not in kwargs:
+            kwargs['zorder'] = np.inf
 
         for i in range(self.n_sat):
             times = self._sat_times[i] - 2450000.
             flux = self._sat_magnifications[i] * fs[0] + fb
             plt.plot(
-                times, Utils.get_mag_from_flux(flux),
-                zorder=np.inf,  # We want the satellite models
-                **kwargs)       # to be at the very top.
+                times, Utils.get_mag_from_flux(flux), **kwargs)
         self.event.model.data_ref = data_ref
 
     def _legend_standard_plot(self, legend_order, legend_kwargs, color_list,
@@ -741,7 +741,8 @@ class Minimizer(object):
                       label_list=None, color_list=None, line_width=1.5,
                       legend_order=None, separate_residuals=False,
                       model_line_width=4., legend_kwargs=None,
-                      fluxes_y_axis=None, ground_model_zorder=None):
+                      fluxes_y_axis=None, ground_model_zorder=None,
+                      sat_model_zorder=None):
         """
         Make plot of the event and residuals.
 
@@ -758,6 +759,10 @@ class Minimizer(object):
             ground_model_zorder: *float*
                 Passed to pyplot to control if ground model is plotted
                 at the top or bottom.
+
+            sat_model_zorder: *float*
+                Passed to pyplot to control if satellite model is
+                plotted at the top or bottom. Defualts to *np.inf*.
         """
         if not self._MM:
             raise NotImplementedError('not yet coded in pixel_lensing')
@@ -783,7 +788,7 @@ class Minimizer(object):
             label="ground-based model", lw=model_line_width,
             zorder=ground_model_zorder)
         self.plot_sat_magnitudes(color='orange', lw=2,
-                                 label="K2 model")  # alpha=0.75,
+                                 label="K2 model", zorder=sat_model_zorder)
 
         if color_list is not None:
             color_list_ = color_list

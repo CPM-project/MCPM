@@ -519,7 +519,8 @@ def read_plot_settings(config):
             elif key in keys_int:
                 plot_settings[key] = [int(val) for val in plot_settings[key]]
 
-    keys_single_float = ['line_width', 'ground_model_zorder']
+    keys_single_float = ['line_width', 'ground_model_zorder',
+                         'sat_model_zorder']
     for key in keys_single_float:
         if key in config[section]:
             plot_settings[key] = config.getfloat(section, key)
