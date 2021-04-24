@@ -229,7 +229,9 @@ def fit_MM_MCPM_EMCEE(
     if 'file_posterior' in emcee_settings:
         if len(emcee_settings['file_posterior']) == 0:
             emcee_settings['file_posterior'] = config_file_root + ".posterior"
-        all_samples = np.concatenate((samples, blob_samples), axis=1)
+        all_samples = samples
+        if n_fluxes > 0:
+            all_samples = np.concatenate((all_samples, blob_samples), axis=1)
         np.save(emcee_settings['file_posterior'], all_samples)
     print('Best model:')
     minimizer.print_min_chi2()
