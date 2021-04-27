@@ -229,7 +229,8 @@ def read_EMCEE_options(config):
     emcee_settings = {
         'n_walkers': 4 * len(parameters_to_fit),
         'n_steps': 1000,
-        'n_burn': 50}
+        'n_burn': 50,
+        'n_temps': 1}
     section = 'EMCEE_settings'
     if section in config.sections():
         for var in config[section]:
@@ -243,6 +244,9 @@ def read_EMCEE_options(config):
         msg = "This doesn't make sense:\nn_steps = {:}\nn_burn = {:}"
         raise ValueError(msg.format(
             emcee_settings['n_steps'], emcee_settings['n_burn']))
+    emcee_settings['PTSampler'] = False
+    if emcee_settings['n_temps'] > 1:
+        emcee_settings['PTSampler'] = True
 
     out = (starting, parameters_to_fit, min_values,
            max_values, emcee_settings)

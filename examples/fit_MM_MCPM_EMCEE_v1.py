@@ -9,12 +9,16 @@ import configparser
 import MulensModel as MM
 
 from MCPM import utils
+from MCPM import __version__ as MCPM_version
 from MCPM.cpmfitsource import CpmFitSource
 from MCPM.minimizer import Minimizer
 from MCPM.pixellensingmodel import PixelLensingModel
 from MCPM.pixellensingevent import PixelLensingEvent
 
 import read_config
+
+
+__version__ = '0.10.0'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
@@ -26,7 +30,18 @@ def fit_MM_MCPM_EMCEE(
     Fit the microlensing (MulensModel) and K2 photometry (MCPM) using
     EMCEE method. The input is complicated - please see code below and
     in read_config.py to find out details.
+
+    emcee_settings['PTSampler'] == True means no blobs (i.e. ground-based
+        fluxes are passed)
+    emcee_settings['file_posterior'] ending in ".npy" means we're saving 3D or
+        4D array, while other extensions mean we're saving text file with
+        flattened posterior
     """
+    print("MM version: " + MM.__version__)
+    print("MCPM version: " + MCPM_version)
+    print("EMCEE version: " + emcee.__version__)
+    print("script version: " + __version__, flush=True)
+
     n_params = len(parameters_to_fit)
     config_file_root = os.path.splitext(config_file)[0]
     if file_all_models is None:
@@ -60,7 +75,8 @@ def fit_MM_MCPM_EMCEE(
 
     # initiate model
     starting = utils.generate_random_points(
-        starting_settings, parameters_to_fit, emcee_settings['n_walkers'])
+        starting_settings, parameters_to_fit,
+        emcee_settings['n_walkers'] * emcee_settings['n_temps'])
     zip_ = zip(parameters_to_fit, starting[0])
     parameters = {key: value for (key, value) in zip_}
     parameters.update(parameters_fixed)
@@ -127,6 +143,9 @@ def fit_MM_MCPM_EMCEE(
         event = PixelLensingEvent(datasets=datasets, model=model)
     params = parameters_to_fit[:]
     minimizer = Minimizer(event, params, cpm_sources)
+    if emcee_settings['PTSampler']:
+        minimizer.save_fluxes = False
+        # Somehow blobs are not allowed for PTSampler.
     minimizer.file_all_models = file_all_models
     minimizer.set_chi2_0()
     if 'f_s_sat' in parameters_fixed:
@@ -176,15 +195,28 @@ def fit_MM_MCPM_EMCEE(
                     MCPM_options['mask_model_epochs'])
 
     # EMCEE fit:
-    print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
-        emcee_settings['n_walkers'], emcee_settings['n_steps'],
-        emcee_settings['n_burn']))
+    if emcee_settings['PTSampler']:
+        print("EMCEE temps, walkers, steps, burn: {:} {:} {:} {:}".format(
+            emcee_settings['n_temps'], emcee_settings['n_walkers'],
+            emcee_settings['n_steps'], emcee_settings['n_burn']))
+    else:
+        print("EMCEE walkers, steps, burn: {:} {:} {:}".format(
+            emcee_settings['n_walkers'], emcee_settings['n_steps'],
+            emcee_settings['n_burn']))
     minimizer.set_prior_boundaries(min_values, max_values)
     for start_ in starting:
         if minimizer.ln_prior(start_) <= -float('inf'):
             raise ValueError('starting point is not in prior:\n' + str(start_))
-    sampler = emcee.EnsembleSampler(
-        emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
+    if emcee_settings['PTSampler']:
+        sampler = emcee.PTSampler(
+            emcee_settings['n_temps'], emcee_settings['n_walkers'], n_params,
+            minimizer.ln_like, minimizer.ln_prior)
+        shape = (emcee_settings['n_temps'], emcee_settings['n_walkers'],
+                 n_params)
+        starting = np.array(starting).reshape(shape)
+    else:
+        sampler = emcee.EnsembleSampler(
+            emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
     acceptance_fractions = []
     # run:
     # sampler.run_mcmc(starting, emcee_settings['n_steps'])
@@ -201,9 +233,13 @@ def fit_MM_MCPM_EMCEE(
         with open(out_name, 'w') as file_out:
             file_out.write('\n'.join(data_save))
     n_burn = emcee_settings['n_burn']
-    samples = sampler.chain[:, n_burn:, :].reshape((-1, n_params))
-    blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
-    n_fluxes = blob_sampler.shape[-1]
+    if emcee_settings['PTSampler']:
+        samples = sampler.chain[0, :, n_burn:, :].reshape((-1, n_params))
+        n_fluxes = 0
+    else:
+        samples = sampler.chain[:, n_burn:, :].reshape((-1, n_params))
+        blob_sampler = np.transpose(np.array(sampler.blobs), axes=(1, 0, 2))
+        n_fluxes = blob_sampler.shape[-1]
     if 'coeffs_fits_out' in MCPM_options:
         minimizer.set_pixel_coeffs_from_samples(samples)
         minimizer.save_coeffs_to_fits(MCPM_options['coeffs_fits_out'])
@@ -211,9 +247,15 @@ def fit_MM_MCPM_EMCEE(
     minimizer.close_file_all_models()
 
     # output
-    print("Mean acceptance fraction: {:.4f} +- {:.4f}".format(
+    text = "Mean acceptance fraction"
+    fmt = ": {:.4f} +- {:.4f}"
+    print(text + fmt.format(
         np.mean(sampler.acceptance_fraction),
         np.std(sampler.acceptance_fraction)))
+    if emcee_settings['PTSampler']:
+        print(text + " of the lowest temperature walkers" + fmt.format(
+            np.mean(sampler.acceptance_fraction[0, :]),
+            np.std(sampler.acceptance_fraction[0, :])))
     zip_ = zip(*np.percentile(samples, [16, 50, 84], axis=0))
     results = map(lambda v: (v[1], v[2]-v[1], v[0]-v[1]), zip_)
     for (param, r) in zip(parameters_to_fit, results):
@@ -229,10 +271,18 @@ def fit_MM_MCPM_EMCEE(
     if 'file_posterior' in emcee_settings:
         if len(emcee_settings['file_posterior']) == 0:
             emcee_settings['file_posterior'] = config_file_root + ".posterior"
-        all_samples = samples
-        if n_fluxes > 0:
-            all_samples = np.concatenate((all_samples, blob_samples), axis=1)
-        np.save(emcee_settings['file_posterior'], all_samples)
+        if emcee_settings['file_posterior'][-4:] == '.npy':
+            if emcee_settings['PTSampler']:
+                all_samples = sampler.chain[:, :, n_burn:, :]
+            else:  # XXX blobs here
+                all_samples = sampler.chain[:, n_burn:, :]
+            np.save(emcee_settings['file_posterior'], all_samples)
+        else:
+            all_samples = samples
+            if n_fluxes > 0:
+                all_samples = np.concatenate(
+                    (all_samples, blob_samples), axis=1)
+            np.save(emcee_settings['file_posterior'], all_samples)
     print('Best model:')
     minimizer.print_min_chi2()
 
