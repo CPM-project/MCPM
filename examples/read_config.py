@@ -185,12 +185,13 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
 
     return (ranges_min, ranges_max, parameters_to_fit, MN_args)
 
-def read_EMCEE_options(config):
+def read_EMCEE_options(config, check_files=True):
     """
     parses EMCEE options
 
     Parameters:
         config - configparser.ConfigParser instance
+        check_files - *bool* - should we check if files exist?
 
     Returns:
         starting - dict - specifies PDFs for starting values of parameters
@@ -236,7 +237,7 @@ def read_EMCEE_options(config):
         for var in config[section]:
             if var in ['file_acceptance_fractions', 'file_posterior']:
                 emcee_settings[var] = config.get(section, var)
-                if os.path.isfile(emcee_settings[var]):
+                if check_files and os.path.isfile(emcee_settings[var]):
                     raise FileExistsError(emcee_settings[var])
             else:
                 emcee_settings[var] = config.getint(section, var)
