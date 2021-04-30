@@ -5,6 +5,7 @@ import emcee
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 import configparser
+from tqdm import tqdm
 
 import MulensModel as MM
 
@@ -18,7 +19,7 @@ from MCPM.pixellensingevent import PixelLensingEvent
 import read_config
 
 
-__version__ = '0.10.0'  # version of this file
+__version__ = '0.10.1'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
@@ -220,7 +221,8 @@ def fit_MM_MCPM_EMCEE(
     acceptance_fractions = []
     # run:
     # sampler.run_mcmc(starting, emcee_settings['n_steps'])
-    for _ in sampler.sample(starting, iterations=emcee_settings['n_steps']):
+    kwargs = {'iterations': emcee_settings['n_steps']}
+    for _ in tqdm(sampler.sample(starting, **kwargs)):
         acceptance_fractions.append(np.mean(sampler.acceptance_fraction))
 
     # cleanup and close minimizer:
