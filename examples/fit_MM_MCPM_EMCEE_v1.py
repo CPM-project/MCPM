@@ -19,7 +19,7 @@ from MCPM.pixellensingevent import PixelLensingEvent
 import read_config
 
 
-__version__ = '0.10.1'  # version of this file
+__version__ = '0.10.2'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
@@ -220,9 +220,9 @@ def fit_MM_MCPM_EMCEE(
             emcee_settings['n_walkers'], n_params, minimizer.ln_prob)
     acceptance_fractions = []
     # run:
-    # sampler.run_mcmc(starting, emcee_settings['n_steps'])
-    kwargs = {'iterations': emcee_settings['n_steps']}
-    for _ in tqdm(sampler.sample(starting, **kwargs)):
+    kwargs = {'initial_state': starting,
+              'iterations': emcee_settings['n_steps']}
+    for _ in tqdm(sampler.sample(**kwargs), total=emcee_settings['n_steps']):
         acceptance_fractions.append(np.mean(sampler.acceptance_fraction))
 
     # cleanup and close minimizer:
@@ -261,7 +261,11 @@ def fit_MM_MCPM_EMCEE(
     zip_ = zip(*np.percentile(samples, [16, 50, 84], axis=0))
     results = map(lambda v: (v[1], v[2]-v[1], v[0]-v[1]), zip_)
     for (param, r) in zip(parameters_to_fit, results):
-        print('{:7s} : {:.4f} {:+.4f} {:+.4f}'.format(param, *r))
+        if r[1] < 1.e-3 or r[2] > -1.e-3:
+            fmt = '{:7s} : {:.5f} {:+.4g} {:+.4g}'
+        else:
+            fmt = '{:7s} : {:.4f} {:+.4f} {:+.4f}'
+        print(fmt.format(param, *r))
     if n_fluxes > 0:
         blob_samples = blob_sampler[:, n_burn:, :].reshape((-1, n_fluxes))
         percentiles = np.percentile(blob_samples, [16, 50, 84], axis=0)
