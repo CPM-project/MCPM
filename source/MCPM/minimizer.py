@@ -9,6 +9,8 @@ import warnings
 from MulensModel.utils import Utils, MAG_ZEROPOINT
 from MulensModel import Event, Trajectory
 
+from MCPM import utils
+
 
 K2_MAG_ZEROPOINT = 25.
 
@@ -129,23 +131,26 @@ class Minimizer(object):
         if len(self.parameters_to_fit) != len(theta):
             raise ValueError('wrong number of parameters {:} vs {:}'.format(
                     len(self.parameters_to_fit), len(theta)))
-        for (i, param) in enumerate(self.parameters_to_fit):
+        combined = dict(zip(self.parameters_to_fit, theta))
+        if 't_0_pl' in self.parameters_to_fit:
+            combined = utils.get_standard_parameters(combined)
+        for (param, value) in combined.items():
             if param == 'f_s_sat':
-                self.set_satellite_source_flux(theta[i])
+                self.set_satellite_source_flux(value)
             elif param == 'f_b_sat':
-                self._sat_blending_flux = theta[i]
+                self._sat_blending_flux = value
             elif param == 'q_f':
-                self.event.model.set_source_flux_ratio(theta[i])
+                self.event.model.set_source_flux_ratio(value)
             elif param[:4] == 'q_f_':
                 self.event.model.set_source_flux_ratio_for_band(
-                    param[4:], theta[i])
+                    param[4:], value)
             elif param == 'log_q_f':
-                self.event.model.set_source_flux_ratio(10**theta[i])
+                self.event.model.set_source_flux_ratio(10**value)
             elif param[:8] == 'log_q_f_':
                 self.event.model.set_source_flux_ratio_for_band(
-                    param[8:], 10**theta[i])
+                    param[8:], 10**value)
             else:
-                setattr(self.event.model.parameters, param, theta[i])
+                setattr(self.event.model.parameters, param, value)
 
     def _run_cpm(self, theta):
         """set the satellite light curve and run CPM"""

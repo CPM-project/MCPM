@@ -15,11 +15,12 @@ from MCPM.cpmfitsource import CpmFitSource
 from MCPM.minimizer import Minimizer
 from MCPM.pixellensingmodel import PixelLensingModel
 from MCPM.pixellensingevent import PixelLensingEvent
+from MCPM.utils import get_standard_parameters
 
 import read_config
 
 
-__version__ = '0.10.2'  # version of this file
+__version__ = '0.11.0'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
@@ -85,6 +86,8 @@ def fit_MM_MCPM_EMCEE(
     for param in list(parameters_.keys()).copy():
         if param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f':
             parameters_.pop(param)
+    if 't_0_pl' in parameters_:
+        parameters_ = utils.get_standard_parameters(parameters_)
     try:
         model = MM.Model(parameters_, coords=coords)
     except KeyError:
