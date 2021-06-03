@@ -53,18 +53,19 @@ else:
     coords = None
 if files is not None:
     for (file_, fmt, kwargs) in zip(files, files_formats, files_kwargs):
-        data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt, 
-                coords=coords, **kwargs)
+        data = MM.MulensData(file_name=file_, add_2450000=True, phot_fmt=fmt,
+                             coords=coords, **kwargs)
         datasets.append(data)
-    
+
 # satellite datasets
 cpm_sources = []
 for campaign in MCPM_options['campaigns']:
-    cpm_source = CpmFitSource(ra=skycoord.ra.deg, dec=skycoord.dec.deg, 
-                campaign=campaign, channel=MCPM_options['channel'])
+    cpm_source = CpmFitSource(ra=skycoord.ra.deg, dec=skycoord.dec.deg,
+                              campaign=campaign,
+                              channel=MCPM_options['channel'])
     cpm_source.get_predictor_matrix(**MCPM_options['predictor_matrix'])
-    cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'], 
-                l2_per_pixel=MCPM_options['l2_per_pixel'])
+    cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'],
+                                   l2_per_pixel=MCPM_options['l2_per_pixel'])
     cpm_source.set_pixels_square(MCPM_options['half_size'])
     if 'n_select' in MCPM_options:
         cpm_source.select_highest_prf_sum_pixels(MCPM_options['n_select'])
@@ -73,18 +74,21 @@ for campaign in MCPM_options['campaigns']:
 
 # initiate model
 model_begin = parameter_values[0]
-parameters = {key: value for (key, value) in zip(parameters_to_fit, model_begin)}
+parameters = {
+    key: value for (key, value) in zip(parameters_to_fit, model_begin)}
 parameters.update(parameters_fixed)
 parameters_ = {**parameters}
 for param in list(parameters_.keys()).copy():
     if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
         parameters_.pop(param)
+    if 't_0_pl' in parameters_:
+        parameters_ = utils.get_standard_parameters(parameters_)
 try:
     model = MM.Model(parameters_, coords=coords)
 except KeyError:
     model = PixelLensingModel(parameters_, coords=coords)
-#for band in {d.bandpass for d in datasets}:
-#    model.set_limb_coeff_gamma(band, 0.)
+# for band in {d.bandpass for d in datasets}:
+#     model.set_limb_coeff_gamma(band, 0.)
 for (m_key, m_value) in methods.items():
     model.set_magnification_methods(m_value, m_key)
 
@@ -109,7 +113,7 @@ for cpm_source in cpm_sources:
             model_magnification = model.magnification(times)
         else:
             model_magnification = model.magnification(
-                times, separate=True)[0] # This is very simple solution.
+                times, separate=True)[0]  # This is very simple solution.
         model_flux = parameters['f_s_sat'] * (model_magnification - 1.)
     cpm_source.run_cpm(model_flux)
 
