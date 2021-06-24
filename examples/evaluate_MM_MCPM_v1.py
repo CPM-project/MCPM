@@ -35,8 +35,8 @@ def evaluate_MM_MCPM(
         coords = None
     if files is not None:
         for (file_, fmt, kwargs) in zip(files, files_formats, files_kwargs):
-            data = MM.MulensData(file_name=file_, add_2450000=data_add_245, phot_fmt=fmt,
-                                 coords=coords, **kwargs)
+            data = MM.MulensData(file_name=file_, add_2450000=data_add_245,
+                                 phot_fmt=fmt, coords=coords, **kwargs)
             datasets.append(data)
 
     # satellite datasets
@@ -46,8 +46,8 @@ def evaluate_MM_MCPM(
                                   campaign=campaign,
                                   channel=MCPM_options['channel'])
         cpm_source.get_predictor_matrix(**MCPM_options['predictor_matrix'])
-        cpm_source.set_l2_l2_per_pixel(l2=MCPM_options['l2'],
-                                       l2_per_pixel=MCPM_options['l2_per_pixel'])
+        cpm_source.set_l2_l2_per_pixel(
+            l2=MCPM_options['l2'], l2_per_pixel=MCPM_options['l2_per_pixel'])
         cpm_source.set_pixels_square(MCPM_options['half_size'])
         if 'n_select' in MCPM_options:
             cpm_source.select_highest_prf_sum_pixels(MCPM_options['n_select'])
@@ -61,7 +61,7 @@ def evaluate_MM_MCPM(
     parameters.update(parameters_fixed)
     parameters_ = {**parameters}
     for param in list(parameters_.keys()).copy():
-        if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
+        if param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f':
             parameters_.pop(param)
         if 't_0_pl' in parameters_:
             parameters_ = utils.get_standard_parameters(parameters_)
@@ -103,15 +103,19 @@ def evaluate_MM_MCPM(
 
         mask = cpm_source.residuals_mask
         if 'mask_model_epochs' in MCPM_options:
-            mask *= utils.mask_nearest_epochs(cpm_source.pixel_time+2450000., MCPM_options['mask_model_epochs'])
+            mask *= utils.mask_nearest_epochs(
+                cpm_source.pixel_time+2450000.,
+                MCPM_options['mask_model_epochs'])
         sat_time = cpm_source.pixel_time[mask] + 2450000.
-        #sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
-        sat_sigma = np.sqrt(np.sum(np.array([err[mask] for err in cpm_source.pixel_flux_err])**2, axis=0))
+        # sat_sigma = sat_time * 0. + MCPM_options['sat_sigma']
+        err_masked = [err[mask] for err in cpm_source.pixel_flux_err]
+        sat_sigma = np.sqrt(np.sum(np.array(err_masked)**2, axis=0))
         if 'sat_sigma_scale' in MCPM_options:
             sat_sigma *= MCPM_options['sat_sigma_scale']
-        data = MM.MulensData([sat_time, 0.*sat_time, sat_sigma],
-                phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'],
-                bandpass="K2", coords=coords)
+        data = MM.MulensData(
+            [sat_time, 0.*sat_time, sat_sigma],
+            phot_fmt='flux', ephemerides_file=MCPM_options['ephemeris_file'],
+            bandpass="K2", coords=coords)
         datasets.append(data)
 
     # initiate event
@@ -136,12 +140,13 @@ def evaluate_MM_MCPM(
             ref_mag = MCPM_options[cc][1]
 
         if len(MCPM_options[cc]) in [3, 4]:
-            minimizer.add_color_constraint(ref_dataset, ref_mag, 
+            minimizer.add_color_constraint(
+                ref_dataset, ref_mag,
                 MCPM_options[cc][-2], MCPM_options[cc][-1])
         elif len(MCPM_options[cc]) in [5, 6, 7, 8]:
-            minimizer.add_full_color_constraint(ref_dataset,
-                files.index(MCPM_options[cc][1]), files.index(MCPM_options[cc][2]), 
-                *MCPM_options[cc][3:])        
+            minimizer.add_full_color_constraint(
+                ref_dataset, files.index(MCPM_options[cc][1]),
+                files.index(MCPM_options[cc][2]), *MCPM_options[cc][3:])
 
     key = 'no_blending_files'
     if key in MCPM_options:
@@ -151,10 +156,11 @@ def evaluate_MM_MCPM(
 
     if 'mask_model_epochs' in MCPM_options:
         minimizer.model_masks[0] = utils.mask_nearest_epochs(
-            cpm_sources[0].pixel_time+2450000., MCPM_options['mask_model_epochs'])
+            cpm_sources[0].pixel_time+2450000.,
+            MCPM_options['mask_model_epochs'])
 
     # main loop:
-    zipped = zip(parameter_values, model_ids, plot_files, txt_files, 
+    zipped = zip(parameter_values, model_ids, plot_files, txt_files,
                  txt_files_prf_phot, txt_models, plot_epochs)
     for zip_single in zipped:
         (values, name, plot_file) = zip_single[:3]
@@ -167,8 +173,10 @@ def evaluate_MM_MCPM(
         if txt_file_prf_phot is not None:
             (y, y_mask) = cpm_source.prf_photometry()
             x = cpm_source.pixel_time[y_mask]
-            err = cpm_source.all_pixels_flux_err * MCPM_options['sat_sigma_scale']
-            y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
+            err = (cpm_source.all_pixels_flux_err *
+                   MCPM_options['sat_sigma_scale'])
+            y_model = minimizer._sat_models[0][y_mask]
+            # XXX We should not use private property above.
             out = [x, y[y_mask], err[y_mask], y[y_mask]-y_model]
             np.savetxt(txt_file_prf_phot, np.array(out).T)
         if txt_file is not None:
@@ -177,22 +185,25 @@ def evaluate_MM_MCPM(
             y = minimizer.event.datasets[-1].flux
             y_err = cpm_source.all_pixels_flux_err[y_mask]
             y_err *= MCPM_options['sat_sigma_scale']
-            y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
+            y_model = minimizer._sat_models[0][y_mask]
+            # XXX We should not use private property above.
             np.savetxt(txt_file, np.array([x, y, y_err, y-y_model]).T)
         if txt_model is not None:
             y_mask = cpm_source.residuals_mask
             x = cpm_source.pixel_time[y_mask]
-            y_model = minimizer._sat_models[0][y_mask]  # XXX we should not use private property
+            y_model = minimizer._sat_models[0][y_mask]
+            # XXX We should not use private property above.
             np.savetxt(txt_model, np.array([x, y_model]).T)
         if plot_file is not None:
             minimizer.set_satellite_data(values)
+            campaigns = MCPM_options['campaigns']
             if 'xlim' in plot_settings:
                 (t_beg, t_end) = plot_settings.pop('xlim')
-            elif 91 in MCPM_options['campaigns'] and 92 in MCPM_options['campaigns']:
+            elif 91 in campaigns and 92 in campaigns:
                 (t_beg, t_end) = (7500.3, 7573.5)
-            elif 91 in MCPM_options['campaigns']:
+            elif 91 in campaigns:
                 (t_beg, t_end) = (7500.3, 7528.0)
-            elif 92 in MCPM_options['campaigns']:
+            elif 92 in campaigns:
                 (t_beg, t_end) = (7530., 7573.5)
             else:
                 (t_beg, t_end) = (7425., 7670.)
@@ -230,7 +241,8 @@ def evaluate_MM_MCPM(
                 plt.show()
         if len(datasets) > 1:
             print("Non-K2 datasets (i, chi2, F_s, F_b):")
-            for (i, (dat, fb)) in enumerate(zip(datasets, minimizer.fit_blending)):
+            zip_ = zip(datasets, minimizer.fit_blending)
+            for (i, (dat, fb)) in enumerate(zip_):
                 chi2_data = event.get_chi2_for_dataset(i, fit_blending=fb)
                 print(i, chi2_data, event.fit.flux_of_sources(dat)[0],
                       event.fit.blending_flux(dat))
