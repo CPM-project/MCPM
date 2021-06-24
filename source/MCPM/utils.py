@@ -428,11 +428,12 @@ def get_standard_parameters(parameters):
     t_0_pl, u_0_pl, and t_E_pl
     """
     p = dict(**parameters)
-    u = p['u_0'] + p['u_0_pl']
+    t_E_ratio = p['t_E_pl'] / p['t_E']
+    u = p['u_0'] + p['u_0_pl'] * t_E_ratio
     tau = (p['t_0_pl'] - p['t_0']) / p['t_E']
     ss = np.sqrt(u**2 + tau**2)
     p['s'] = 0.5 * (ss + np.sqrt(ss**2+4.))
-    p['q'] = (p['t_E_pl'] / p['t_E'])**2
+    p['q'] = t_E_ratio**2
     p['alpha'] = 360 - np.arcsin(u/ss) * 180 / np.pi
 
     for pp in ['t_0_pl', 'u_0_pl', 't_E_pl']:
