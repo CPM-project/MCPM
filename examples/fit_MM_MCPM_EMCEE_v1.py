@@ -20,14 +20,14 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.11.0'  # version of this file
+__version__ = '0.12.0'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
-        file_all_models, data_add_245=True):
+        file_all_models, config_file_root, data_add_245=True):
     """
     Fit the microlensing (MulensModel) and K2 photometry (MCPM) using
     EMCEE method. The input is complicated - please see code below and
@@ -45,7 +45,6 @@ def fit_MM_MCPM_EMCEE(
     print("script version: " + __version__, flush=True)
 
     n_params = len(parameters_to_fit)
-    config_file_root = os.path.splitext(config_file)[0]
     if file_all_models is None:
         file_all_models = config_file_root + ".models"
 
@@ -305,6 +304,7 @@ if __name__ == '__main__':
     config.optionxform = str
     config.read(config_file)
     read_config.check_sections_in_config(config)
+    config_file_root = os.path.splitext(config_file)[0]
     print('Configuration file:', config_file)
 
     # Read general options:
@@ -324,4 +324,4 @@ if __name__ == '__main__':
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
-        file_all_models)
+        file_all_models, config_file_root)
