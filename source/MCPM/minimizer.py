@@ -174,6 +174,8 @@ class Minimizer(object):
             kwargs = {
                 'time': self._sat_times[i],
                 'satellite_skycoord': data[n_0+i].satellite_skycoord}
+            if 'K2' in self.event.model.bandpasses:
+                kwargs['gamma'] = self.event.model.get_limb_coeff_gamma('K2')
             if self.event.model.n_sources == 2:
                 if not self._MM:
                     raise NotImplementedError('not yet coded in pixel_lensing')

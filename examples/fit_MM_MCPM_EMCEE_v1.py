@@ -20,14 +20,14 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.12.0'  # version of this file
+__version__ = '0.13.0'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
-        file_all_models, config_file_root, data_add_245=True):
+        file_all_models, config_file_root, gamma_LD, data_add_245=True):
     """
     Fit the microlensing (MulensModel) and K2 photometry (MCPM) using
     EMCEE method. The input is complicated - please see code below and
@@ -93,6 +93,8 @@ def fit_MM_MCPM_EMCEE(
         model = PixelLensingModel(parameters_, coords=coords)
     for (m_key, m_value) in methods.items():
         model.set_magnification_methods(m_value, m_key)
+    for (band, gamma) in gamma_LD.items():
+        model.set_limb_coeff_gamma(band, gamma)
 
     for cpm_source in cpm_sources:
         times = cpm_source.pixel_time + 2450000.
@@ -310,7 +312,7 @@ if __name__ == '__main__':
     # Read general options:
     out = read_config.read_general_options(config)
     (skycoord, methods, file_all_models) = out[:3]
-    (files, files_formats, files_kwargs, parameters_fixed) = out[3:]
+    (files, files_formats, files_kwargs, parameters_fixed, gamma_LD) = out[3:]
     # Read EMCEE options:
     out = read_config.read_EMCEE_options(config)
     (starting_settings, parameters_to_fit) = out[:2]
@@ -324,4 +326,4 @@ if __name__ == '__main__':
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
-        file_all_models, config_file_root)
+        file_all_models, config_file_root, gamma_LD)

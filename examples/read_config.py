@@ -28,7 +28,7 @@ def check_sections_in_config(config):
         'MultiNest', 'EMCEE_starting_mean_sigma', 'EMCEE_min_values',
         'EMCEE_max_values', 'EMCEE_settings', 'MCPM', 'other_constraints',
         'models_1_line', 'plot_files', 'txt_files', 'txt_files_prf_phot',
-        'txt_models', 'plot_settings', 'plot_difference_images']
+        'txt_models', 'plot_settings', 'plot_difference_images', 'gamma_LD']
     difference = set(config.sections()) - set(allowed)
     if len(difference) > 0:
         txt = ("\nThere are unexpected sections in config file (they will " +
@@ -51,6 +51,8 @@ def read_general_options(config):
         files - list - list of names of files to be read
         files_formats - list - list of "mag" or "flux"
         parameters_fixed - dict - parameters to be kept fixed during fitting
+        gamma_LD - dict - limb darkening gamma coeffs for bands (most
+            importantly "K2")
     """
     if not isinstance(config, configparser.ConfigParser):
         raise TypeError('read_general_options() option of wrong type')
@@ -73,6 +75,13 @@ def read_general_options(config):
     for (key, v) in keys.items():
         if config.has_option(section, key):
             methods[v] = _parse_methods(config.get(section, key).split())
+
+    # Gamma LD:
+    section = 'gamma_LD'
+    gamma_LD = dict()
+    if section in config:
+        for (key, _) in config.items(section):
+            gamma_LD[key] = config.getfloat(section, key)
 
     # data files:
     section = 'file_names'
@@ -112,7 +121,7 @@ def read_general_options(config):
             parameters_fixed[var] = config.getfloat(section, var)
 
     out = (out_skycoord, methods, file_all_models, files, files_formats,
-           files_kwargs, parameters_fixed)
+           files_kwargs, parameters_fixed, gamma_LD)
     return out
 
 def _parse_methods(methods):

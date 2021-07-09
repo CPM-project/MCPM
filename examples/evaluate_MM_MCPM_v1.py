@@ -23,7 +23,8 @@ def evaluate_MM_MCPM(
         parameters_fixed, file_all_models,
         parameter_values, model_ids, plot_files, txt_files,
         txt_files_prf_phot, txt_models, parameters_to_fit,
-        plot_epochs, plot_epochs_type, plot_settings, data_add_245=True):
+        plot_epochs, plot_epochs_type, plot_settings, gamma_LD,
+        data_add_245=True):
     """
     Evaluate MCPM model.
     """
@@ -69,10 +70,10 @@ def evaluate_MM_MCPM(
         model = MM.Model(parameters_, coords=coords)
     except KeyError:
         model = PixelLensingModel(parameters_, coords=coords)
-    # for band in {d.bandpass for d in datasets}:
-    #     model.set_limb_coeff_gamma(band, 0.)
     for (m_key, m_value) in methods.items():
         model.set_magnification_methods(m_value, m_key)
+    for (band, gamma) in gamma_LD.items():
+        model.set_limb_coeff_gamma(band, gamma)
 
     for cpm_source in cpm_sources:
         times = cpm_source.pixel_time + 2450000.
@@ -272,7 +273,7 @@ if __name__ == '__main__':
     # Read general options:
     out = read_config.read_general_options(config)
     (skycoord, methods, file_all_models) = out[:3]
-    (files, files_formats, files_kwargs, parameters_fixed) = out[3:]
+    (files, files_formats, files_kwargs, parameters_fixed, gamma_LD) = out[3:]
 
     # Read models:
     out = read_config.read_models(config)
@@ -289,5 +290,5 @@ if __name__ == '__main__':
         parameters_fixed, file_all_models,
         parameter_values, model_ids, plot_files, txt_files,
         txt_files_prf_phot, txt_models, parameters_to_fit,
-        plot_epochs, plot_epochs_type, plot_settings)
+        plot_epochs, plot_epochs_type, plot_settings, gamma_LD)
 
