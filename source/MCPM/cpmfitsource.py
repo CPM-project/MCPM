@@ -868,7 +868,7 @@ class CpmFitSource(object):
             elif data_type == 'pixel_flux':
                 image[x[i], y[i]] = self.pixel_flux[i][index]
             else:
-                raise ValueError('Unrecognized data_type: ' + data_type)
+                raise ValueError('Unrecognized data_type: ' + str(data_type))
 
         plt.title("{:.5f}".format(self.pixel_time[index]))
         plt.imshow(image, **kwargs)
