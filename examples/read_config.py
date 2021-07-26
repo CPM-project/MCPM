@@ -384,6 +384,9 @@ def read_MCPM_options(config, check_fits_files=True):
         mcpm_options['no_blending_files'] = config.get(
             section, 'no_blending_files').split()
 
+    if 'model_type' in config[section]:
+        mcpm_options['model_type'] = config.get(section, 'model_type')
+
     return mcpm_options
 
 def read_other_constraints(config):

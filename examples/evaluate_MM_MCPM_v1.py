@@ -20,14 +20,20 @@ import read_config
 
 def evaluate_MM_MCPM(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
-        parameters_fixed, file_all_models,
-        parameter_values, model_ids, plot_files, txt_files,
+        parameters_fixed, parameter_values, model_ids, plot_files, txt_files,
         txt_files_prf_phot, txt_models, parameters_to_fit,
         plot_epochs, plot_epochs_type, plot_settings, gamma_LD,
-        data_add_245=True):
+        model_type=None, data_add_245=True):
     """
     Evaluate MCPM model.
+
+    model_type: *None* or *str*
+        Can be *None* (i.e., MM parameters are used), 'wide', 'close_A',
+        or 'close_B'. If not None, then 't_0_pl', 'u_0_pl', and 't_E_pl'
+        parameters are translated to s, q, alpha.
     """
+    utils.get_standard_parameters.model_type = model_type
+
     # read datasets
     datasets = []
     if skycoord is not None:
@@ -272,7 +278,7 @@ if __name__ == '__main__':
 
     # Read general options:
     out = read_config.read_general_options(config)
-    (skycoord, methods, file_all_models) = out[:3]
+    (skycoord, methods, _) = out[:3]
     (files, files_formats, files_kwargs, parameters_fixed, gamma_LD) = out[3:]
 
     # Read models:
@@ -284,11 +290,11 @@ if __name__ == '__main__':
 
     # Read MCPM options:
     MCPM_options = read_config.read_MCPM_options(config)
+    model_type = MCPM_options.pop('model_type', None)
 
     evaluate_MM_MCPM(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
-        parameters_fixed, file_all_models,
-        parameter_values, model_ids, plot_files, txt_files,
+        parameters_fixed, parameter_values, model_ids, plot_files, txt_files,
         txt_files_prf_phot, txt_models, parameters_to_fit,
-        plot_epochs, plot_epochs_type, plot_settings, gamma_LD)
+        plot_epochs, plot_epochs_type, plot_settings, gamma_LD, model_type)
 

@@ -426,8 +426,34 @@ def get_standard_parameters(parameters):
     """
     export *dict* with standard parameters based on input *dict* which has
     t_0_pl, u_0_pl, and t_E_pl
+
+    Before running it, you should set get_standard_parameters.model_type
+    variable to either 'wide', 'close_A', or 'close_B'.
     """
-    p = dict(**parameters)
+    if get_standard_parameters.model_type == 'wide':
+        p = _get_standard_parameters_1(dict(**parameters))
+    elif get_standard_parameters.model_type == 'close_A':
+        p = _get_standard_parameters_2(dict(**parameters))
+    elif get_standard_parameters.model_type == 'close_B':
+        p = _get_standard_parameters_3(dict(**parameters))
+    elif get_standard_parameters.model_type is None:
+        raise ValueError(
+            'You have to set get_standard_parameters.model_type!')
+    else:
+        raise ValueError('unrecognized model type: {:}'.format(
+            get_standard_parameters.model_type))
+
+    for pp in ['t_0_pl', 'u_0_pl', 't_E_pl']:
+        p.pop(pp)
+
+    return p
+get_standard_parameters.model_type = None
+
+
+def _get_standard_parameters_1(p):
+    """
+    transform dictionary to standard parameters for a wide topology
+    """
     t_E_ratio = p['t_E_pl'] / p['t_E']
     u = p['u_0'] + p['u_0_pl'] * t_E_ratio
     tau = (p['t_0_pl'] - p['t_0']) / p['t_E']
@@ -435,9 +461,31 @@ def get_standard_parameters(parameters):
     p['s'] = 0.5 * (ss + np.sqrt(ss**2+4.))
     p['q'] = t_E_ratio**2
     p['alpha'] = 360 - np.arcsin(u/ss) * 180 / np.pi
-
-    for pp in ['t_0_pl', 'u_0_pl', 't_E_pl']:
-        p.pop(pp)
-
     return p
 
+
+def _get_standard_parameters_2(p):
+    """
+    transform dictionary to standard parameters for a close topology
+    passing next to central caustic and planetary caustic
+    """
+    t_E_ratio = p['t_E_pl'] / p['t_E']
+    u = p['u_0'] + p['u_0_pl'] * t_E_ratio
+    tau = (p['t_0_pl'] - p['t_0']) / p['t_E']
+    uu = u**2 + tau**2
+    p['q'] = t_E_ratio**2
+    delta = (uu + 2.)**2 + 4. * (4. * p['q'] + 1.) * (uu - 1.)
+    beta = np.arctan(tau / u)
+    p['s'] = ((-uu-2+delta**0.5) / (2*(uu-1.)))**0.5
+    eta = 2 * p['q']**0.5 / (p['s'] * np.sqrt(1+p['s']**2))
+    angle = np.arctan(eta / (1./p['s'] - p['s']))
+    p['alpha'] = (angle + beta) * 180 / np.pi + 90
+    return p
+
+
+def _get_standard_parameters_3(p):
+    """
+    transform dictionary to standard parameters for a close topology
+    and both planetary caustics passed
+    """
+    raise NotImplementedError('close_B')

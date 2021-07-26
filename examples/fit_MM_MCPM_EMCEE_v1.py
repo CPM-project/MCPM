@@ -20,14 +20,15 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.13.0'  # version of this file
+__version__ = '0.14.0'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
-        file_all_models, config_file_root, gamma_LD, data_add_245=True):
+        file_all_models, config_file_root, gamma_LD,
+        model_type=None, data_add_245=True):
     """
     Fit the microlensing (MulensModel) and K2 photometry (MCPM) using
     EMCEE method. The input is complicated - please see code below and
@@ -38,11 +39,17 @@ def fit_MM_MCPM_EMCEE(
     emcee_settings['file_posterior'] ending in ".npy" means we're saving 3D or
         4D array, while other extensions mean we're saving text file with
         flattened posterior
+    model_type: *None* or *str*
+        Can be *None* (i.e., MM parameters are used), 'wide', 'close_A',
+        or 'close_B'. If not None, then 't_0_pl', 'u_0_pl', and 't_E_pl'
+        parameters are translated to s, q, alpha.
     """
     print("MM version: " + MM.__version__)
     print("MCPM version: " + MCPM_version)
     print("EMCEE version: " + emcee.__version__)
     print("script version: " + __version__, flush=True)
+
+    utils.get_standard_parameters.model_type = model_type
 
     n_params = len(parameters_to_fit)
     if file_all_models is None:
@@ -319,6 +326,7 @@ if __name__ == '__main__':
     (min_values, max_values, emcee_settings) = out[2:]
     # Read MCPM options and other constraints:
     MCPM_options = read_config.read_MCPM_options(config)
+    model_type = MCPM_options.pop('model_type', None)
     other_constraints = read_config.read_other_constraints(config)
 
     # Main function:
@@ -326,4 +334,4 @@ if __name__ == '__main__':
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
         min_values, max_values, emcee_settings, other_constraints,
-        file_all_models, config_file_root, gamma_LD)
+        file_all_models, config_file_root, gamma_LD, model_type)
