@@ -488,4 +488,16 @@ def _get_standard_parameters_3(p):
     transform dictionary to standard parameters for a close topology
     and both planetary caustics passed
     """
-    raise NotImplementedError('close_B')
+    t_E_ratio = p['t_E_pl'] / p['t_E']
+    p['q'] = t_E_ratio**2
+    u_1 = p['u_0']
+    u_2 = p['u_0_pl']
+    tau = (p['t_0_pl'] - p['t_0']) / p['t_E']
+    C = 16. * p['q'] / (tau**2 + (u_2 - u_1)**2)
+    p['s'] = (((4.*C+1.)**.5 - 1) / 2.)**.5
+    p['alpha'] = 90. - np.arctan((u_2-u_1)/tau) * 180 / np.pi
+    ss = 1. / p['s'] - p['s']
+    eta = 2 * t_E_ratio / (p['s'] * (1.+p['s']**2)**.5)
+    xx = ss - eta / np.tan(np.pi - p['alpha']*np.pi/180)
+    p['u_0'] = xx * np.sin(np.pi - p['alpha']*np.pi/180) - u_2
+    return p
