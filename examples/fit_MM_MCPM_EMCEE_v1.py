@@ -20,7 +20,18 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.14.1'  # version of this file
+__version__ = '0.14.2'  # version of this file
+
+
+def _get_magnification(model, times, **kwargs):
+    """
+    get magnification for given model and times
+    """
+    if MM.__version__[0] in ['0', '1']:
+        out = model.magnification(times, **kwargs)
+    else:
+        out = model.get_magnification(times, **kwargs)
+    return out
 
 
 def fit_MM_MCPM_EMCEE(
@@ -108,7 +119,7 @@ def fit_MM_MCPM_EMCEE(
         times[np.isnan(times)] = np.mean(times[~np.isnan(times)])
         if model.n_sources == 1:
             if isinstance(model, MM.Model):
-                model_flux = ((model.magnification(times)-1.) *
+                model_flux = ((_get_magnification(model, times) - 1.) *
                               parameters['f_s_sat'])
             else:
                 model_flux = model.flux_difference(times)
@@ -121,10 +132,10 @@ def fit_MM_MCPM_EMCEE(
                 else:
                     q_f = parameters['q_f']
                 model.set_source_flux_ratio(q_f)
-                model_magnification = model.magnification(times)
-            else:
-                model_magnification = model.magnification(
-                    times, separate=True)[0]  # This is very simple solution.
+                model_magnification = _get_magnification(model, times)
+            else:  # This is very simple solution.
+                model_magnification = _get_magnification(
+                    model, times, separate=True)[0]
             model_flux = (model_magnification - 1.) * parameters['f_s_sat']
         cpm_source.run_cpm(model_flux)
 

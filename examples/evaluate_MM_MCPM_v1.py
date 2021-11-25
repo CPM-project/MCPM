@@ -18,6 +18,17 @@ from MCPM.pixellensingevent import PixelLensingEvent
 import read_config
 
 
+def _get_magnification(model, times, **kwargs):
+    """
+    get magnification for given model and times
+    """
+    if MM.__version__[0] in ['0', '1']:
+        out = model.magnification(times, **kwargs)
+    else:
+        out = model.get_magnification(times, **kwargs)
+    return out
+
+
 def evaluate_MM_MCPM(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         parameters_fixed, parameter_values, model_ids, plot_files, txt_files,
@@ -87,7 +98,7 @@ def evaluate_MM_MCPM(
         if model.n_sources == 1:
             if isinstance(model, MM.Model):
                 model_flux = (parameters['f_s_sat'] *
-                              (model.magnification(times) - 1.))
+                              (_get_magnification(model, times) - 1.))
             else:
                 model_flux = model.flux_difference(times)
         else:
@@ -99,10 +110,10 @@ def evaluate_MM_MCPM(
                 else:
                     q_f = parameters['q_f']
                 model.set_source_flux_ratio(q_f)
-                model_magnification = model.magnification(times)
-            else:
-                model_magnification = model.magnification(
-                    times, separate=True)[0]  # This is very simple solution.
+                model_magnification = _get_magnification(model, times)
+            else:  # This is very simple solution.
+                model_magnification = _get_magnification(
+                    model, times, separate=True)[0]
             model_flux = parameters['f_s_sat'] * (model_magnification - 1.)
         cpm_source.run_cpm(model_flux)
 
@@ -297,4 +308,3 @@ if __name__ == '__main__':
         parameters_fixed, parameter_values, model_ids, plot_files, txt_files,
         txt_files_prf_phot, txt_models, parameters_to_fit,
         plot_epochs, plot_epochs_type, plot_settings, gamma_LD, model_type)
-
