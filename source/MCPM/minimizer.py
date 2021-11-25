@@ -8,6 +8,7 @@ import warnings
 
 from MulensModel.utils import Utils, MAG_ZEROPOINT
 from MulensModel import Event, Trajectory
+from MulensModel import __version__ as mm_version
 
 from MCPM import utils
 
@@ -183,10 +184,12 @@ class Minimizer(object):
                     raise NotImplementedError('not yet coded in pixel_lensing')
                 kwargs['flux_ratio_constraint'] = 'K2'
             if self._MM:
-                self._sat_magnifications[i] = self.event.model.magnification(
-                    **kwargs)
-                model = self._magnification_to_sat_flux(
-                    self._sat_magnifications[i])
+                if mm_version[0] in ['0', '1']:
+                    out = self.event.model.magnification(**kwargs)
+                else:
+                    out = self.event.model.get_magnification(**kwargs)
+                self._sat_magnifications[i] = out
+                model = self._magnification_to_sat_flux(out)
             else:
                 model = self.event.model.flux_difference(self._sat_times[i])
                 # XXX satellite_skycoord is ignored above
