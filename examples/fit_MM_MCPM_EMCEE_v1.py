@@ -20,7 +20,7 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.14.0'  # version of this file
+__version__ = '0.14.1'  # version of this file
 
 
 def fit_MM_MCPM_EMCEE(
@@ -295,7 +295,8 @@ def fit_MM_MCPM_EMCEE(
                 all_samples = sampler.chain[:, n_burn:, :]
             np.save(emcee_settings['file_posterior'], all_samples)
         else:
-            all_samples = samples
+            # all_samples = samples
+            all_samples = sampler.chain[:, n_burn:, :]
             if n_fluxes > 0:
                 all_samples = np.concatenate(
                     (all_samples, blob_samples), axis=1)

@@ -23,6 +23,8 @@ try:
     in_data = np.load(input_file)
 except Exception:
     in_data = np.loadtxt(input_file)
+if len(in_data.shape) > 2:
+    in_data = in_data.reshape(-1, in_data.shape[-1])
 output_file = None
 if 'output_file' in config[section]:
     output_file = config.get(section, 'output_file')
