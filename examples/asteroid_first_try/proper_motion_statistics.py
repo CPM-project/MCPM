@@ -15,6 +15,9 @@ def calculate_proper_motion_stats(file_name):
     (time, channel, x, y) = np.loadtxt(file_name, unpack=True,
                                        usecols=(0, 3, 4, 5))
 
+    if isinstance(channel, float):
+        return (0., 0., 0., 0)
+
     motion = []
     for c in set(channel):
         if c == 0.:

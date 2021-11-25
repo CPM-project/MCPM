@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import sys
 import configparser
+import os
 
 import read_config
 
@@ -78,6 +79,8 @@ if __name__ == '__main__':
     settings = read_config.read_EMCEE_options(config, check_files=False)
     parameters = settings[1]
     file_in = settings[4]['file_posterior']
+    if file_in == "":
+        file_in = os.path.splitext(config_file)[0] + ".posterior.npy"
 
     plot_trace_plot(parameters, file_in, file_out)
 
