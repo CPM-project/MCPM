@@ -28,12 +28,14 @@ def check_sections_in_config(config):
         'MultiNest', 'EMCEE_starting_mean_sigma', 'EMCEE_min_values',
         'EMCEE_max_values', 'EMCEE_settings', 'MCPM', 'other_constraints',
         'models_1_line', 'plot_files', 'txt_files', 'txt_files_prf_phot',
-        'txt_models', 'plot_settings', 'plot_difference_images', 'gamma_LD']
+        'txt_models', 'plot_settings', 'plot_difference_images', 'gamma_LD',
+        'priors_gauss']
     difference = set(config.sections()) - set(allowed)
     if len(difference) > 0:
         txt = ("\nThere are unexpected sections in config file (they will " +
                "be ignored):\n\n{:}\n".format(difference))
         warnings.warn(txt, UserWarning)
+
 
 def read_general_options(config):
     """
@@ -90,7 +92,8 @@ def read_general_options(config):
         files_formats = None
         files_kwargs = None
     else:
-        info = [[var, config.get(section, var).split()] for var in config[section]]
+        info = [[var, config.get(section, var).split()] for var in
+                config[section]]
         for info_ in info:
             if len(info_[1]) not in [2, 4]:
                 msg = ('Wrong input in cfg file:\n{:}\nFiles require ' +
@@ -124,6 +127,7 @@ def read_general_options(config):
            files_kwargs, parameters_fixed, gamma_LD)
     return out
 
+
 def _parse_methods(methods):
     """
     change odd elements of the list to floats
@@ -136,6 +140,7 @@ def _parse_methods(methods):
                 "Parsing methods failed - expected float, got ", methods[i])
             raise
     return methods
+
 
 def read_MultiNest_options(config, config_file, dir_out="chains"):
     """
@@ -194,6 +199,7 @@ def read_MultiNest_options(config, config_file, dir_out="chains"):
 
     return (ranges_min, ranges_max, parameters_to_fit, MN_args)
 
+
 def read_EMCEE_options(config, check_files=True):
     """
     parses EMCEE options
@@ -208,6 +214,7 @@ def read_EMCEE_options(config, check_files=True):
         min_values - dict - prior minimum values
         max_values - dict - prior maximum values
         emcee_settings - dict - a few parameters need for EMCEE
+        priors_gauss - dict - gaussian priors
     """
     # mean and sigma for start
     section = 'EMCEE_starting_mean_sigma'
@@ -258,9 +265,18 @@ def read_EMCEE_options(config, check_files=True):
     if emcee_settings['n_temps'] > 1:
         emcee_settings['PTSampler'] = True
 
+    # gaussian priors
+    priors_gauss = dict()
+    section = "priors_gauss"
+    if section in config.sections():
+        for var in config[section]:
+            words = config.get(section, var).split()
+            priors_gauss[var] = [float(words[0]), float(words[1])]
+
     out = (starting, parameters_to_fit, min_values,
-           max_values, emcee_settings)
+           max_values, emcee_settings, priors_gauss)
     return out
+
 
 def read_MCPM_options(config, check_fits_files=True):
     """
@@ -336,9 +352,11 @@ def read_MCPM_options(config, check_fits_files=True):
     if 'color_constraint' in config[section]:
         tt = config.get(section, 'color_constraint').split()
         if len(tt) in [3, 4]:
-            mcpm_options['color_constraint'] = [tt[0]] + [float(t) for t in tt[1:]]
+            mcpm_options['color_constraint'] = [
+                tt[0]] + [float(t) for t in tt[1:]]
         elif len(tt) == 7:
-            mcpm_options['color_constraint'] = tt[:3] + [[float(t) for t in tt[3:6]]] + [float(t) for t in tt[6:]]
+            mcpm_options['color_constraint'] = tt[:3] + [
+                [float(t) for t in tt[3:6]]] + [float(t) for t in tt[6:]]
         else:
             raise ValueError(
                 'Wrong length of color_constraint in MCPM section of config')
@@ -350,7 +368,8 @@ def read_MCPM_options(config, check_fits_files=True):
             raise ValueError('Wrong length of magnitude_constraint in ' +
                              'MCPM section of config')
 
-    if 'coeffs_fits_out' in config[section] and 'coeffs_fits_in' in config[section]:
+    if ('coeffs_fits_out' in config[section] and
+            'coeffs_fits_in' in config[section]):
         raise ValueError(
             'coeffs_fits_out and coeffs_fits_in cannot both be set')
     key = 'coeffs_fits_out'
@@ -389,6 +408,7 @@ def read_MCPM_options(config, check_fits_files=True):
 
     return mcpm_options
 
+
 def read_other_constraints(config):
     """
     parses more complicated constrains
@@ -422,6 +442,7 @@ def read_other_constraints(config):
         else:
             raise KeyError('unregognized keyword: ' + var)
     return options
+
 
 def read_models(config):
     """
@@ -498,6 +519,7 @@ def read_models(config):
     return (parameter_values, model_ids, plot_files, txt_files,
             txt_files_prf_phot, txt_models, parameters_to_fit, plot_epochs,
             plot_epochs_type)
+
 
 def read_plot_settings(config):
     """

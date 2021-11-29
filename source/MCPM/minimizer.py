@@ -60,6 +60,7 @@ class Minimizer(object):
         self._chi2_0 = None
         self._prior_min_values = None
         self._prior_max_values = None
+        self._prior_gaussian = dict()
         self._n_calls = 0
         self._color_constraint = None
         self.model_masks = [None] * self.n_sat
@@ -560,9 +561,17 @@ class Minimizer(object):
         self._prior_min_values = parameters_min_values
         self._prior_max_values = parameters_max_values
 
+    def set_prior_gaussian(self, settings):
+        """
+        Set gaussian priors. The keywords *settings* is a *dict* with keys
+        being names of parameters (e.g., 't_E') and values being lists of 2
+        *floats* - mean and sigma (e.g., [10., 2.]).
+        """
+        self._prior_gaussian = settings
+
     def ln_prior(self, theta):
         """return 0 in most cases, or -np.inf if beyond ranges provided"""
-        inside = 0.
+        out = 0.
         outside = -np.inf
 
         if self._prior_min_values is not None:
@@ -603,7 +612,11 @@ class Minimizer(object):
             else:
                 raise KeyError('unkown constraint: {:}'.format(key))
 
-        return inside
+        for (parameter, gauss) in self._prior_gaussian.items():
+            value = theta[self.parameters_to_fit.index(parameter)]
+            out -= ((value - gauss[0]) / gauss[1])**2
+
+        return out
 
     def ln_like(self, theta):
         """logarithm of likelihood"""
