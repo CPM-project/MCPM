@@ -103,15 +103,15 @@ class Minimizer(object):
             self._file_all_models = open(self._file_all_models_name, 'w')
 
     def reset_min_chi2(self):
-        """reset minimum chi2 and corresponding parameters"""
-        self._min_chi2 = None
-        self._min_chi2_theta = None
+        """reset best model and corresponding parameters"""
+        self._best_ln_prob = None
+        self._best_ln_prob_theta = None
 
     def print_min_chi2(self):
-        """Print minimum chi2 and corresponding values"""
+        """Print best model (including prior) and corresponding chi2 value"""
         # fmt = " ".join(["{:.4f}"] * self.n_parameters)
         fmt = " ".join(["{:}"] * self.n_parameters)
-        parameters = fmt.format(*list(self._min_chi2_theta))
+        parameters = fmt.format(*list(self._best_ln_prob_theta))
         print("{:.3f}  {:}".format(self._min_chi2, parameters))
 
     def set_satellite_source_flux(self, sat_source_flux):
@@ -401,9 +401,7 @@ class Minimizer(object):
             self.chi2.append(
                 self._chi2_for_color_constraint(self._sat_source_flux))
         chi2 = sum(self.chi2)
-        if self._min_chi2 is None or chi2 < self._min_chi2:
-            self._min_chi2 = chi2
-            self._min_chi2_theta = theta
+        self._last_chi2 = chi2
         self._n_calls += 1
         if self.save_fluxes:
             self.fluxes = 2 * n * [0.]
@@ -643,6 +641,12 @@ class Minimizer(object):
                 return -np.inf
 
         ln_probability = ln_prior + ln_like
+
+        if self._best_ln_prob is None or ln_probability > self._best_ln_prob:
+            self._min_chi2 = self._last_chi2
+            self._best_ln_prob = ln_probability
+            self._best_ln_prob_theta = theta
+
         if self.save_fluxes:
             return (ln_probability, self.fluxes)
         else:
