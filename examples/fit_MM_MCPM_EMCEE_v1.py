@@ -101,7 +101,8 @@ def fit_MM_MCPM_EMCEE(
     parameters.update(parameters_fixed)
     parameters_ = {**parameters}
     for param in list(parameters_.keys()).copy():
-        if param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f':
+        pop_keys = ['f_s_sat', 'f_s_sat_over_u_0']
+        if param in pop_keys or param[:3] == 'q_f' or param[:7] == 'log_q_f':
             parameters_.pop(param)
     if 't_0_pl' in parameters_:
         parameters_ = utils.get_standard_parameters(parameters_)
@@ -113,16 +114,20 @@ def fit_MM_MCPM_EMCEE(
         model.set_magnification_methods(m_value, m_key)
     for (band, gamma) in gamma_LD.items():
         model.set_limb_coeff_gamma(band, gamma)
+    if isinstance(model, MM.Model):
+        if 'f_s_sat' in parameters:
+            f_s_sat = parameters['f_s_sat']
+        else:
+            f_s_sat = parameters['f_s_sat_over_u_0'] * model.parameters.u_0
 
     for cpm_source in cpm_sources:
         times = cpm_source.pixel_time + 2450000.
         times[np.isnan(times)] = np.mean(times[~np.isnan(times)])
         if model.n_sources == 1:
-            if isinstance(model, MM.Model):
-                model_flux = ((_get_magnification(model, times) - 1.) *
-                              parameters['f_s_sat'])
-            else:
+            if not isinstance(model, MM.Model):
                 model_flux = model.flux_difference(times)
+            else:
+                model_flux = f_s_sat * (_get_magnification(model, times) - 1.)
         else:
             if not isinstance(model, MM.Model):
                 raise NotImplementedError('not yet coded for pixel lensing')
@@ -136,7 +141,7 @@ def fit_MM_MCPM_EMCEE(
             else:  # This is very simple solution.
                 model_magnification = _get_magnification(
                     model, times, separate=True)[0]
-            model_flux = (model_magnification - 1.) * parameters['f_s_sat']
+            model_flux = f_s_sat * (model_magnification - 1.)
         cpm_source.run_cpm(model_flux)
 
         utils.apply_limit_time(cpm_source, MCPM_options)
@@ -171,8 +176,8 @@ def fit_MM_MCPM_EMCEE(
         # Somehow blobs are not allowed for PTSampler.
     minimizer.file_all_models = file_all_models
     minimizer.set_chi2_0()
-    if 'f_s_sat' in parameters_fixed:
-        minimizer.set_satellite_source_flux(parameters_fixed['f_s_sat'])
+    if 'f_s_sat' in parameters_fixed or 'f_s_sat_over_u_0' in parameters_fixed:
+        minimizer.set_satellite_source_flux(f_s_sat)
     if 'coeffs_fits_in' in MCPM_options:
         minimizer.read_coeffs_from_fits(MCPM_options['coeffs_fits_in'])
     if 'coeffs_fits_out' in MCPM_options:

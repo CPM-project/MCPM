@@ -37,7 +37,8 @@ class Minimizer(object):
         parameters_to_fit: *list* of *str*
             Parameters that will be fitted. Except
             the *MulensModel.ModelParameters* parameters one can use satellite
-            source fluxes: 'f_s_sat' and  'f_b_sat'.
+            source fluxes: 'f_s_sat', 'f_s_sat_over_u_0',
+            and 'f_b_sat' (I suggest not to use it).
 
         cpm_sources: *CpmFitSource* or *list* of them
 
@@ -139,6 +140,14 @@ class Minimizer(object):
         for (param, value) in combined.items():
             if param == 'f_s_sat':
                 self.set_satellite_source_flux(value)
+            elif param == 'f_s_sat_over_u_0':
+                try:
+                    u_0 = self.parameters_to_fit.index('u_0')
+                except Exception:
+                    raise ValueError(
+                        'This case is not yet coded: f_s_sat_over_u_0 is '
+                        'fitted, but u_0 is not')
+                self.set_satellite_source_flux(value*u_0)
             elif param == 'f_b_sat':
                 self._sat_blending_flux = value
             elif param == 'q_f':

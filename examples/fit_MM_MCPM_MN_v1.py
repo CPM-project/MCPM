@@ -79,8 +79,9 @@ zip_ = zip(parameters_to_fit, mn_min, mn_max)
 parameters = {key: (v1+v2)/2. for (key, v1, v2) in zip_}
 parameters.update(parameters_fixed)
 parameters_ = {**parameters}
+pop_keys = ['f_s_sat', 'f_s_sat_over_u_0']
 for param in list(parameters_.keys()).copy():
-    if (param == 'f_s_sat' or param[:3] == 'q_f' or param[:7] == 'log_q_f'):
+    if param in pop_keys or param[:3] == 'q_f' or param[:7] == 'log_q_f':
         parameters_.pop(param)
 model = MM.Model(parameters_, coords=coords)
 for (m_key, m_value) in methods.items():
@@ -102,7 +103,11 @@ for cpm_source in cpm_sources:
         else:
             model_magnification = model.magnification(
                 times, separate=True)[0]  # This is very simple solution.
-    cpm_source.run_cpm(parameters['f_s_sat'] * model_magnification)
+    if 'f_s_sat' in parameters:
+        f_s_sat = parameters['f_s_sat']
+    else:
+        f_s_sat = parameters['f_s_sat_over_u_0'] * model.parameters.u_0
+    cpm_source.run_cpm(f_s_sat * (model_magnification - 1.))
 
     utils.apply_limit_time(cpm_source, MCPM_options)
 
