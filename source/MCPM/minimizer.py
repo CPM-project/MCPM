@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import matplotlib.lines as mlines
@@ -59,9 +60,12 @@ class Minimizer(object):
         self.n_sat = len(self.cpm_sources)
         self.reset_min_chi2()
         self._chi2_0 = None
+
         self._prior_min_values = None
         self._prior_max_values = None
         self._prior_gaussian = dict()
+        self._prior_tabulated = dict()
+
         self._n_calls = 0
         self._color_constraint = None
         self.model_masks = [None] * self.n_sat
@@ -576,6 +580,29 @@ class Minimizer(object):
         """
         self._prior_gaussian = settings
 
+    def set_prior_tabulated(self, parameter, file_name, outside_factor=1.e-4):
+        """
+        Add settings to calculate prior based on tabulated data.
+
+        Parameters :
+            parameter: *str*
+                Name of the parameter to be used for prior, e.g. 't_0'
+
+            file_name: *str*
+                Name of 2-column text file with a histogram. Columns are bin
+                centers and counts (the latter are normalized by this function)
+
+            outside_factor: *str*
+                Ratio of largest to smallest value of prior - used both to
+                places where histogram = 0 and values that are beyond the prior
+        """
+        (bin_centers, counts) = np.loadtxt(file_name, unpack=True)
+        counts = counts / float(np.sum(counts))
+        min_counts = outside_factor * np.max(counts)
+        counts[counts < min_counts] = min_counts
+        self._prior_tabulated[parameter] = interp1d(
+            bin_centers, counts, fill_value=min_counts, bounds_error=False)
+
     def ln_prior(self, theta):
         """return 0 in most cases, or -np.inf if beyond ranges provided"""
         out = 0.
@@ -622,6 +649,10 @@ class Minimizer(object):
         for (parameter, gauss) in self._prior_gaussian.items():
             value = theta[self.parameters_to_fit.index(parameter)]
             out -= ((value - gauss[0]) / gauss[1])**2
+
+        for (parameter, function) in self._prior_tabulated.items():
+            value = theta[self.parameters_to_fit.index(parameter)]
+            out += np.log(function(value))
 
         return out
 

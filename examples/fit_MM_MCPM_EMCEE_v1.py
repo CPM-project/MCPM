@@ -20,7 +20,7 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.15.0'  # version of this file
+__version__ = '0.16.0'  # version of this file
 
 
 def _get_magnification(model, times, **kwargs):
@@ -37,7 +37,7 @@ def _get_magnification(model, times, **kwargs):
 def fit_MM_MCPM_EMCEE(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
-        min_values, max_values, emcee_settings, priors_gauss,
+        min_values, max_values, emcee_settings, priors_gauss, priors_tabulated,
         other_constraints, file_all_models, config_file_root, gamma_LD,
         model_type=None, data_add_245=True):
     """
@@ -236,6 +236,8 @@ def fit_MM_MCPM_EMCEE(
         if minimizer.ln_prior(start_) <= -float('inf'):
             raise ValueError('starting point is not in prior:\n' + str(start_))
     minimizer.set_prior_gaussian(priors_gauss)
+    for (parameter, file_name) in priors_tabulated.items():
+        minimizer.set_prior_tabulated(parameter, file_name)
     if emcee_settings['PTSampler']:
         sampler = emcee.PTSampler(
             emcee_settings['n_temps'], emcee_settings['n_walkers'], n_params,
@@ -341,7 +343,8 @@ if __name__ == '__main__':
     # Read EMCEE options:
     out = read_config.read_EMCEE_options(config)
     (starting_settings, parameters_to_fit) = out[:2]
-    (min_values, max_values, emcee_settings, priors_gauss) = out[2:]
+    (min_values, max_values, emcee_settings) = out[2:5]
+    (priors_gauss, priors_tabulated) = out[5:]
     # Read MCPM options and other constraints:
     MCPM_options = read_config.read_MCPM_options(config)
     model_type = MCPM_options.pop('model_type', None)
@@ -351,6 +354,6 @@ if __name__ == '__main__':
     fit_MM_MCPM_EMCEE(
         files, files_formats, files_kwargs, skycoord, methods, MCPM_options,
         starting_settings, parameters_to_fit, parameters_fixed,
-        min_values, max_values, emcee_settings, priors_gauss,
+        min_values, max_values, emcee_settings, priors_gauss, priors_tabulated,
         other_constraints,
         file_all_models, config_file_root, gamma_LD, model_type)

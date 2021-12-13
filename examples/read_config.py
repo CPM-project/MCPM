@@ -29,7 +29,7 @@ def check_sections_in_config(config):
         'EMCEE_max_values', 'EMCEE_settings', 'MCPM', 'other_constraints',
         'models_1_line', 'plot_files', 'txt_files', 'txt_files_prf_phot',
         'txt_models', 'plot_settings', 'plot_difference_images', 'gamma_LD',
-        'priors_gauss']
+        'priors_gauss', 'priors_tabulated']
     difference = set(config.sections()) - set(allowed)
     if len(difference) > 0:
         txt = ("\nThere are unexpected sections in config file (they will " +
@@ -215,6 +215,9 @@ def read_EMCEE_options(config, check_files=True):
         max_values - dict - prior maximum values
         emcee_settings - dict - a few parameters need for EMCEE
         priors_gauss - dict - gaussian priors
+        priors_tabulated - dict - priors in a form of tabulated function
+            (here defined by a text file with histogram [bin centers in
+            the first column])
     """
     # mean and sigma for start
     section = 'EMCEE_starting_mean_sigma'
@@ -269,12 +272,19 @@ def read_EMCEE_options(config, check_files=True):
     priors_gauss = dict()
     section = "priors_gauss"
     if section in config.sections():
-        for var in config[section]:
-            words = config.get(section, var).split()
-            priors_gauss[var] = [float(words[0]), float(words[1])]
+        for key in config[section]:
+            words = config.get(section, key).split()
+            priors_gauss[key] = [float(words[0]), float(words[1])]
+
+    # tabulated priors
+    priors_tabulated = dict()
+    section = "priors_tabulated"
+    if section in config.sections():
+        for key in config[section]:
+            priors_tabulated[key] = config.get(section, key)
 
     out = (starting, parameters_to_fit, min_values,
-           max_values, emcee_settings, priors_gauss)
+           max_values, emcee_settings, priors_gauss, priors_tabulated)
     return out
 
 
@@ -565,4 +575,3 @@ def read_plot_settings(config):
             plot_settings[key] = config.getfloat(section, key)
 
     return plot_settings
-
