@@ -4,8 +4,12 @@ import sys
 import emcee
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+from matplotlib import pyplot as plt
+from matplotlib import gridspec
 import configparser
 from tqdm import tqdm
+
+import corner
 
 import MulensModel as MM
 
@@ -20,7 +24,7 @@ from MCPM.utils import get_standard_parameters
 import read_config
 
 
-__version__ = '0.16.0'  # version of this file
+__version__ = '0.17.0'  # version of this file
 
 
 def _get_magnification(model, times, **kwargs):
@@ -322,6 +326,48 @@ def fit_MM_MCPM_EMCEE(
             np.save(emcee_settings['file_posterior'], all_samples)
     print('Best model:')
     minimizer.print_min_chi2()
+    # Plots are below
+    if 'file_corner' in emcee_settings or 'file_trace' in emcee_settings:
+        data = sampler.chain[:, n_burn:, :]
+        if 't_0' in parameters_to_fit:
+            index = parameters_to_fit.index('t_0')
+            data[:, :, index] -= int(np.median(data[:, :, index]))
+            # The above line doesn't work properly for PTSampler XXX
+    if 'file_trace' in emcee_settings:
+        if len(emcee_settings['file_trace']) == 0:
+            emcee_settings['file_trace'] = config_file_root + "_trace.png"
+        alpha = 0.5
+        grid = gridspec.GridSpec(n_params, 1, hspace=0)
+        plt.figure(figsize=(7.5, 10.5))
+        plt.subplots_adjust(left=0.13, right=0.97, top=0.99, bottom=0.05)
+        plt.rcParams['font.size'] = 12
+        plt.rcParams['axes.linewidth'] = 1.4
+        for i in range(n_params):
+            if i == 0:
+                ax0 = plt.subplot(grid[i])
+            else:
+                plt.gcf().add_subplot(grid[i], sharex=ax0)
+            plt.ylabel(parameters_to_fit[i])
+            for j in range(data.shape[0]):
+                vector = data[j, :, i]
+                plt.plot(np.arange(len(vector)), vector, alpha=alpha)
+            plt.xlim(0, len(vector))
+            plt.gca().tick_params(axis='both', which='both', direction='in',
+                                  top=True, right=True)
+            if i != n_params - 1:
+                plt.setp(plt.gca().get_xticklabels(), visible=False)
+            plt.gca().set_prop_cycle(None)
+        plt.xlabel('step count')
+        plt.savefig(emcee_settings['file_trace'])
+        plt.rcParams['font.size'] = 10  # resetting to defaults
+        plt.rcParams['axes.linewidth'] = 0.8
+    if 'file_corner' in emcee_settings:
+        if len(emcee_settings['file_corner']) == 0:
+            emcee_settings['file_corner'] = config_file_root + "_corner.png"
+        kwargs = {'quantiles': [0.16, 0.50, 0.84], 'bins': 40,
+                  'show_titles': True, 'labels': parameters_to_fit}
+        corner.corner(data.reshape(-1, n_params), **kwargs)
+        plt.savefig(emcee_settings['file_corner'])
 
 
 if __name__ == '__main__':

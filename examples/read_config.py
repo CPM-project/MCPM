@@ -252,9 +252,11 @@ def read_EMCEE_options(config, check_files=True):
         'n_burn': 50,
         'n_temps': 1}
     section = 'EMCEE_settings'
+    files = ['file_acceptance_fractions', 'file_posterior', 'file_corner',
+             'file_trace']
     if section in config.sections():
         for var in config[section]:
-            if var in ['file_acceptance_fractions', 'file_posterior']:
+            if var in files:
                 emcee_settings[var] = config.get(section, var)
                 if check_files and os.path.isfile(emcee_settings[var]):
                     raise FileExistsError(emcee_settings[var])
